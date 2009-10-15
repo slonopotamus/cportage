@@ -1,0 +1,3 @@
+#!/bin/sh
+[[ ! -e build ]] && mkdir build
+cd build && cmake -Wdev -DWITH_TESTS=1 .. && make && ctest -V

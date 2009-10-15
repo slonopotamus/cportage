@@ -3,9 +3,6 @@ find_package(PCRE REQUIRED)
 find_package(Popt REQUIRED)
 
 # Checks
-set(CMAKE_REQUIRED_FLAGS "-std=c99 -Wall -Wextra -pedantic -fvisibility=hidden")
-set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE -D_FORTIFY_SOURCE=2")
-
 include(CheckIncludeFile)
 include(CheckFunctionExists)
 
@@ -20,14 +17,15 @@ if(!${HAVE_ASPRINTF})
 endif()
 
 # Executables
-include_directories("${PROJECT_SOURCE_DIR}/include")
-add_definitions(${CMAKE_REQUIRED_FLAGS} ${CMAKE_REQUIRED_DEFINITIONS})
 add_library(cportage SHARED atom.c config.c object.c)
 target_link_libraries(cportage ${PCRE_LIBRARY})
 add_executable(cmerge cmerge.c)
 target_link_libraries(cmerge cportage ${Popt_LIBRARY})
 
-# Tests
-enable_testing()
-
 # Installation
+install(TARGETS
+	cportage
+	LIBRARY DESTINATION lib)
+install(TARGETS
+	cmerge
+	RUNTIME DESTINATION bin)
