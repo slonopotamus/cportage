@@ -94,30 +94,27 @@ int main() {
 		{ "foo/666", true },
 		{ "=dev-libs/poppler-qt3-0.11*", true },
 
-		#warning TODO: Uncomment this when useflags parsing is written.
-		/*
-		
-			  ( "sys-apps/portage-2.1:[foo]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[bar?,!baz?,!doc=,build=]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[doc?]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[!doc?]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[doc=]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[!doc=]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[!doc]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[!-doc]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[!-doc=]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[!-doc?]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[-doc?]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[-doc=]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[-doc!=]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[-doc=]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[bar][-baz][doc?][!build?]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[bar,-baz,doc?,!build?]", True ),
-			  ( "=sys-apps/portage-2.2*:foo[bar,-baz,doc?,!build?,]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[,bar,-baz,doc?,!build?]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[bar,-baz][doc?,!build?]", False ),
-			  ( "=sys-apps/portage-2.2*:foo[bar][doc,build]", False ),
-		*/
+		{ "sys-apps/portage[foo]", true },
+		{ "sys-apps/portage-2.1:[foo]", false },
+		{ "=sys-apps/portage-2.2*:foo[bar?,!baz?,!doc=,build=]", true },
+		{ "=sys-apps/portage-2.2*:foo[doc?]", true },
+		{ "=sys-apps/portage-2.2*:foo[!doc?]", true },
+		{ "=sys-apps/portage-2.2*:foo[doc=]", true },
+		{ "=sys-apps/portage-2.2*:foo[!doc=]", true },
+		{ "=sys-apps/portage-2.2*:foo[!doc]", false },
+		{ "=sys-apps/portage-2.2*:foo[!-doc]", false },
+		{ "=sys-apps/portage-2.2*:foo[!-doc=]", false },
+		{ "=sys-apps/portage-2.2*:foo[!-doc?]", false },
+		{ "=sys-apps/portage-2.2*:foo[-doc?]", false },
+		{ "=sys-apps/portage-2.2*:foo[-doc=]", false },
+		{ "=sys-apps/portage-2.2*:foo[-doc!=]", false },
+		{ "=sys-apps/portage-2.2*:foo[-doc=]", false },
+		{ "=sys-apps/portage-2.2*:foo[bar][-baz][doc?][!build?]", false },
+		{ "=sys-apps/portage-2.2*:foo[bar,-baz,doc?,!build?]", true },
+		{ "=sys-apps/portage-2.2*:foo[bar,-baz,doc?,!build?,]", false },
+		{ "=sys-apps/portage-2.2*:foo[,bar,-baz,doc?,!build?]", false },
+		{ "=sys-apps/portage-2.2*:foo[bar,-baz][doc?,!build?]", false },
+		{ "=sys-apps/portage-2.2*:foo[bar][doc,build]", false },
 	};
 	int retval = 0;
 	for (unsigned int i = 0; i < sizeof(data) / sizeof(data[0]); ++i) {
@@ -125,7 +122,7 @@ int main() {
 		const char * msg = data[i].valid ? "valid" : "invalid";
 		void * atom = new(Class(Atom), s);
 		if (data[i].valid == (atom == NULL)) {
-			fprintf(stderr, "'%s' must be %s, but it isn't", s, msg);
+			fprintf(stderr, "'%s' must be %s, but it isn't\n", s, msg);
 			--retval;
 		}
 		unref(atom);

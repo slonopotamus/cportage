@@ -135,16 +135,20 @@ static void * AtomClass_ctor(void * _self, va_list * app) {
 	/* See 2.2 section for version syntax. */
 	const char * ver  = "(cvs\\.)?(\\d+)((\\.\\d+)*)([a-z]?)"
 		"((_(pre|p|beta|alpha|rc)\\d*)*)(-r\\d+)?";
-	#warning TODO: useflags regex part
-	const char * use  = "(?P<use>.*)";
+	const char * use_name = "[A-Za-z0-9][\\w+@-]*";
 	const char * op   = "(?P<op>[=~]|[><]=?)";
 
-	char * cp, * cpv, * atom_re_str;
+	char * use, * use_item, * cp, * cpv, * atom_re_str;
+	if (asprintf(&use_item, "(?:!?%s[=?]|-?%s)",
+		use_name, use_name) == -1) abort();
+	if (asprintf(&use, "(?P<use>\\[%s(?:,%s)*\\])?",
+		use_item, use_item) == -1) abort();
 	if (asprintf(&cp, "(%s/%s(-%s)\?\?)", cat, pkg, ver) == -1) abort();
 	if (asprintf(&cpv, "%s-%s", cp, ver) == -1) abort();
 	if (asprintf(&atom_re_str,
-		"^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?(?:\\[%s\\])?$",
+		"^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
 		op, cpv, cpv, cp, slot, use) == -1) abort();
+	free(use);
 	free(cp);
 	free(cpv);
 	const char *err;
