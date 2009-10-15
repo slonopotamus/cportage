@@ -53,7 +53,10 @@ static void * Atom_new(const void * _class, va_list * app) {
 	const char * s = va_arg(* app, char *);
 	assert(s);
 	assert(class->atom_re);
+
+	/* See man 3 pcreapi "How pcre_exec() returns captured substrings" */
 	int m_data[(class->atom_re_nsub + 1) * 3];
+
 	const int m = pcre_exec(class->atom_re, class->atom_re_extra,
 		s, strlen(s), 0, 0, m_data, sizeof(m_data));
 	if (m == PCRE_ERROR_NOMATCH) {
