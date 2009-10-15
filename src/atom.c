@@ -27,12 +27,6 @@
 #include "cportage/atom.h"
 #include "cportage/object.r"
 
-enum atom_type {
-	CP = 1 << 0,
-	STAR = 1 << 1,
-	OP = 1 << 2
-};
-
 struct Atom {
 	struct Object _;
 	const char * category;
