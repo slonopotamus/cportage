@@ -132,10 +132,15 @@ static void * AtomClass_ctor(void * _self, va_list * app) {
 		It must not begin with a hyphen or a dot.
 	 */
 	const char * slot = "(?P<slot>[\\w+][\\w+.-]*)";
+	/*
+		2.1.4 A USE flag name may contain any of the characters [A-Za-z0-9+_@-].
+		It must begin with an alphanumeric character.
+	 */
+	const char * use_name = "[A-Za-z0-9][\\w+@-]*";
 	/* See 2.2 section for version syntax. */
 	const char * ver  = "(cvs\\.)?(\\d+)((\\.\\d+)*)([a-z]?)"
 		"((_(pre|p|beta|alpha|rc)\\d*)*)(-r\\d+)?";
-	const char * use_name = "[A-Za-z0-9][\\w+@-]*";
+	#warning TODO: add reference to PMS
 	const char * op   = "(?P<op>[=~]|[><]=?)";
 
 	char * use, * use_item, * cp, * cpv, * atom_re_str;
