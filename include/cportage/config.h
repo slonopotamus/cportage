@@ -24,6 +24,7 @@
 
 void * initConfig() __attribute__ ((visibility("default")));
 
+/* new(Class(Config), "/path/to/config/root") */
 extern const void * Config __attribute__ ((visibility("default")));
 
 #endif
