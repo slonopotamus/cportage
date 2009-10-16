@@ -24,6 +24,7 @@
 
 void * initAtom() __attribute__ ((visibility("default")));
 
+/* new(Class(Atom), "=foo/bar-1.0") */
 extern const void * Atom __attribute__ ((visibility("default")));
 
 #endif
