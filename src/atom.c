@@ -81,8 +81,9 @@ static void * Atom_new(const void * _class, va_list * app) {
 	} else if ((rc = pcre_get_substring(s, m_data, m, simple_idx, &type)) > 0) {
 		cat_idx = simple_idx + 2;
 	} else {
-		/* Should never happen (if we get here, we have a error in regex) */
-		assert(false);
+		/* Getting here means we have a bug in atom regex */
+		fprintf(stderr, "Could not determine atom type for '%s'", s);
+		abort();
 	}
 	pcre_free_substring(type);
 	const char * invalid_version;
@@ -113,6 +114,7 @@ static void * Atom_dtor(void *_self) {
 static void * AtomClass_ctor(void * _self, va_list * app) {
 	super_ctor(AtomClass, _self, app);
 	struct AtomClass * self = cast(AtomClass, _self);
+
 	/*
 		2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
 		It must not begin with a hyphen or a dot.
@@ -162,14 +164,17 @@ static void * AtomClass_ctor(void * _self, va_list * app) {
 		abort();
 	}
 	free(atom_re_str);
+
 	self->atom_re_extra = pcre_study(self->atom_re, 0, &err);
 	if (err) {
 		fprintf(stderr, "Atom regex study failed: %s", err);
 		abort();
 	}
+
 	const int rc = pcre_fullinfo(self->atom_re, self->atom_re_extra,
 		PCRE_INFO_CAPTURECOUNT, &self->atom_re_nsub);
 	assert(rc == 0);
+
 	return self;
 }
 
