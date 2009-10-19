@@ -27,14 +27,24 @@
 #include "cportage/atom.h"
 #include "cportage/object.r"
 
+enum OP_TYPE {
+	OP_NONE,
+	OP_LT,
+	OP_LE,
+	OP_EQ,
+	OP_GE,
+	OP_GT,
+	OP_TILDE,
+	OP_STAR
+};
+
 struct Atom {
 	struct Object _;
 	const char * category;
 	const char * package;
 	/* Nullable */
 	const char * version;
-	/* Nullable */
-	const char * operator;
+	int operator;
 	/* Nullable */
 	const char * slot;
 };
@@ -73,19 +83,38 @@ static void * Atom_new(const void * _class, va_list * app) {
 		&& use_idx > 0);
 
 	const char * type;
-	int rc, cat_idx;
+	int rc, cat_idx, op;
 	if ((rc = pcre_get_substring(s, m_data, m, op_idx, &type)) > 0) {
 		cat_idx = op_idx + 2;
+		if (strcmp(type, "<") == 0) {
+			op = OP_LT;
+		} else if (strcmp(type, "<=") == 0) {
+			op = OP_LE;
+		} else if (strcmp(type, "=") == 0) {
+			op = OP_EQ;
+		} else if (strcmp(type, ">=") == 0) {
+			op = OP_GE;
+		} else if (strcmp(type, ">") == 0) {
+			op = OP_GT;
+		} else if (strcmp(type, "~") == 0) {
+			op = OP_TILDE;
+		} else {
+			fprintf(stderr, "Unknown operator: %s\n", type);
+			abort();
+		}
 	} else if ((rc = pcre_get_substring(s, m_data, m, star_idx, &type)) > 0) {
 		cat_idx = star_idx + 2;
+		op = OP_STAR;
 	} else if ((rc = pcre_get_substring(s, m_data, m, simple_idx, &type)) > 0) {
 		cat_idx = simple_idx + 2;
+		op = OP_NONE;
 	} else {
 		/* Getting here means we have a bug in atom regex */
 		fprintf(stderr, "Could not determine atom type for '%s'", s);
 		abort();
 	}
 	pcre_free_substring(type);
+
 	const char * invalid_version;
 	rc = pcre_get_substring(s, m_data, m, cat_idx + 2, &invalid_version);
 	if (rc > 0) {
@@ -99,7 +128,8 @@ static void * Atom_new(const void * _class, va_list * app) {
 	rc = pcre_get_substring(s, m_data, m, cat_idx + 1, &atom->package);
 	assert(rc > 0);
 	pcre_get_named_substring(class->atom_re, s, m_data, m, "slot", &atom->slot);
-	#warning TODO: store version, useflags and operator
+	atom->operator = op;
+	#warning TODO: store version and useflags
 	return atom;
 }
 
