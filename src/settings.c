@@ -17,15 +17,25 @@
 	along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cportage/config.h"
+#include <assert.h>
+
+#include "cportage/settings.h"
 #include "cportage/object.r"
 
-struct Config {
+struct Settings {
 	struct Object _;
 };
 
-const void * Config;
+static void * Settings_new(const void * _class, va_list * app) {
+	const char * config_root = va_arg(* app, char *);
+	assert(config_root);
+	struct Settings * settings = super_ctor(Settings, alloc(_class), NULL);
+	return settings;
+}
 
-void * initConfig() {
-	return new(Class, "Config", Object, sizeof(struct Config));
+const void * Settings;
+
+void * initSettings() {
+	return new(Class, "Settings", Object, sizeof(struct Settings),
+		new, Settings_new);
 }

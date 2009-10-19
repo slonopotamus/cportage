@@ -23,7 +23,7 @@
 #include <popt.h>
 
 #include "cportage/atom.h"
-#include "cportage/config.h"
+#include "cportage/settings.h"
 
 int main(const int argc, const char * argv[]) {
 	const struct poptOption actions[] = {
@@ -45,9 +45,9 @@ int main(const int argc, const char * argv[]) {
 	int rc = poptGetNextOpt(ctx);
 	int ret = 42;
 	if (rc == -1) {
-		void * config = new(Class(Config), config_root);
-		
-		unref(config);
+		void * settings = new(Class(Settings), config_root);
+
+		unref(settings);
 		ret = EXIT_SUCCESS;
 	} else {
 		/* Invalid option */

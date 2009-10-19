@@ -11,7 +11,7 @@ add_definitions(${CMAKE_REQUIRED_FLAGS} ${CMAKE_REQUIRED_DEFINITIONS})
 add_subdirectory(include)
 add_subdirectory(src)
 
-option(WITH_TESTS "enable unit tests" OFF)
+option(WITH_TESTS "Enable unit tests" OFF)
 
 if(WITH_TESTS)
 	enable_testing()

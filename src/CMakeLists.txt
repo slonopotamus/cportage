@@ -17,7 +17,7 @@ if(!${HAVE_ASPRINTF})
 endif()
 
 # Executables
-add_library(cportage SHARED atom.c config.c object.c)
+add_library(cportage SHARED atom.c settings.c object.c)
 target_link_libraries(cportage ${PCRE_LIBRARY})
 add_executable(cmerge cmerge.c)
 target_link_libraries(cmerge cportage ${Popt_LIBRARY})

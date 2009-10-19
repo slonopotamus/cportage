@@ -22,10 +22,10 @@
 
 #include "cportage/object.h"
 
-void * initConfig() __attribute__ ((visibility("default")));
+void * initSettings() __attribute__ ((visibility("default")));
 
-/* new(Class(Config), "/path/to/config/root") */
-extern const void * Config __attribute__ ((visibility("default")));
+/* new(Class(Settings), "/path/to/config/root") */
+extern const void * Settings __attribute__ ((visibility("default")));
 
 #endif
 
