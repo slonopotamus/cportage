@@ -21,7 +21,7 @@
 #define CPORTAGE_OBJECT_H
 
 /*
-	OOP system, heavily based on Object-Oriented Programming With ANSI-C paper.
+	OOP system, heavily based on 'Object-Oriented Programming With ANSI-C' paper.
 	Supports inheritance, static/dynamic object methods, typesafe casts.
  */
 
@@ -36,6 +36,8 @@
  */
 #define Class(x) x ? x : ( x = init ## x () )
 
+#pragma GCC visibility push(default)
+
 /* Pointer to Object class. */
 extern const void * Object;
 
@@ -43,28 +45,26 @@ extern const void * Object;
 extern const void * Class;
 
 /* Increases refcounter of given object */
-void * ref(void * self) __attribute__ ((visibility("default")));
+void * ref(void * self);
 
 /*
 	Decreases refcounter of given object, potentially destroying it
 	if refcount becomes zero.
  */
-void unref(void * self) __attribute__ ((visibility("default")));
+void unref(void * self);
 
 /* Equality comparison between two objects (also acts as a selector) */
-int cmp(
-	const void * self,
-	const void * other) __attribute__ ((visibility("default")));
+int cmp(const void * self,  const void * other);
 
 /* Type checking cast. Always use it when get objects in params. */
-void * cast(
-	const void * class,
-	const void * self) __attribute__ ((visibility("default")));
+void * cast(const void * class, const void * self);
 
 /*
 	New instance creation function.
 	Varargs are specific to class you're instantiating.
  */
-void * new(const void * class, ...) __attribute__ ((visibility("default")));
+void * new(const void * class, ...);
+
+#pragma GCC visibility pop
 
 #endif

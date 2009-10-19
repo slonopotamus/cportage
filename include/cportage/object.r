@@ -24,6 +24,8 @@
 
 #include "cportage/object.h"
 
+#pragma GCC visibility push(default)
+
 struct Object {
 	char _ [sizeof(struct {
 		unsigned long magic;
@@ -46,20 +48,19 @@ struct Class {
 };
 
 /* Selector for constructor overriding */
-void * ctor(void * self, va_list * app) __attribute__ ((visibility("default")));
+void * ctor(void * self, va_list * app);
 
 /* Selector for destructor overriding */
-void * dtor(void * self) __attribute__ ((visibility("default")));
+void * dtor(void * self);
 
-void * super_ctor(const void * class, void * self, va_list * app)
-	__attribute__ ((visibility("default")));
+void * super_ctor(const void * class, void * self, va_list * app);
 
-void * super_dtor(const void * class, void * self)
-	__attribute__ ((visibility("default")));
+void * super_dtor(const void * class, void * self);
 
-void * super_new(const void * class, const void * of, va_list * app)
-	__attribute__ ((visibility("default")));
+void * super_new(const void * class, const void * of, va_list * app);
 
-void * alloc(const void * _class) __attribute__ ((visibility("default")));
+void * alloc(const void * _class);
+
+#pragma GCC visibility pop
 
 #endif

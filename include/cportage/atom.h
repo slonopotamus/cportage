@@ -22,9 +22,13 @@
 
 #include "cportage/object.h"
 
-void * initAtom() __attribute__ ((visibility("default")));
+#pragma GCC visibility push(default)
+
+void * initAtom();
 
 /* new(Class(Atom), "=foo/bar-1.0") */
-extern const void * Atom __attribute__ ((visibility("default")));
+extern const void * Atom;
+
+#pragma GCC visibility pop
 
 #endif

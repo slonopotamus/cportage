@@ -22,10 +22,14 @@
 
 #include "cportage/object.h"
 
-void * initSettings() __attribute__ ((visibility("default")));
+#pragma GCC visibility push(default)
+
+void * initSettings();
 
 /* new(Class(Settings), "/path/to/config/root") */
-extern const void * Settings __attribute__ ((visibility("default")));
+extern const void * Settings;
+
+#pragma GCC visibility pop
 
 #endif
 
