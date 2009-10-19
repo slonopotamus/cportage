@@ -17,6 +17,9 @@ if(!${HAVE_ASPRINTF})
 endif()
 
 # Executables
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/config.h")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 add_library(cportage SHARED atom.c settings.c object.c)
 target_link_libraries(cportage ${PCRE_LIBRARY})
 add_executable(cmerge cmerge.c)

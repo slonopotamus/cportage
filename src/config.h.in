@@ -1,0 +1,1 @@
+#define CPORTAGE_VERSION "${cportage_VERSION}"
