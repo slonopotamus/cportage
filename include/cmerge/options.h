@@ -28,13 +28,16 @@ enum VERBOSITY_LEVEL {
 
 /* Global options */
 struct cmerge_gopts {
+	/* Verbosity level. See VERBOSITY_LEVEL for possible values */
 	int verbosity;
 	const char * config_root;
+	/* Leftover args, as returned by poptGetArgs */
 	const char ** args;
 };
 
 /* Merge/unmerge options */
 struct cmerge_mopts {
+	/* Reference to general options */
 	const struct cmerge_gopts * gopts;
 	int pretend;
 	int update;
