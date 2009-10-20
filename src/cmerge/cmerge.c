@@ -67,10 +67,12 @@ int main(const int argc, const char * argv[]) {
 			"Tells cmerge to run in verbose mode", NULL},
 		POPT_TABLEEND
 	};
-	struct cmerge_mopts mopts = { &gopts, 0 };
+	struct cmerge_mopts mopts = { &gopts, 0, 0 };
 	const struct poptOption moptions[] = {
 		{"pretend", 'p', POPT_ARG_NONE, &mopts.pretend, 0, "Instead of actually"
 			" performing any action, only displays what would be done", NULL},
+		{"update", 'u', POPT_ARG_NONE, &mopts.update, 0, "Updates packages"
+			" to the best version available", NULL},
 		POPT_TABLEEND
 	};
 	const struct poptOption popts[] = {

@@ -31,6 +31,7 @@ struct cmerge_gopts {
 struct cmerge_mopts {
 	const struct cmerge_gopts * gopts;
 	int pretend;
+	int update;
 };
 
 #endif
