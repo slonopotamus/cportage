@@ -26,6 +26,7 @@
 #include "cportage/settings.h"
 
 #include "config.h"
+#include "cmerge/actions.h"
 #include "cmerge/options.h"
 
 void print_version(void) {
@@ -38,11 +39,10 @@ void print_version(void) {
 }
 
 int main(const int argc, const char * argv[]) {
-	int depclean = 0, help = 0, info = 0, install = 0, search = 0, update = 0,
-		version = 0;
+	int clean = 0, help = 0, info = 0, install = 0, search = 0, version = 0;
 	const struct poptOption actions[] = {
 		#warning TODO: alias this to --clean, -c, --prune, -P, --unmerge
-		{"depclean", 'C', POPT_ARG_NONE, &depclean, 0, "Cleans the system"
+		{"depclean", 'C', POPT_ARG_NONE, &clean, 0, "Cleans the system"
 			" by removing packages that are not associated"
 			" with explicitly merged packages", NULL},
 		{"help", 'h', POPT_ARG_NONE, &help, 0, "Shows this help message", NULL},
@@ -51,8 +51,6 @@ int main(const int argc, const char * argv[]) {
 		{"install", 0, POPT_ARG_NONE, &install, 0, "Installs package", NULL},
 		{"search", 's', POPT_ARG_NONE, &search, 0, "Searches for matches"
 			" of the supplied string in the portage tree.", NULL},
-		{"update", 'u', POPT_ARG_NONE, &update, 0, "Updates packages"
-			" to the best version available", NULL},
 		{"version", 'V', POPT_ARG_NONE, &version, 0, "Outputs version", NULL},
 		POPT_TABLEEND
 	};
@@ -90,8 +88,7 @@ int main(const int argc, const char * argv[]) {
 	int rc = poptGetNextOpt(ctx);
 	int ret = EXIT_FAILURE;
 	if (rc == -1) {
-		int actions = depclean + help + info + install + search + update
-			+ version;
+		int actions = clean + help + info + install + search + version;
 
 		/*
 			Special case for `cmerge foo/bar`.
@@ -106,9 +103,17 @@ int main(const int argc, const char * argv[]) {
 		} else if (version) {
 			print_version();
 			ret = EXIT_SUCCESS;
+		} else if (clean) {
+			ret = clean_action(&mopts);
+		} else if (info) {
+			ret = info_action(&gopts);
+		} else if (install) {
+			ret = install_action(&mopts);
+		} else if (search) {
+			ret = search_action(&gopts);
 		} else {
-			puts("Action!");
-			ret = EXIT_SUCCESS;
+			fputs("Unknown action", stderr);
+			abort();
 		}
 	} else {
 		/* Invalid option */
