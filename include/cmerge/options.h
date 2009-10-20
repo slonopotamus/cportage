@@ -20,9 +20,15 @@
 #ifndef CMERGE_OPTIONS_H
 #define CMERGE_OPTIONS_H
 
+enum VERBOSITY_LEVEL {
+	VERBOSITY_QUIET = -1,
+	VERBOSITY_NORMAL = 0,
+	VERBOSITY_VERBOSE = 1
+};
+
 /* Global options */
 struct cmerge_gopts {
-	int verbose;
+	int verbosity;
 	const char * config_root;
 	const char ** args;
 };

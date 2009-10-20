@@ -56,15 +56,16 @@ int main(const int argc, const char * argv[]) {
 	};
 
 	const char * s = NULL;
-	struct cmerge_gopts gopts = { 0, "/", &s };
+	struct cmerge_gopts gopts = { VERBOSITY_NORMAL, "/", &s };
 
 	const struct poptOption goptions[] = {
 		{"config-root", 0, POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
 			&gopts.config_root, 0, "Specifies the location"
-			" for configuration files",
-			"DIR"},
-		{"verbose", 'v', POPT_ARG_NONE, &gopts.verbose, 0,
-			"Tells cmerge to run in verbose mode", NULL},
+			" for configuration files", "DIR"},
+		{"quiet", 'q', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_QUIET,
+			"Enables quiet output mode", NULL},
+		{"verbose", 'v', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_VERBOSE,
+			"Enables verbose output mode", NULL},
 		POPT_TABLEEND
 	};
 	struct cmerge_mopts mopts = { &gopts, 0, 0 };
