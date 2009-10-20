@@ -78,11 +78,11 @@ int main(const int argc, const char * argv[]) {
 	};
 	const struct poptOption popts[] = {
 		{NULL, 0, POPT_ARG_INCLUDE_TABLE, &actions, 0,
-			"Actions (only one can be specified):", NULL},
-		{NULL, 0, POPT_ARG_INCLUDE_TABLE, &goptions, 0, "General Options:", NULL},
+			"Actions (only one can be specified)", NULL},
+		{NULL, 0, POPT_ARG_INCLUDE_TABLE, &goptions, 0, "General Options", NULL},
 		{NULL, 0, POPT_ARG_INCLUDE_TABLE, &moptions, 0, "Merge Options"
 			" (taken into account when requested action performes"
-			" package (un)merging):", NULL},
+			" package (un)merging)", NULL},
 		POPT_TABLEEND
 	};
 	poptContext ctx = poptGetContext(NULL, argc, argv, popts,
