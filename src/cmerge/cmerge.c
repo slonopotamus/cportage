@@ -91,6 +91,9 @@ int main(const int argc, const char * argv[]) {
 	int rc = poptGetNextOpt(ctx);
 	int ret = EXIT_FAILURE;
 	if (rc == -1) {
+		#warning TODO: should it be free()'ed?
+		gopts.args = poptGetArgs(ctx);
+
 		int actions = clean + help + info + install + search + version;
 
 		/*
