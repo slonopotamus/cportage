@@ -22,9 +22,11 @@
 #include <stdlib.h>
 #include <popt.h>
 
-#include "config.h"
 #include "cportage/atom.h"
 #include "cportage/settings.h"
+
+#include "config.h"
+#include "cmerge/options.h"
 
 void print_version(void) {
 	printf("cportage %s\n\n", CPORTAGE_VERSION);
@@ -54,18 +56,22 @@ int main(const int argc, const char * argv[]) {
 		{"version", 'V', POPT_ARG_NONE, &version, 0, "Outputs version", NULL},
 		POPT_TABLEEND
 	};
-	char * config_root = "/";
-	int verbose = 0, pretend = 0;
+
+	const char * s = NULL;
+	struct cmerge_gopts gopts = { 0, "/", &s };
+
 	const struct poptOption goptions[] = {
 		{"config-root", 0, POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-			&config_root, 0, "Specifies the location for configuration files",
+			&gopts.config_root, 0, "Specifies the location"
+			" for configuration files",
 			"DIR"},
-		{"verbose", 'v', POPT_ARG_NONE, &verbose, 0,
+		{"verbose", 'v', POPT_ARG_NONE, &gopts.verbose, 0,
 			"Tells cmerge to run in verbose mode", NULL},
 		POPT_TABLEEND
 	};
+	struct cmerge_mopts mopts = { &gopts, 0 };
 	const struct poptOption moptions[] = {
-		{"pretend", 'p', POPT_ARG_NONE, &pretend, 0, "Instead of actually"
+		{"pretend", 'p', POPT_ARG_NONE, &mopts.pretend, 0, "Instead of actually"
 			" performing any action, only displays what would be done", NULL},
 		POPT_TABLEEND
 	};
