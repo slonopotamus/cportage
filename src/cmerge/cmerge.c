@@ -17,13 +17,9 @@
 	along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <popt.h>
-
-#include "cportage/atom.h"
-#include "cportage/settings.h"
 
 #include "config.h"
 #include "cmerge/actions.h"
