@@ -17,8 +17,8 @@
 	along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_CONFIG_H
-#define CPORTAGE_CONFIG_H
+#ifndef CPORTAGE_SETTINGS_H
+#define CPORTAGE_SETTINGS_H
 
 #include "cportage/object.h"
 
