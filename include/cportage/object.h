@@ -25,10 +25,6 @@
 	Supports inheritance, static/dynamic object methods, typesafe casts.
  */
 
-#include <stdbool.h>
-#include <stdarg.h>
-#include <stddef.h>
-
 /*
 	Ondemand class initializarion.
 	Always use this macro when first accessing some class outside of instance
@@ -52,9 +48,6 @@ void * ref(void * self);
 	if refcount becomes zero.
  */
 void unref(void * self);
-
-/* Equality comparison between two objects (also acts as a selector) */
-int cmp(const void * self,  const void * other);
 
 /* Type checking cast. Always use it when get objects in params. */
 void * cast(const void * class, const void * self);

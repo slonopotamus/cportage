@@ -22,6 +22,9 @@
 
 /* Use this header when you write your own classes */
 
+#include <stdarg.h>
+#include <stddef.h>
+
 #include "cportage/object.h"
 
 #pragma GCC visibility push(default)
@@ -43,7 +46,6 @@ struct Class {
 		void * (* ctor) (void * self, va_list * app);
 		void * (* dtor) (void * self);
 		void * (* new) (const void * class, va_list * app);
-		int    (* cmp)  (const void * self, const void * other);
 	})];
 };
 

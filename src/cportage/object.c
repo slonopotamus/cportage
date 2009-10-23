@@ -18,6 +18,9 @@
 */
 
 #include <assert.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +45,6 @@ struct Class {
 	void * (* ctor) (void * self, va_list * app);
 	void * (* dtor) (void * self);
 	void * (* new) (const void * class, va_list * app);
-	int    (* cmp)  (const void * self, const void * other);
 };
 
 static const void * classOf(const void * _self) {
@@ -73,16 +75,9 @@ void unref(void * _self) {
 	if (_self) {
 		struct Object * self = isObject(_self);
 		--self->refcount;
-		if (!self->refcount) {
+		if (!self->refcount)
 			free(dtor(self));
-		}
 	}
-}
-
-int cmp(const void *self, const void *other) {
-	const struct Class * class = classOf(self);
-	assert(class->cmp);
-	return class->cmp(self, cast(Object, other));
 }
 
 static size_t sizeOf(const void * self) {
@@ -107,9 +102,8 @@ static bool isOf(const void * self, const void * class) {
 		assert(isObject(self));
 		const struct Class * myClass = classOf(self);
 		while (myClass) {
-			if (myClass == class) {
+			if (myClass == class)
 				return true;
-			}
 			myClass = myClass->super;
 		}
 		return false;
@@ -128,12 +122,6 @@ static void * Object_ctor(void * self, va_list * app __attribute__((unused))) {
 
 static void * Object_dtor(void * self) {
 	return cast(Object, self);
-}
-
-static int Object_cmp(const void * _self, const void * _other) {
-	const struct Object * self = cast(Object, _self);
-	const struct Object * other = cast(Object, _other);
-	return self - other;
 }
 
 void * alloc(const void * _class) {
@@ -164,13 +152,13 @@ void * new(const void * _class, ...) {
 
 void * super_ctor(const void * class, void * self, va_list * app) {
 	const struct Class * superclass = super(class);
-	assert(self && superclass && superclass->ctor);
+	assert(superclass && superclass->ctor);
 	return superclass->ctor(cast(Object, self), app);
 }
 
 void * super_dtor(const void * class, void * self) {
 	const struct Class * superclass = super(class);
-	assert(self && superclass && superclass->dtor);
+	assert(superclass && superclass->dtor);
 	return superclass->dtor(cast(Object, self));
 }
 
@@ -199,15 +187,12 @@ static void * Class_ctor(void * _self, va_list * app) {
 	va_list ap = * app;
 	while ((selector = va_arg(ap, voidf))) {
 		voidf method = va_arg(ap, voidf);
-		if (selector == (voidf) ctor) {
+		if (selector == (voidf) ctor)
 			* (voidf *) &self->ctor = method;
-		} else if (selector == (voidf) dtor) {
+		else if (selector == (voidf) dtor)
 			* (voidf *) &self->dtor = method;
-		} else if (selector == (voidf) new) {
+		else if (selector == (voidf) new)
 			* (voidf *) &self->new = method;
-		} else if (selector == (voidf) cmp) {
-			* (voidf *) &self->cmp = method;
-		}
 	}
 	return self;
 }
@@ -221,11 +206,11 @@ static void * Class_dtor(void * _self) {
 static const struct Class object[] = {
 	{
 		{ MAGIC, &object[1], 1}, "Object", NULL, sizeof(struct Object),
-		Object_ctor, Object_dtor, Object_new, Object_cmp
+		Object_ctor, Object_dtor, Object_new
 	},
 	{
 		{ MAGIC, &object[1], 1}, "Class", &object[0], sizeof(struct Class),
-		Class_ctor, Class_dtor, Object_new, Object_cmp
+		Class_ctor, Class_dtor, Object_new
 	}
 };
 
