@@ -18,6 +18,7 @@
 */
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -38,12 +39,11 @@ char * concat(const char * first, const char * second) {
 
 void trim(char * s) {
 	assert(s);
-	const char * whitespace = " \t\n\r";
 	size_t first = 0;
-	while (s[first] && strchr(whitespace, s[first]))
+	while (s[first] && isspace(s[first]))
 		++first;
 	size_t last = strlen(s) - 1;
-	while (last > first && strchr(whitespace, s[last]))
+	while (last > first && isspace(s[last]))
 		--last;
 	memmove(s, s + first, last - first + 1);
 	s[last - first + 1] = '\0';
