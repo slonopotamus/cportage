@@ -24,6 +24,7 @@
 #include "cportage/object.r"
 #include "cportage/porttree.h"
 #include "cportage/settings.h"
+#include "cportage/strings.h"
 
 struct Porttree {
 	struct Object _;
@@ -34,11 +35,8 @@ const void * Porttree;
 
 char * porttree_get_path(const void * _self, const char * relative) {
 	struct Porttree * self = cast(Porttree, _self);
-	assert(relative[0] == '/');
-	char * result;
-	const int rc = asprintf(&result, "%s%s", self->portdir, relative);
-	assert(rc != -1);
-	return result;
+	assert(relative && relative[0] == '/');
+	return concat(self->portdir, relative);
 }
 
 static void * Porttree_ctor(void * _self, va_list * app) {

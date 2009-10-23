@@ -24,8 +24,10 @@
 #include <string.h>
 #include <sys/utsname.h>
 
-#include "cportage/settings.h"
+#include "cportage/atom.h"
 #include "cportage/porttree.h"
+#include "cportage/settings.h"
+#include "cportage/strings.h"
 
 #include "config.h"
 #include "cmerge/actions.h"
@@ -63,6 +65,33 @@ static void print_porttree_timestamp(const void * porttree) {
 	free(filename);
 }
 
+static void print_packages(const void * porttree) {
+	char * filename = porttree_get_path(porttree, "/profiles/info_pkgs");
+	FILE * f = fopen(filename, "r");
+	if (f) {
+		char buf[BUFSIZ];
+		char * s;
+		while ((s = fgets(buf, sizeof(buf), f))) {
+			trim(s);
+			if (s[0] == '#') {
+				continue;
+			}
+			void * atom = new(Class(Atom), s);
+			s = concat(s, ":");
+			if (atom) {
+				const char * version = "3.2_p39";
+				printf("%-20s %s\n", s, version);
+			} else {
+				printf("%-20s %s\n", s, "[NOT VALID]");
+			}
+			free(s);
+			unref(atom);
+		}
+		fclose(f);
+	}
+	free(filename);
+}
+
 int info_action(const struct cmerge_gopts * options) {
 	void * settings = new(Class(Settings), options->config_root);
 	if (!settings)
@@ -84,13 +113,7 @@ int info_action(const struct cmerge_gopts * options) {
 	printf("%s-%s-%s-%s-with-%s\n",
 		utsname.sysname, utsname.release, utsname.machine, cpu, system);
 	print_porttree_timestamp(porttree);
-
-	#warning TODO: list packages from $PORTDIR/profiles/info_pkgs
-	for (int i = 0; i < 1; ++i) {
-		const char * atom = "app-shells/bash:";
-		const char * version = "3.2_p39";
-		printf("%-20s %s\n", atom, version);
-	}
+	print_packages(porttree);
 
 	#warning TODO: list vars from $PORTDIR/profiles/info_vars
 	for  (int i = 0; i < 1; ++i) {
