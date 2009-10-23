@@ -73,7 +73,7 @@ static void print_packages(const void * porttree) {
 		char * s;
 		while ((s = fgets(buf, sizeof(buf), f))) {
 			trim(s);
-			if (s[0] == '#') {
+			if (s[0] == '#' || s[0] = '\0') {
 				continue;
 			}
 			void * atom = new(Class(Atom), s);
