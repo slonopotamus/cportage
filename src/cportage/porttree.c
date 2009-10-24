@@ -39,10 +39,10 @@ char * porttree_get_path(const void * _self, const char * relative) {
 	return concat(self->portdir, relative);
 }
 
-static void * Porttree_ctor(void * _self, va_list * app) {
-	super_ctor(Porttree, _self, app);
+static void * Porttree_ctor(void * _self, va_list ap) {
+	super_ctor(Porttree, _self, ap);
 	struct Porttree * self = cast(Porttree, _self);
-	const void * settings = cast(Class(Settings), va_arg(* app, void *));
+	const void * settings = cast(Class(Settings), va_arg(ap, void *));
 	#warning TODO: read portdir from settings
 	const int rc = asprintf(&self->portdir, "%s", "/usr/portage");
 	assert(rc != -1);

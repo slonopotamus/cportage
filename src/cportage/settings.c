@@ -26,8 +26,8 @@ struct Settings {
 	struct Object _;
 };
 
-static void * Settings_new(const void * _class, va_list * app) {
-	const char * config_root = va_arg(* app, char *);
+static void * Settings_new(const void * _class, va_list ap) {
+	const char * config_root = va_arg(ap, char *);
 	assert(config_root);
 	struct Settings * settings = super_ctor(Settings, alloc(_class), NULL);
 	return settings;

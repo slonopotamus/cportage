@@ -58,9 +58,9 @@ struct AtomClass {
 
 extern const void * AtomClass;
 
-static void * Atom_new(const void * _class, va_list * app) {
+static void * Atom_new(const void * _class, va_list ap) {
 	const struct AtomClass * class = cast(AtomClass, _class);
-	const char * s = va_arg(* app, char *);
+	const char * s = va_arg(ap, char *);
 	assert(s);
 	assert(class->atom_re);
 
@@ -141,8 +141,8 @@ static void * Atom_dtor(void *_self) {
 	return self;
 }
 
-static void * AtomClass_ctor(void * _self, va_list * app) {
-	super_ctor(AtomClass, _self, app);
+static void * AtomClass_ctor(void * _self, va_list ap) {
+	super_ctor(AtomClass, _self, ap);
 	struct AtomClass * self = cast(AtomClass, _self);
 
 	/*

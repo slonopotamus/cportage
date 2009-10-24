@@ -43,23 +43,23 @@ struct Class {
 		const char * name;
 		const struct Class * super;
 		size_t size;
-		void * (* ctor) (void * self, va_list * app);
+		void * (* ctor) (void * self, va_list ap);
 		void * (* dtor) (void * self);
-		void * (* new) (const void * class, va_list * app);
+		void * (* new) (const void * class, va_list ap);
 	})];
 };
 
 /* Selector for constructor overriding */
-void * ctor(void * self, va_list * app);
+void * ctor(void * self, va_list ap);
 
 /* Selector for destructor overriding */
 void * dtor(void * self);
 
-void * super_ctor(const void * class, void * self, va_list * app);
+void * super_ctor(const void * class, void * self, va_list ap);
 
 void * super_dtor(const void * class, void * self);
 
-void * super_new(const void * class, const void * of, va_list * app);
+void * super_new(const void * class, const void * of, va_list ap);
 
 void * alloc(const void * _class);
 
