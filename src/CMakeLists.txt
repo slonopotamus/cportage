@@ -14,7 +14,12 @@ endif()
 
 check_function_exists(asprintf HAVE_ASPRINTF)
 if(!${HAVE_ASPRINTF})
-	message(FATAL_ERROR "asprintf function is required")
+	message(FATAL_ERROR "asprintf function not found")
+endif()
+
+check_function_exists(getline HAVE_GETLINE)
+if(!${HAVE_GETLINE})
+	message(FATAL_ERROR "getline function not found")
 endif()
 
 add_subdirectory(cportage)

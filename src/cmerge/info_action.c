@@ -69,24 +69,32 @@ static void print_packages(const void * porttree) {
 	char * filename = porttree_get_path(porttree, "/profiles/info_pkgs");
 	FILE * f = fopen(filename, "r");
 	if (f) {
-		char buf[BUFSIZ];
-		char * s;
-		while ((s = fgets(buf, sizeof(buf), f))) {
-			trim(s);
-			if (s[0] == '#' || s[0] == '\0') {
-				continue;
-			}
-			void * atom = new(Class(Atom), s);
-			s = concat(s, ":");
-			if (atom) {
-				const char * version = "3.2_p39";
-				printf("%-20s %s\n", s, version);
+		size_t bufsize, i = 0;
+		ssize_t len;
+		char * s = NULL;
+		while ((len = getline(&s, &bufsize, f)) != -1) {
+			++i;
+			if (strlen(s) == (size_t)len) {
+				trim(s);
+				if (s[0] == '#' || s[0] == '\0') {
+					continue;
+				}
+				void * atom = new(Class(Atom), s);
+				char * s1 = concat(s, ":");
+				if (atom) {
+					const char * version = "3.2_p39";
+					printf("%-20s %s\n", s1, version);
+				} else {
+					printf("%-20s %s\n", s1, "[NOT VALID]");
+				}
+				free(s1);
+				unref(atom);
 			} else {
-				printf("%-20s %s\n", s, "[NOT VALID]");
+				fprintf(stderr, "null byte in %s on line %zd, skipping line\n",
+					filename, i);
 			}
-			free(s);
-			unref(atom);
 		}
+		free(s);
 		fclose(f);
 	}
 	free(filename);
