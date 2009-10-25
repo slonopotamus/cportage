@@ -25,6 +25,7 @@
 #include <sys/utsname.h>
 
 #include "cportage/atom.h"
+#include "cportage/io.h"
 #include "cportage/porttree.h"
 #include "cportage/settings.h"
 #include "cportage/strings.h"
@@ -45,19 +46,17 @@ static void print_version(const struct utsname * utsname) {
 		utsname->release, utsname->machine);
 }
 
+static void print_timestamp_line(void *ctx, char * s) {
+	bool * need_newline = ctx;
+	* need_newline = s[strlen(s) - 1] != '\n';
+	fputs(s, stdout);
+}
+
 static void print_porttree_timestamp(const void * porttree) {
 	char * filename = porttree_get_path(porttree, "/metadata/timestamp.chk");
 	fputs("Timestamp of tree: ", stdout);
-	FILE * f = fopen(filename, "r");
-	if (f) {
-		char buf[BUFSIZ];
-		char * s;
-		bool need_newline = true;
-		while ((s = fgets(buf, sizeof(buf), f))) {
-			need_newline = s[strlen(s) - 1] != '\n';
-			fputs(s, stdout);
-		}
-		fclose(f);
+	bool need_newline = true;
+	if (getrawlines(filename, &need_newline, &print_timestamp_line)) {
 		if (need_newline)
 			puts("");
 	} else
@@ -65,38 +64,22 @@ static void print_porttree_timestamp(const void * porttree) {
 	free(filename);
 }
 
+static void print_package(void *ctx, char * s) {
+	void * atom = new(Class(Atom), s);
+	char * s1 = concat(s, ":");
+	if (atom) {
+		const char * version = "3.2_p39";
+		printf("%-20s %s\n", s1, version);
+	} else {
+		printf("%-20s %s\n", s1, "[NOT VALID]");
+	}
+	free(s1);
+	unref(atom);
+}
+
 static void print_packages(const void * porttree) {
 	char * filename = porttree_get_path(porttree, "/profiles/info_pkgs");
-	FILE * f = fopen(filename, "r");
-	if (f) {
-		size_t bufsize, i = 0;
-		ssize_t len;
-		char * s = NULL;
-		while ((len = getline(&s, &bufsize, f)) != -1) {
-			++i;
-			if (strlen(s) == (size_t)len) {
-				trim(s);
-				if (s[0] == '#' || s[0] == '\0') {
-					continue;
-				}
-				void * atom = new(Class(Atom), s);
-				char * s1 = concat(s, ":");
-				if (atom) {
-					const char * version = "3.2_p39";
-					printf("%-20s %s\n", s1, version);
-				} else {
-					printf("%-20s %s\n", s1, "[NOT VALID]");
-				}
-				free(s1);
-				unref(atom);
-			} else {
-				fprintf(stderr, "null byte in %s on line %zd, skipping line\n",
-					filename, i);
-			}
-		}
-		free(s);
-		fclose(f);
-	}
+	getlines(filename, NULL, &print_package);
 	free(filename);
 }
 
