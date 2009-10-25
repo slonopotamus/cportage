@@ -45,6 +45,7 @@ void trim(char * s) {
 	size_t last = strlen(s) - 1;
 	while (last > first && isspace(s[last]))
 		--last;
-	memmove(s, s + first, last - first + 1);
+	if (first != 0)
+		memmove(s, s + first, last - first + 1);
 	s[last - first + 1] = '\0';
 }
