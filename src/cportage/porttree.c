@@ -20,6 +20,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+/* Required for stat() */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "cportage/object.r"
 #include "cportage/porttree.h"
@@ -43,8 +49,22 @@ static void * Porttree_ctor(void * _self, va_list ap) {
 	super_ctor(Porttree, _self, ap);
 	struct Porttree * self = cast(Porttree, _self);
 	const void * settings = cast(Class(Settings), va_arg(ap, void *));
+
 	self->portdir = settings_get_default(settings, "PORTDIR", "/usr/portage");
 	assert(self->portdir);
+	const size_t len = strlen(self->portdir);
+	/* Remove trailing slashes */
+	for (size_t i = len; i > 1 && self->portdir[i - 1] == '/'; --i)
+		self->portdir[i - 1] = '\0';
+	/* Check portdir */
+	struct stat buf;
+	if (stat(self->portdir, &buf)) {
+		fprintf(stderr, "ERROR: Could not access PORTDIR %s: ", self->portdir);
+		perror(NULL);
+	} else if (!S_ISDIR(buf.st_mode)) {
+		fprintf(stderr, "ERROR: PORTDIR %s is not a directory\n", self->portdir);
+	}
+
 	return self;
 }
 
