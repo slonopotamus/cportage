@@ -82,14 +82,19 @@ static void print_packages(const void * porttree) {
 	free(filename);
 }
 
-static void print_setting(void * ctx __attribute__((unused)), char * s) {
-	#warning TODO: read var value from settings
-	printf("%s=\"%s\"\n", s, "arm");
+static void print_setting(void * settings, char * s) {
+	char * value = settings_get(settings, s);
+	if (value)
+		printf("%s=\"%s\"\n", s, value);
+	else {
+		printf("%s unset\n", s);
+	}
+	free(value);
 }
 
-static void print_settings(const void * porttree) {
+static void print_settings(const void * porttree, void * settings) {
 	char * filename = porttree_get_path(porttree, "/profiles/info_vars");
-	processlines(filename, NULL, &print_setting);
+	processlines(filename, settings, &print_setting);
 	free(filename);
 }
 
@@ -116,7 +121,7 @@ int info_action(const struct cmerge_gopts * options) {
 		utsname.sysname, utsname.release, utsname.machine, cpu, system);
 	print_porttree_timestamp(porttree);
 	print_packages(porttree);
-	print_settings(porttree);
+	print_settings(porttree, settings);
 
 	unref(porttree);
 	unref(settings);

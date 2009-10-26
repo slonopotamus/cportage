@@ -43,9 +43,8 @@ static void * Porttree_ctor(void * _self, va_list ap) {
 	super_ctor(Porttree, _self, ap);
 	struct Porttree * self = cast(Porttree, _self);
 	const void * settings = cast(Class(Settings), va_arg(ap, void *));
-	#warning TODO: read portdir from settings
-	const int rc = asprintf(&self->portdir, "%s", "/usr/portage");
-	assert(rc != -1);
+	self->portdir = settings_get_default(settings, "PORTDIR", "/usr/portage");
+	assert(self->portdir);
 	return self;
 }
 

@@ -29,6 +29,18 @@ void * initSettings();
 /* new(Class(Settings), "/path/to/config/root") */
 extern const void * Settings;
 
+/* Same as settings_get_default(self, key, NULL) */
+char * settings_get(const void * self, const char * key);
+
+/*
+	Searches settings value with given key.
+	It's caller responsibility to free returned value.
+	If no matching entry found, default is returned (strdup'ed if nonnull).
+ */
+char * settings_get_default(const void * self,
+	const char * key,
+	const char * _default);
+
 #pragma GCC visibility pop
 
 #endif

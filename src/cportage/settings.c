@@ -18,24 +18,52 @@
 */
 
 #include <assert.h>
+#include <string.h>
 
 #include "cportage/settings.h"
 #include "cportage/object.r"
 
-struct Settings {
-	struct Object _;
+struct settings_entry {
+	char * name;
+	char * value;
+	struct settings_entry * next;
 };
 
-static void * Settings_new(const void * _class, va_list ap) {
-	const char * config_root = va_arg(ap, char *);
-	assert(config_root);
-	struct Settings * settings = super_ctor(Settings, alloc(_class), NULL);
-	return settings;
-}
+struct Settings {
+	struct Object _;
+	struct settings_entry * entries;
+};
 
 const void * Settings;
 
+char * settings_get_default(const void * _self,
+		const char * key,
+		const char * _default) {
+	struct Settings * self = cast(Settings, _self);
+	assert(key);
+	struct settings_entry * e = self->entries;
+	while (e) {
+		if (strcmp(e->name, key) == 0) {
+			return strdup(e->value);
+		}
+		e = e->next;
+	}
+	return _default == NULL ? NULL : strdup(_default);
+}
+
+char * settings_get(const void * _self, const char * key) {
+	return settings_get_default(_self, key, NULL);
+}
+
+static void * Settings_ctor(void * _self, va_list ap) {
+	super_ctor(Settings, _self, ap);
+	struct Settings * self = cast(Settings, _self);
+	const char * config_root = va_arg(ap, char *);
+	assert(config_root);
+	return self;
+}
+
 void * initSettings() {
 	return new(Class, "Settings", Object, sizeof(struct Settings),
-		new, Settings_new);
+		ctor, Settings_ctor);
 }
