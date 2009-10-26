@@ -25,7 +25,7 @@
 #include "cportage/io.h"
 #include "cportage/strings.h"
 
-bool getrawlines(const char * filename,
+bool processrawlines(const char * filename,
 		void * ctx,
 		void (* func) (void *ctx, char * s)) {
 	FILE * f = fopen(filename, "r");
@@ -47,25 +47,25 @@ bool getrawlines(const char * filename,
 	return true;
 }
 
-struct _getlinectx {
+struct processlinectx {
 	void * orig_ctx;
 	void (* orig_func) (void * ctx, char * s);
 };
 
-static void _getline(void * _ctx, char * s) {
+static void processline(void * _ctx, char * s) {
 	char * comment = strchr(s, '#');
 	if (comment)
 		* comment = '\0';
 	trim(s);
 	if (s[0] != '\0') {
-		struct _getlinectx * ctx = _ctx;
+		struct processlinectx * ctx = _ctx;
 		ctx->orig_func(ctx->orig_ctx, s);
 	}
 }
 
-bool getlines(const char * filename,
+bool processlines(const char * filename,
 		void * orig_ctx,
 		void (* func) (void * ctx, char * s)) {
-	struct _getlinectx ctx = { orig_ctx, func };
-	return getrawlines(filename, &ctx, &_getline);
+	struct processlinectx ctx = { orig_ctx, func };
+	return processrawlines(filename, &ctx, &processline);
 }

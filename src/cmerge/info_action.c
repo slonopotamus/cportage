@@ -56,7 +56,7 @@ static void print_porttree_timestamp(const void * porttree) {
 	char * filename = porttree_get_path(porttree, "/metadata/timestamp.chk");
 	fputs("Timestamp of tree: ", stdout);
 	bool need_newline = true;
-	if (getrawlines(filename, &need_newline, &print_timestamp_line)) {
+	if (processrawlines(filename, &need_newline, &print_timestamp_line)) {
 		if (need_newline)
 			puts("");
 	} else
@@ -64,22 +64,32 @@ static void print_porttree_timestamp(const void * porttree) {
 	free(filename);
 }
 
-static void print_package(void *ctx, char * s) {
+static void print_package(void * ctx __attribute__((unused)), char * s) {
 	void * atom = new(Class(Atom), s);
 	char * s1 = concat(s, ":");
 	if (atom) {
 		const char * version = "3.2_p39";
 		printf("%-20s %s\n", s1, version);
-	} else {
+	} else
 		printf("%-20s %s\n", s1, "[NOT VALID]");
-	}
 	free(s1);
 	unref(atom);
 }
 
 static void print_packages(const void * porttree) {
 	char * filename = porttree_get_path(porttree, "/profiles/info_pkgs");
-	getlines(filename, NULL, &print_package);
+	processlines(filename, NULL, &print_package);
+	free(filename);
+}
+
+static void print_setting(void * ctx __attribute__((unused)), char * s) {
+	#warning TODO: read var value from settings
+	printf("%s=\"%s\"\n", s, "arm");
+}
+
+static void print_settings(const void * porttree) {
+	char * filename = porttree_get_path(porttree, "/profiles/info_vars");
+	processlines(filename, NULL, &print_setting);
 	free(filename);
 }
 
@@ -94,6 +104,7 @@ int info_action(const struct cmerge_gopts * options) {
 	struct utsname utsname;
 	int rc = uname(&utsname);
 	assert(rc == 0);
+
 	print_version(&utsname);
 	puts("=================================================================");
 	fputs("System uname: ", stdout);
@@ -105,13 +116,8 @@ int info_action(const struct cmerge_gopts * options) {
 		utsname.sysname, utsname.release, utsname.machine, cpu, system);
 	print_porttree_timestamp(porttree);
 	print_packages(porttree);
+	print_settings(porttree);
 
-	#warning TODO: list vars from $PORTDIR/profiles/info_vars
-	for  (int i = 0; i < 1; ++i) {
-		const char * var = "ACCEPT_KEYWORDS";
-		const char * value = "arm";
-		printf("%s=\"%s\"\n", var, value);
-	}
 	unref(porttree);
 	unref(settings);
 	return EXIT_SUCCESS;

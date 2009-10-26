@@ -33,7 +33,7 @@
 	Skips lines that contain \0 char.
 	@return true if file was read successfully, false otherwise.
 */
-bool getrawlines(const char * filename,
+bool processrawlines(const char * filename,
 	/* Arbitrary object that is passed to func. Useful to accumulate result. */
 	void * ctx,
 	/* Line handling function */
@@ -43,7 +43,7 @@ bool getrawlines(const char * filename,
 	Similar to getlines but additionally trims lines, skips empty lines
 	and comments starting with #.
  */
-bool getlines(const char * filename,
+bool processlines(const char * filename,
 	void * ctx,
 	void (* func) (void *ctx, char * s));
 
