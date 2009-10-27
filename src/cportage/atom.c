@@ -149,13 +149,13 @@ static void * AtomClass_ctor(void * _self, va_list ap) {
 		2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
 		It must not begin with a hyphen or a dot.
 	 */
-	const char * cat  = "([\\w+][\\w+.-]*)";
+	const char * cat = "([\\w+][\\w+.-]*)";
 	/*
 		2.1.2 A package name may contain any of the characters [A-Za-z0-9+_-].
 		It must not begin with a hyphen,
 		and must not end in a hyphen followed by _valid version string_.
 	*/
-	const char * pkg  = "([\\w+][\\w+-]*?)";
+	const char * pkg = "([\\w+][\\w+-]*?)";
 	/*
 		2.1.3 A slot name may contain any of the characters [A-Za-z0-9+_.-].
 		It must not begin with a hyphen or a dot.
@@ -167,10 +167,10 @@ static void * AtomClass_ctor(void * _self, va_list ap) {
 	 */
 	const char * use_name = "[A-Za-z0-9][\\w+@-]*";
 	/* See 2.2 section for version syntax. */
-	const char * ver  = "(cvs\\.)?(\\d+)((\\.\\d+)*)([a-z]?)"
-		"((_(pre|p|beta|alpha|rc)\\d*)*)(-r\\d+)?";
+	const char * ver
+		= "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?";
 	#warning TODO: add reference to PMS
-	const char * op   = "(?P<op>[=~]|[><]=?)";
+	const char * op = "(?P<op>[=~]|[><]=?)";
 
 	char * use, * use_item, * cp, * cpv, * atom_re_str;
 	if (asprintf(&use_item, "(?:!?%s[=?]|-?%s)",
