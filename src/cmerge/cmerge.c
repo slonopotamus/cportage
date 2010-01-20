@@ -1,5 +1,5 @@
 /*
-    Copyright 2009, Marat Radchenko
+    Copyright 2009-2010, Marat Radchenko
 
     This file is part of cportage.
 
@@ -27,7 +27,7 @@
 
 static void print_version(void) {
     printf("cportage %s\n\n", CPORTAGE_VERSION);
-    puts("Copyright (C) 2009 Marat Radchenko <marat@slonopotamus.org>\n"
+    puts("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
          "License GPLv3+: GNU GPL version 3 or later"
          " <http://gnu.org/licenses/gpl.html>\n"
          "This is free software: you are free to change and redistribute it.\n"
