@@ -68,8 +68,6 @@ char * cportage_settings_get_profile(const void * _self) {
     return concat(self->config_root, "/etc/make.profile", NULL);
 }
 
-
-
 static void * Settings_ctor(void * _self, va_list ap) {
     cportage_super_ctor(CPortageSettings, _self, ap);
     struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
