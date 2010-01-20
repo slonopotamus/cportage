@@ -17,8 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_PORTTREE_H
-#define CPORTAGE_PORTTREE_H
+#ifndef CPORTAGE_OBJECT_IMPL_H
+#define CPORTAGE_OBJECT_IMPL_H
+
+/* Use this header when you write your own classes */
+
+#include <stddef.h>
+
+#include "cportage/object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,17 +32,25 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-void * cportage_initCPortagePorttree(void);
+struct CPortageObject {
+    char _ [sizeof(struct {
+        unsigned long magic;
+        const struct CPortageClass * klass;
+        int refcount;
+    })];
+};
 
-/* new(Class(CPortagePorttree), settings) */
-extern const void * CPortagePorttree;
-
-/*
-    Constructs absolute path from tree root.
-    It's up to the caller to free result.
-    @relative must have leading slash.
- */
-char * cportage_porttree_get_path(const void * _self, const char * relative);
+struct CPortageClass {
+    char _ [sizeof(struct {
+        const struct CPortageObject _;
+        const char * name;
+        const struct Class * super;
+        size_t size;
+        void * (* ctor) (void * self, va_list ap);
+        void * (* dtor) (void * self);
+        void * (* _new) (const void * _class, va_list ap);
+    })];
+};
 
 #pragma GCC visibility pop
 
@@ -45,4 +59,3 @@ char * cportage_porttree_get_path(const void * _self, const char * relative);
 #endif
 
 #endif
-

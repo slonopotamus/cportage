@@ -1,11 +1,8 @@
-# Dependencies
-find_package(PCRE REQUIRED)
-
 # Executables
 add_library(cportage SHARED atom.c io.c object.c porttree.c settings.c strings.c)
-target_link_libraries(cportage ${PCRE_LIBRARY})
+target_link_libraries(cportage ${PCRE_LIBRARY} "iberty")
 
 # Installation
 install(TARGETS
-	cportage
-	LIBRARY DESTINATION lib)
+  cportage
+  LIBRARY DESTINATION lib)

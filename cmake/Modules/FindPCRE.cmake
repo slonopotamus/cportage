@@ -2,27 +2,27 @@
 # Find the native PCRE includes and library
 #
 #  PCRE_INCLUDE_DIR - where to find pcre.h, etc.
-#  PCRE_LIBRARIES   - List of libraries when using PCRE.
-#  PCRE_FOUND       - True if PCRE found.
+#  PCRE_LIBRARIES   - List of libraries when using pcre.
+#  PCRE_FOUND       - True if pcre found.
 
-IF (PCRE_INCLUDE_DIR)
+if(PCRE_INCLUDE_DIR)
   # Already in cache, be silent
-  SET(PCRE_FIND_QUIETLY TRUE)
-ENDIF (PCRE_INCLUDE_DIR)
+  set(PCRE_FIND_QUIETLY TRUE)
+endif()
 
-FIND_PATH(PCRE_INCLUDE_DIR pcre.h)
+find_path(PCRE_INCLUDE_DIR pcre.h)
 
-FIND_LIBRARY(PCRE_LIBRARY NAMES pcre )
+find_library(PCRE_LIBRARY NAMES pcre)
 
-# handle the QUIETLY and REQUIRED arguments and set PCRE_FOUND to TRUE if 
+# handle the QUIETLY and REQUIRED arguments and set PCRE_FOUND to TRUE if
 # all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(PCRE DEFAULT_MSG PCRE_LIBRARY PCRE_INCLUDE_DIR)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(PCRE DEFAULT_MSG PCRE_LIBRARY PCRE_INCLUDE_DIR)
 
-IF(PCRE_FOUND)
-  SET( PCRE_LIBRARIES ${PCRE_LIBRARY} )
-ELSE(PCRE_FOUND)
-  SET( PCRE_LIBRARIES )
-ENDIF(PCRE_FOUND)
+if(PCRE_FOUND)
+  set(PCRE_LIBRARIES ${PCRE_LIBRARY})
+else()
+  set(PCRE_LIBRARIES)
+endif()
 
-MARK_AS_ADVANCED( PCRE_LIBRARY PCRE_INCLUDE_DIR )
+mark_as_advanced(PCRE_LIBRARY PCRE_INCLUDE_DIR)
