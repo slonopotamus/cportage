@@ -25,14 +25,20 @@
 #ifndef CPORTAGE_STRINGS_H
 #define CPORTAGE_STRINGS_H
 
-#pragma GCC visibility push(default)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-char * cportage_concat(const char * first, const char * second);
+#pragma GCC visibility push(default)
 
 /** Trims given string (modifies it inplace). */
 void cportage_trim(char * s);
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

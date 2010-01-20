@@ -24,19 +24,6 @@
 
 #include "cportage/strings.h"
 
-char * cportage_concat(const char * first, const char * second) {
-    assert(first);
-    assert(second);
-    const size_t firstlen = strlen(first);
-    const size_t secondlen = strlen(second);
-    char * result = malloc(firstlen + secondlen + 1);
-    assert(result);
-    memcpy(result, first, firstlen);
-    memcpy(result + firstlen, second, secondlen);
-    result[firstlen + secondlen] = '\0';
-    return result;
-}
-
 void cportage_trim(char * s) {
     assert(s);
     size_t first = 0;

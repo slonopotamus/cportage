@@ -18,6 +18,7 @@
 */
 
 #include <assert.h>
+#include <libiberty.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,7 @@ static void print_porttree_timestamp(const void * porttree) {
 
 static void print_package(void * ctx __attribute__((unused)), char * s) {
     void * atom = cportage_new(CPortageClass(CPortageAtom), s);
-    char * s1 = cportage_concat(s, ":");
+    char * s1 = concat(s, ":", NULL);
     if (atom) {
         const char * version = "3.2_p39";
         printf("%-20s %s\n", s1, version);

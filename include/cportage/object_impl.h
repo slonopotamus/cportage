@@ -26,6 +26,10 @@
 
 #include "cportage/object.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC visibility push(default)
 
 struct CPortageObject {
@@ -49,5 +53,9 @@ struct CPortageClass {
 };
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

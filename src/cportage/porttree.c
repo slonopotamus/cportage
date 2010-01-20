@@ -18,6 +18,7 @@
 */
 
 #include <assert.h>
+#include <libiberty.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +43,7 @@ const void * CPortagePorttree;
 char * cportage_porttree_get_path(const void * _self, const char * relative) {
     struct CPortagePorttree * self = cportage_cast(CPortagePorttree, _self);
     assert(relative && relative[0] == '/');
-    return cportage_concat(self->portdir, relative);
+    return concat(self->portdir, relative);
 }
 
 static void * Porttree_ctor(void * _self, va_list ap) {

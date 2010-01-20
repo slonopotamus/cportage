@@ -18,6 +18,7 @@
 */
 
 #include <assert.h>
+#include <libiberty.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -127,8 +128,7 @@ static void * Object_dtor(void * self) {
 void * cportage_alloc(const void * _class) {
     const struct CPortageClass * klass = cportage_cast(CPortageClass, _class);
     assert(klass->size >= sizeof(struct CPortageObject));
-    struct CPortageObject * object = calloc(1, klass->size);
-    assert(object);
+    struct CPortageObject * object = xcalloc(1, klass->size);
     object->magic = MAGIC;
     object->klass = klass;
     object->refcount = 1;

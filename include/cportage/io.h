@@ -26,6 +26,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC visibility push(default)
 
 /*
@@ -48,6 +52,10 @@ bool cportage_processlines(const char * filename,
                   void (* func) (void *ctx, char * s));
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -22,6 +22,10 @@
 
 #include "cportage/object.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC visibility push(default)
 
 void * cportage_initCPortageAtom(void);
@@ -30,5 +34,9 @@ void * cportage_initCPortageAtom(void);
 extern const void * CPortageAtom;
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

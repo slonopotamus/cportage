@@ -22,6 +22,12 @@
 
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#pragma GCC visibility push(default)
+
 /*
     OOP system, heavily based on 'Object-Oriented Programming With ANSI-C' paper.
     Supports inheritance, static/dynamic object methods, typesafe casts.
@@ -33,8 +39,6 @@
     of that class (or its descendant).
  */
 #define CPortageClass(x) x ? x : ( x = cportage_init ## x () )
-
-#pragma GCC visibility push(default)
 
 /** Pointer to Object class. */
 extern const void * CPortageObject;
@@ -75,5 +79,9 @@ void * cportage_super_new(const void * _class, const void * of, va_list ap);
 void * cportage_alloc(const void * _class);
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

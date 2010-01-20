@@ -22,6 +22,10 @@
 
 #include "cportage/object.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC visibility push(default)
 
 void * cportage_initCPortageSettings(void);
@@ -42,6 +46,10 @@ char * cportage_settings_get_default(const void * self,
                             const char * _default);
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

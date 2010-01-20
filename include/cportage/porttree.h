@@ -20,6 +20,10 @@
 #ifndef CPORTAGE_PORTTREE_H
 #define CPORTAGE_PORTTREE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC visibility push(default)
 
 void * cportage_initCPortagePorttree(void);
@@ -35,6 +39,10 @@ extern const void * CPortagePorttree;
 char * cportage_porttree_get_path(const void * self, const char * relative);
 
 #pragma GCC visibility pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
