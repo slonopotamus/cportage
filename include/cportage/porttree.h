@@ -36,7 +36,7 @@ extern const void * CPortagePorttree;
     It's up to the caller to free result.
     @relative must have leading slash.
  */
-char * cportage_porttree_get_path(const void * self, const char * relative);
+char * cportage_porttree_get_path(const void * _self, const char * relative);
 
 #pragma GCC visibility pop
 

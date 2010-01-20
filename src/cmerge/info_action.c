@@ -34,9 +34,31 @@
 #include "config.h"
 #include "cmerge/actions.h"
 
-static void print_version(const struct utsname * utsname) {
-    // TODO: read current profile from settings
-    const char * profile = "default/linux/arm/10.0/desktop";
+static void print_version(const void * settings, const struct utsname * utsname) {
+    char * profile = cportage_settings_get_profile(settings);
+    char * abs_profile_path = realpath(profile, NULL);
+    if (abs_profile_path) {
+        char * portdir = cportage_settings_get_portdir(settings);
+        char * profiles_dir = concat(portdir, "/profiles");
+        char * abs_profiles_dir_path = realpath(profiles_dir, NULL);
+        if (abs_profiles_dir_path) {
+            if (strstr(abs_profile_path, abs_profiles_dir_path) == abs_profile_path) {
+                const size_t profiles_dir_len = strlen(abs_profiles_dir_path);
+                const char * src = &abs_profile_path[profiles_dir_len + 1];
+                const size_t len = strlen(abs_profile_path) - profiles_dir_len;
+                memmove(abs_profile_path, src, len);
+                free(profile);
+                profile = abs_profile_path;
+            }
+            free(abs_profiles_dir_path);
+        }
+        if (profile != abs_profile_path) {
+          free(abs_profile_path);
+        }
+        free(profiles_dir);
+        free(portdir);
+    }
+
     // TODO: read gcc version from gcc-config
     const char * gcc_ver = "gcc-4.3.2";
     // TODO: read libc from vartree
@@ -45,6 +67,7 @@ static void print_version(const struct utsname * utsname) {
     printf("cportage %s (%s, %s, %s, %s %s)\n",
            CPORTAGE_VERSION, profile, gcc_ver, libc_ver,
            utsname->release, utsname->machine);
+    free(profile);
 }
 
 static void print_timestamp_line(void *ctx, char * s) {
@@ -111,7 +134,7 @@ int cmerge_info_action(const struct cmerge_gopts * options) {
     int rc = uname(&utsname);
     assert(rc == 0);
 
-    print_version(&utsname);
+    print_version(settings, &utsname);
     puts("=================================================================");
     fputs("System uname: ", stdout);
     // TODO: read cpu name from /proc/cpuinfo

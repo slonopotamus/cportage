@@ -34,16 +34,20 @@ void * cportage_initCPortageSettings(void);
 extern const void * CPortageSettings;
 
 /* Same as settings_get_default(self, key, NULL) */
-char * cportage_settings_get(const void * self, const char * key);
+char * cportage_settings_get(const void * _self, const char * key);
 
 /*
     Searches settings value with given key.
     It's caller responsibility to free returned value.
     If no matching entry found, default is returned (strdup'ed if nonnull).
  */
-char * cportage_settings_get_default(const void * self,
+char * cportage_settings_get_default(const void * _self,
                             const char * key,
                             const char * _default);
+
+char * cportage_settings_get_profile(const void * _self);
+
+char * cportage_settings_get_portdir(const void * _self);
 
 #pragma GCC visibility pop
 

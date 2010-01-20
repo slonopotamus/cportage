@@ -18,6 +18,9 @@
 */
 
 #include <assert.h>
+#include <libiberty.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "cportage/settings.h"
@@ -31,20 +34,21 @@ struct settings_entry {
 
 struct CPortageSettings {
     struct CPortageObject _;
+    char * config_root;
     struct settings_entry * entries;
 };
 
 const void * CPortageSettings;
 
 char * cportage_settings_get_default(const void * _self,
-                            const char * key,
-                            const char * _default) {
+                                     const char * key,
+                                     const char * _default) {
     struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
     assert(key);
     struct settings_entry * e = self->entries;
     while (e) {
         if (strcmp(e->name, key) == 0) {
-            return strdup(e->value);
+            return xstrdup(e->value);
         }
         e = e->next;
     }
@@ -55,15 +59,47 @@ char * cportage_settings_get(const void * _self, const char * key) {
     return cportage_settings_get_default(_self, key, NULL);
 }
 
+char * cportage_settings_get_portdir(const void * _self) {
+    return cportage_settings_get_default(_self, "PORTDIR", "/usr/portage");
+}
+
+char * cportage_settings_get_profile(const void * _self) {
+    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
+    return concat(self->config_root, "/etc/make.profile", NULL);
+}
+
+static void foo(va_list ap) {
+  const char * bar = va_arg(ap, char *);
+}
+
 static void * Settings_ctor(void * _self, va_list ap) {
     cportage_super_ctor(CPortageSettings, _self, ap);
     struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
     const char * config_root = va_arg(ap, char *);
     assert(config_root);
+    self->config_root = xstrdup(config_root);
+    assert(self->config_root);
+
+    // Strip slashes at the end
+    ssize_t i = strlen(self->config_root) - 1;
+    while (i >= 0) {
+        if (self->config_root[i] == '/') {
+            self->config_root[i] = '\0';
+        }
+        --i;
+    }
+
+    return self;
+}
+
+static void * Settings_dtor(void * _self) {
+    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
+    free(self->config_root);
     return self;
 }
 
 void * cportage_initCPortageSettings(void) {
     return cportage_new(CPortageClass, "Settings", CPortageObject, sizeof(struct CPortageSettings),
-               cportage_ctor, Settings_ctor);
+                        cportage_ctor, Settings_ctor,
+                        cportage_dtor, Settings_dtor);
 }

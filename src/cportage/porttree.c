@@ -35,7 +35,7 @@
 
 struct CPortagePorttree {
     struct CPortageObject _;
-    char * portdir;
+    void * settings;
 };
 
 const void * CPortagePorttree;
@@ -43,35 +43,23 @@ const void * CPortagePorttree;
 char * cportage_porttree_get_path(const void * _self, const char * relative) {
     struct CPortagePorttree * self = cportage_cast(CPortagePorttree, _self);
     assert(relative && relative[0] == '/');
-    return concat(self->portdir, relative);
+    char * portdir = cportage_settings_get_portdir(self->settings);
+    char * result = concat(portdir, relative, NULL);
+    free(portdir);
+    return result;
 }
 
 static void * Porttree_ctor(void * _self, va_list ap) {
     cportage_super_ctor(CPortagePorttree, _self, ap);
     struct CPortagePorttree * self = cportage_cast(CPortagePorttree, _self);
-    const void * settings = cportage_cast(CPortageClass(CPortageSettings), va_arg(ap, void *));
-
-    self->portdir = cportage_settings_get_default(settings, "PORTDIR", "/usr/portage");
-    assert(self->portdir);
-    const size_t len = strlen(self->portdir);
-    /* Remove trailing slashes */
-    for (size_t i = len; i > 1 && self->portdir[i - 1] == '/'; --i)
-        self->portdir[i - 1] = '\0';
-    /* Check portdir */
-    struct stat buf;
-    if (stat(self->portdir, &buf)) {
-        fprintf(stderr, "ERROR: Could not access PORTDIR %s: ", self->portdir);
-        perror(NULL);
-    } else if (!S_ISDIR(buf.st_mode)) {
-        fprintf(stderr, "ERROR: PORTDIR %s is not a directory\n", self->portdir);
-    }
-
+    self->settings = cportage_cast(CPortageClass(CPortageSettings), va_arg(ap, void *));
+    cportage_ref(self->settings);
     return self;
 }
 
 static void * Porttree_dtor(void * _self) {
     struct CPortagePorttree * self = cportage_cast(CPortagePorttree, _self);
-    free(self->portdir);
+    cportage_unref(self->settings);
     return cportage_super_dtor(CPortagePorttree, self);
 }
 
