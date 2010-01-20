@@ -7,5 +7,5 @@ target_link_libraries(cportage ${PCRE_LIBRARY})
 
 # Installation
 install(TARGETS
-	cportage
-	LIBRARY DESTINATION lib)
+  cportage
+  LIBRARY DESTINATION lib)

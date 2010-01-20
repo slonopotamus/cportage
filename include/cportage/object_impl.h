@@ -17,17 +17,36 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_ATOM_H
-#define CPORTAGE_ATOM_H
+#ifndef CPORTAGE_OBJECT_IMPL_H
+#define CPORTAGE_OBJECT_IMPL_H
+
+/* Use this header when you write your own classes */
+
+#include <stddef.h>
 
 #include "cportage/object.h"
 
 #pragma GCC visibility push(default)
 
-void * cportage_initCPortageAtom(void);
+struct CPortageObject {
+    char _ [sizeof(struct {
+        unsigned long magic;
+        const struct CPortageClass * klass;
+        int refcount;
+    })];
+};
 
-/* new(Class(Atom), "=foo/bar-1.0") */
-extern const void * CPortageAtom;
+struct CPortageClass {
+    char _ [sizeof(struct {
+        const struct CPortageObject _;
+        const char * name;
+        const struct Class * super;
+        size_t size;
+        void * (* ctor) (void * self, va_list ap);
+        void * (* dtor) (void * self);
+        void * (* _new) (const void * _class, va_list ap);
+    })];
+};
 
 #pragma GCC visibility pop
 
