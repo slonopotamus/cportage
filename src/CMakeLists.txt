@@ -1,30 +1,46 @@
 # Dependencies
 find_package(PCRE REQUIRED)
-find_package(Popt REQUIRED)
+find_package(POPT REQUIRED)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 # Checks
+
 include(CheckIncludeFile)
+
+check_include_file(libiberty.h HAVE_LIBIBERTY_H)
+if (!${HAVE_LIBIBERTY_H})
+    message(FATAL_ERROR "libiberty.h is required")
+endif()
+
+check_include_file(stdbool.h HAVE_STDBOOL_H)
+if (!${HAVE_STDBOOL_H})
+    message(FATAL_ERROR "stdbool.h is required")
+endif()
+
+check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
+if (!${HAVE_SYS_UTSNAME_H})
+    message(FATAL_ERROR "sys/utsname.h is required")
+endif()
+
 include(CheckFunctionExists)
 
-macro(require_include_file _include_filename)
-  check_include_file(${_include_filename} _have_include_filename)
-  if(!${_have_include_filename})
-    message(FATAL_ERROR "${_have_include_filename} header not found")
-  endif()
-endmacro()
+check_function_exists(asprintf HAVE_ASPRINTF)
+if(!${HAVE_ASPRINTF})
+  message(FATAL_ERROR "asprintf is required")
+endif()
 
-macro(require_function _function_name)
-  check_function_exists(${_function_name} _function_name)
-  if(!${_function_name})
-    message(FATAL_ERROR "${_function_name} function not found")
-  endif()
-endmacro()
+check_function_exists(getline HAVE_GETLINE)
+if(!${HAVE_GETLINE})
+  message(FATAL_ERROR "getline is required")
+endif()
 
-require_include_file(libiberty.h)
-require_include_file(stdbool.h)
-require_include_file(sys/utsname.h)
-require_function(asprintf)
-require_function(getline)
+include(CheckLibraryExists)
+
+check_library_exists(iberty xmalloc "" HAVE_LIBIBERTY)
+if(!HAVE_LIBIBERTY)
+  message(FATAL_ERROR "libiberty not found")
+endif()
 
 add_subdirectory(cportage)
 add_subdirectory(cmerge)
