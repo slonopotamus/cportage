@@ -28,55 +28,55 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-/*
-    OOP system, heavily based on 'Object-Oriented Programming With ANSI-C' paper.
-    Supports inheritance, static/dynamic object methods, typesafe casts.
- */
+    /**
+        OOP system, heavily based on 'Object-Oriented Programming With ANSI-C' paper.
+        Supports inheritance, static/dynamic object methods, typesafe casts.
+     */
 
-/*
-    Ondemand class initializarion.
-    Always use this macro when first accessing some class outside of instance
-    of that class (or its descendant).
- */
+    /**
+        Ondemand class initializarion.
+        Always use this macro when first accessing some class outside of instance
+        of that class (or its descendant).
+     */
 #define CPortageClass(x) x ? x : ( x = cportage_init ## x () )
 
-/** Pointer to Object class. */
-extern const void * CPortageObject;
+    /** Pointer to Object class. */
+    extern const void * CPortageObject;
 
-/** Pointer to Class class */
-extern const void * CPortageClass;
+    /** Pointer to Class class */
+    extern const void * CPortageClass;
 
-/** Increases refcounter of given object */
-void * cportage_ref(void * self);
+    /** Increases refcounter of given object */
+    void * cportage_ref(void * self);
 
-/**
-    Decreases refcounter of given object, potentially destroying it
-    if refcount becomes zero.
- */
-void cportage_unref(void * self);
+    /**
+        Decreases refcounter of given object, potentially destroying it
+        if refcount becomes zero.
+     */
+    void cportage_unref(void * self);
 
-/** Type checking cast. Always use it when get objects in params. */
-void * cportage_cast(const void * _class, const void * self);
+    /** Type checking cast. Always use it when get objects in params. */
+    void * cportage_cast(const void * _class, const void * self);
 
-/*
-    New instance creation function.
-    Varargs are specific to class you're instantiating.
- */
-void * cportage_new(const void * _class, ...);
+    /**
+        New instance creation function.
+        Varargs are specific to class you're instantiating.
+     */
+    void * cportage_new(const void * _class, ...);
 
-/* Selector for constructor overriding */
-void * cportage_ctor(void * self, va_list ap);
+    /** Selector for constructor overriding */
+    void * cportage_ctor(void * self, va_list ap);
 
-/* Selector for destructor overriding */
-void * cportage_dtor(void * self);
+    /** Selector for destructor overriding */
+    void * cportage_dtor(void * self);
 
-void * cportage_super_ctor(const void * _class, void * self, va_list ap);
+    void * cportage_super_ctor(const void * _class, void * self, va_list ap);
 
-void * cportage_super_dtor(const void * _class, void * self);
+    void * cportage_super_dtor(const void * _class, void * self);
 
-void * cportage_super_new(const void * _class, const void * of, va_list ap);
+    void * cportage_super_new(const void * _class, const void * of, va_list ap);
 
-void * cportage_alloc(const void * _class);
+    void * cportage_alloc(const void * _class);
 
 #pragma GCC visibility pop
 

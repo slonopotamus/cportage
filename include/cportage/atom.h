@@ -28,10 +28,10 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-void * cportage_initCPortageAtom(void);
+    void * cportage_initCPortageAtom(void);
 
-/* new(Class(Atom), "=foo/bar-1.0") */
-extern const void * CPortageAtom;
+    /* new(Class(Atom), "=foo/bar-1.0") */
+    extern const void * CPortageAtom;
 
 #pragma GCC visibility pop
 

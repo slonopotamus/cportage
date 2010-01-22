@@ -26,17 +26,17 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-void * cportage_initCPortagePorttree(void);
+    void * cportage_initCPortagePorttree(void);
 
-/* new(Class(CPortagePorttree), settings) */
-extern const void * CPortagePorttree;
+    /** new(Class(CPortagePorttree), settings) */
+    extern const void * CPortagePorttree;
 
-/*
-    Constructs absolute path from tree root.
-    It's up to the caller to free result.
-    @relative must have leading slash.
- */
-char * cportage_porttree_get_path(const void * _self, const char * relative);
+    /**
+        Constructs absolute path from tree root.
+        It's up to the caller to free result.
+        @relative must have leading slash.
+     */
+    char * cportage_porttree_get_path(const void * _self, const char * relative);
 
 #pragma GCC visibility pop
 
@@ -45,4 +45,3 @@ char * cportage_porttree_get_path(const void * _self, const char * relative);
 #endif
 
 #endif
-

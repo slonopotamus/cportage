@@ -31,8 +31,8 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-/** Trims given string (modifies it inplace). */
-void cportage_trim(char * s);
+    /** Trims given string (modifies it inplace). */
+    void cportage_trim(char * s);
 
 #pragma GCC visibility pop
 
@@ -41,4 +41,3 @@ void cportage_trim(char * s);
 #endif
 
 #endif
-

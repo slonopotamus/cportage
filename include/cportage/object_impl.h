@@ -20,7 +20,7 @@
 #ifndef CPORTAGE_OBJECT_IMPL_H
 #define CPORTAGE_OBJECT_IMPL_H
 
-/* Use this header when you write your own classes */
+/** Use this header when you write your own classes */
 
 #include <stddef.h>
 
@@ -32,25 +32,25 @@ extern "C" {
 
 #pragma GCC visibility push(default)
 
-struct CPortageObject {
-    char _ [sizeof(struct {
-        unsigned long magic;
-        const struct CPortageClass * klass;
-        int refcount;
-    })];
-};
+    struct CPortageObject {
+        char _ [sizeof(struct {
+            unsigned long magic;
+            const struct CPortageClass * klass;
+            int refcount;
+        })];
+    };
 
-struct CPortageClass {
-    char _ [sizeof(struct {
-        const struct CPortageObject _;
-        const char * name;
-        const struct Class * super;
-        size_t size;
-        void * (* ctor) (void * self, va_list ap);
-        void * (* dtor) (void * self);
-        void * (* _new) (const void * _class, va_list ap);
-    })];
-};
+    struct CPortageClass {
+        char _ [sizeof(struct {
+            const struct CPortageObject _;
+            const char * name;
+            const struct Class * super;
+            size_t size;
+            void * (* ctor) (void * self, va_list ap);
+            void * (* dtor) (void * self);
+            void * (* _new) (const void * _class, va_list ap);
+        })];
+    };
 
 #pragma GCC visibility pop
 
