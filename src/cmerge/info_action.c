@@ -39,7 +39,7 @@ static void print_version(const void * settings, const struct utsname * utsname)
     char * abs_profile_path = realpath(profile, NULL);
     if (abs_profile_path) {
         char * portdir = cportage_settings_get_portdir(settings);
-        char * profiles_dir = concat(portdir, "/profiles");
+        char * profiles_dir = concat(portdir, "/profiles", NULL);
         char * abs_profiles_dir_path = realpath(profiles_dir, NULL);
         if (abs_profiles_dir_path) {
             if (strstr(abs_profile_path, abs_profiles_dir_path) == abs_profile_path) {
