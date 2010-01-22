@@ -182,6 +182,7 @@ static void * AtomClass_ctor(void * _self, va_list ap) {
     if (asprintf(&atom_re_str,
                  "^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
                  op, cpv, cpv, cp, slot, use) == -1) abort();
+    free(use_item);
     free(use);
     free(cp);
     free(cpv);
