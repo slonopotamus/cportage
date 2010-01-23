@@ -1,6 +1,7 @@
 # Dependencies
 find_package(PCRE REQUIRED)
 find_package(POPT REQUIRED)
+find_package(Libhash REQUIRED)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
