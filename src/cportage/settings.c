@@ -17,85 +17,81 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <assert.h>
-#include <libiberty.h>
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
+#include "cportage/io.h"
 #include "cportage/settings.h"
-#include "cportage/object_impl.h"
-
-struct settings_entry {
-    char * name;
-    char * value;
-    struct settings_entry * next;
-};
 
 struct CPortageSettings {
-    struct CPortageObject _;
+    /*@refs@*/ int refcount;
     char * config_root;
-    struct settings_entry * entries;
+    GHashTable * entries;
 };
 
-const void * CPortageSettings;
+CPortageSettings
+cportage_settings_new(const char *config_root, /*@out@*/ GError **error) {
+    CPortageSettings self;
+    ssize_t i;
+    char *make_conf;
 
-char * cportage_settings_get_default(const void * _self,
-                                     const char * key,
-                                     const char * _default) {
-    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
-    assert(key);
-    struct settings_entry * e = self->entries;
-    while (e) {
-        if (strcmp(e->name, key) == 0) {
-            return xstrdup(e->value);
-        }
-        e = e->next;
-    }
-    return _default == NULL ? NULL : strdup(_default);
-}
+    g_assert(error == NULL || *error == NULL);
 
-char * cportage_settings_get(const void * _self, const char * key) {
-    return cportage_settings_get_default(_self, key, NULL);
-}
+    self = g_malloc0(sizeof(*self));
+    self->refcount = 1;
 
-char * cportage_settings_get_portdir(const void * _self) {
-    return cportage_settings_get_default(_self, "PORTDIR", "/usr/portage");
-}
-
-char * cportage_settings_get_profile(const void * _self) {
-    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
-    return concat(self->config_root, "/etc/make.profile", NULL);
-}
-
-static void * Settings_ctor(void * _self, va_list ap) {
-    cportage_super_ctor(CPortageSettings, _self, ap);
-    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
-    const char * config_root = va_arg(ap, char *);
-    assert(config_root);
-    self->config_root = xstrdup(config_root);
-    assert(self->config_root);
-
-    // Strip slashes at the end
-    ssize_t i = strlen(self->config_root) - 1;
+    self->config_root = g_strdup(config_root);
+    /* Strip slashes at the end */
+    i = strlen(self->config_root) - 1;
     while (i >= 0) {
-        if (self->config_root[i] == '/') {
+        if (self->config_root[i] == '/')
             self->config_root[i] = '\0';
-        }
         --i;
     }
 
+    self->entries = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
+    make_conf = g_build_path(self->config_root, "etc/make.conf", NULL);
+    /* cportage_read_shellconfig(make_conf, TRUE, self->entries, error); */
+    g_assert_no_error(*error);
+    free(make_conf);
+
     return self;
 }
 
-static void * Settings_dtor(void * _self) {
-    struct CPortageSettings * self = cportage_cast(CPortageSettings, _self);
-    free(self->config_root);
+CPortageSettings
+cportage_settings_ref(CPortageSettings self) {
+    ++self->refcount;
     return self;
 }
 
-void * cportage_initCPortageSettings(void) {
-    return cportage_new(CPortageClass, "Settings", CPortageObject, sizeof(struct CPortageSettings),
-                        cportage_ctor, Settings_ctor,
-                        cportage_dtor, Settings_dtor);
+void
+cportage_settings_unref(CPortageSettings self) {
+    g_assert(self->refcount > 0);
+    if (--self->refcount == 0) {
+        g_hash_table_unref(self->entries);
+        free(self->config_root);
+        /*@-refcounttrans@*/
+        free(self);
+        /*@=refcounttrans@*/
+    }
+}
+
+char *
+cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) {
+    const char *retval = g_hash_table_lookup(self->entries, key);
+    if (retval == NULL)
+        return g_strdup(dflt);
+    else
+        return g_strdup(retval);
+}
+
+char *
+cportage_settings_get_portdir(const CPortageSettings self) {
+    return cportage_settings_get_entry(self, "PORTDIR", "usr/portage");
+}
+
+char *
+cportage_settings_get_profile(const CPortageSettings self) {
+    return g_build_filename(self->config_root, "etc/make.profile", NULL);
 }

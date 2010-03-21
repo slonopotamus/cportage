@@ -20,28 +20,29 @@
 #ifndef CMERGE_OPTIONS_H
 #define CMERGE_OPTIONS_H
 
-enum VERBOSITY_LEVEL {
+#include <glib.h>
+#include <stdbool.h>
+
+typedef enum {
     VERBOSITY_QUIET = -1,
     VERBOSITY_NORMAL = 0,
     VERBOSITY_VERBOSE = 1
-};
+} VerbosityLevel;
 
 /* Global options */
-struct cmerge_gopts {
-    /* Verbosity level. See VERBOSITY_LEVEL for possible values */
-    int verbosity;
-    const char * config_root;
-    /* Leftover args, as returned by poptGetArgs */
-    const char ** args;
-};
+typedef struct GlobalOptions {
+    VerbosityLevel verbosity;
+    const char *config_root;
+    /* Leftover args */
+    const char **args;
+} *GlobalOptions;
 
 /* Merge/unmerge options */
-struct cmerge_mopts {
-    /* Reference to general options */
-    const struct cmerge_gopts * gopts;
-    int pretend;
-    int update;
-};
+typedef struct MergeOptions {
+    struct GlobalOptions global;
+    bool pretend;
+    bool update;
+} *MergeOptions;
 
 #endif
 

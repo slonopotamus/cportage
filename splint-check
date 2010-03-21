@@ -1,0 +1,5 @@
+#!/bin/sh
+splint +strict +posixstrictlib \
+	-sys-dir-errors -protoparamname \
+	-Iinclude `pkg-config --cflags glib-2.0` \
+	src/cportage/*.c

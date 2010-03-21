@@ -17,26 +17,30 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+#include <locale.h>
 #include <stdlib.h>
-#include <popt.h>
 
 #include "config.h"
 #include "cmerge/actions.h"
-#include "cmerge/options.h"
 
-static void print_version(void) {
-    printf("cportage %s\n\n", CPORTAGE_VERSION);
-    puts("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
-         "License GPLv3+: GNU GPL version 3 or later"
-         " <http://gnu.org/licenses/gpl.html>\n"
+static void
+print_version(void) {
+    g_print("cportage " CPORTAGE_VERSION "\n\n");
+    g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
+         "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
          "This is free software: you are free to change and redistribute it.\n"
-         "There is NO WARRANTY, to the extent permitted by law.");
+         "There is NO WARRANTY, to the extent permitted by law.\n");
 }
 
-int main(const int argc, const char * argv[]) {
-    int clean = 0, help = 0, info = 0, install = 0, search = 0, version = 0;
-    const struct poptOption actions[] = {
+int
+main(int argc, char *argv[]) {
+    int clean = 0,
+        help = 0,
+        info = 0,
+        install = 0,
+        search = 0,
+        version = 0;
+    /*const struct poptOption actions[] = {
         // TODO: alias this to --clean, -c, --prune, -P, --unmerge
         {"depclean", 'C', POPT_ARG_NONE, &clean, 0, "Cleans the system"
             " by removing packages that are not associated"
@@ -50,21 +54,9 @@ int main(const int argc, const char * argv[]) {
         {"version", 'V', POPT_ARG_NONE, &version, 0, "Outputs version", NULL},
         POPT_TABLEEND
     };
-
-    const char * s = NULL;
-    struct cmerge_gopts gopts = { VERBOSITY_NORMAL, "/", &s };
-
-    const struct poptOption goptions[] = {
-        {"config-root", 0, POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-            &gopts.config_root, 0, "Specifies the location"
-            " for configuration files", "DIR"},
-        {"quiet", 'q', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_QUIET,
-         "Enables quiet output mode", NULL},
-        {"verbose", 'v', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_VERBOSE,
-         "Enables verbose output mode", NULL},
-        POPT_TABLEEND
-    };
-    struct cmerge_mopts mopts = { &gopts, 0, 0 };
+    */
+    struct MergeOptions mopts = { { VERBOSITY_NORMAL, "/", NULL }, 0, 0 };
+    /*
     const struct poptOption moptions[] = {
         {"pretend", 'p', POPT_ARG_NONE, &mopts.pretend, 0, "Instead of actually"
             " performing any action, only displays what would be done", NULL},
@@ -81,48 +73,61 @@ int main(const int argc, const char * argv[]) {
          " package (un)merging)", NULL},
         POPT_TABLEEND
     };
-    poptContext ctx = poptGetContext(NULL, argc, argv, popts,
-                                     POPT_CONTEXT_NO_EXEC);
-    poptSetOtherOptionHelp(ctx, "[OPTION...] ACTION [ARGS...]");
-    int rc = poptGetNextOpt(ctx);
-    int ret = EXIT_FAILURE;
-    if (rc == -1) {
-        // TODO: should it be free()ed?
-        gopts.args = poptGetArgs(ctx);
+    */
+    const GOptionEntry entries[] = {
+        /*{"config-root", 0, POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
+            &gopts.config_root, 0, "Specifies the location"
+            " for configuration files", "DIR"},
+        {"quiet", 'q', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_QUIET,
+         "Enables quiet output mode", NULL},
+        {"verbose", 'v', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_VERBOSE,
+         "Enables verbose output mode", NULL},
+         */
+        { NULL, 0, 0, 0, NULL, NULL, NULL }
+    };
+    GOptionContext *ctx;
+    GError *error = NULL;
 
+    setlocale(LC_ALL, "");
+
+    ctx = g_option_context_new("ACTION [ARGS...]");
+    g_option_context_add_main_entries(ctx, entries, NULL);
+
+    if (g_option_context_parse(ctx, &argc, &argv, &error)) {
         int actions = clean + help + info + install + search + version;
 
         /*
             Special case for `cmerge foo/bar`.
             We treat it as if --install was specified.
          */
-        if (actions == 0 && poptPeekArg(ctx) != NULL) actions = install = 1;
+        if (actions == 0 && mopts.global.args != NULL)
+            actions = install = 1;
 
-        if (actions == 0 || help) {
-            poptPrintHelp(ctx, stdout, 0);
-        }  else if (actions > 1) {
-            fputs("Only one action can be given\n", stderr);
-        } else if (version) {
+        if (actions == 0 || help)
+            (void)0;
+            /* poptPrintHelp(ctx, stdout, 0); */
+        else if (actions > 1)
+            g_error("Only one action can be given\n");
+        else if (version)
             print_version();
-            ret = EXIT_SUCCESS;
-        } else if (clean) {
-            ret = cmerge_clean_action(&mopts);
-        } else if (info) {
-            ret = cmerge_info_action(&gopts);
-        } else if (install) {
-            ret = cmerge_install_action(&mopts);
-        } else if (search) {
-            ret = cmerge_search_action(&gopts);
-        } else {
-            fputs("Unknown action", stderr);
-            abort();
-        }
-    } else {
-        /* Invalid option */
-        fprintf(stderr, "%s: %s\n",
-                poptBadOption(ctx, POPT_BADOPTION_NOALIAS),
-                poptStrerror(rc));
+        else if (clean)
+            cmerge_clean_action(&mopts, &error);
+        else if (info)
+            cmerge_info_action(&mopts.global, &error);
+        else if (install)
+           cmerge_install_action(&mopts, &error);
+        else if (search)
+            cmerge_search_action(&mopts.global, &error);
+        else
+            g_error("Unknown action");
     }
-    poptFreeContext(ctx);
-    return ret;
+    g_option_context_free(ctx);
+
+    if (error == NULL)
+        return EXIT_SUCCESS;
+    else {
+      g_print("%s\n", error->message);
+      g_error_free(error);
+      return EXIT_FAILURE;
+    }
 }

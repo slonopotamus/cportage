@@ -17,55 +17,40 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "cportage/io.h"
-#include "cportage/strings.h"
 
-bool cportage_processrawlines(const char * filename,
-                     void * ctx,
-                     void (* func) (void *ctx, char * s)) {
-    FILE * f = fopen(filename, "r");
-    if (!f) return false;
+char **
+cportage_read_lines(const char *path, const bool ignore_comments, GError **error) {
+    char *data;
+    char **result;
 
-    size_t bufsize, i = 0;
-    ssize_t len;
-    char * s = NULL;
-    while ((len = getline(&s, &bufsize, f)) != -1) {
-        ++i;
-        if (strlen(s) == (size_t)len)
-            func(ctx, s);
-        else
-            fprintf(stderr, "null byte in %s on line %zd, skipping line\n",
-                    filename, i);
-    }
-    free(s);
-    fclose(f);
-    return true;
+    g_assert(error == NULL || *error == NULL);
+
+    if (g_file_get_contents(path, &data, NULL, error)) {
+        char **lines = g_strsplit(data, "\n", -1);
+        free(data);
+        if (ignore_comments) {
+            char *line;
+            int i = 0;
+            int j = 0;
+            result = g_malloc(g_strv_length(lines) + 1);
+            while ((line = lines[i++]) != NULL) {
+                char *comment = strchr(line, '#');
+                if (comment != NULL)
+                    *comment = '\0';
+                g_strstrip(line);
+                if (line[0] != '\0')
+                    result[j++] = line;
+            }
+            result[j] = NULL;
+            g_strfreev(lines);
+        } else
+            result = lines;
+    } else
+        result = NULL;
+    return result;
 }
 
-struct processlinectx {
-    void * orig_ctx;
-    void (* orig_func) (void * ctx, char * s);
-};
-
-static void processline(void * _ctx, char * s) {
-    char * comment = strchr(s, '#');
-    if (comment)
-        * comment = '\0';
-    cportage_trim(s);
-    if (s[0] != '\0') {
-        struct processlinectx * ctx = _ctx;
-        ctx->orig_func(ctx->orig_ctx, s);
-    }
-}
-
-bool cportage_processlines(const char * filename,
-                  void * orig_ctx,
-                  void (* func) (void * ctx, char * s)) {
-    struct processlinectx ctx = { orig_ctx, func };
-    return cportage_processrawlines(filename, &ctx, &processline);
-}

@@ -22,13 +22,17 @@
 
 #include "cmerge/options.h"
 
-int cmerge_clean_action(const struct cmerge_mopts * options);
+void
+cmerge_clean_action(const MergeOptions options, /*@out@*/ GError **error);
 
-int cmerge_info_action(const struct cmerge_gopts * options);
+void
+cmerge_info_action(const GlobalOptions options, /*@out@*/ GError **error);
 
-int cmerge_install_action(const struct cmerge_mopts * options);
+void
+cmerge_install_action(const MergeOptions options, /*@out@*/ GError **error);
 
-int cmerge_search_action(const struct cmerge_gopts * options);
+void
+cmerge_search_action(const GlobalOptions options, /*@out@*/ GError **error);
 
 #endif
 

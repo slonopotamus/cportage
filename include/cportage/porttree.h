@@ -20,28 +20,35 @@
 #ifndef CPORTAGE_PORTTREE_H
 #define CPORTAGE_PORTTREE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <glib.h>
+
+#include "cportage/settings.h"
+
+G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-    void * cportage_initCPortagePorttree(void);
+typedef /*@abstract@*/ /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
 
-    /** new(Class(CPortagePorttree), settings) */
-    extern const void * CPortagePorttree;
+/*@newref@*/ CPortagePorttree
+cportage_porttree_new(CPortageSettings settings);
 
-    /**
-        Constructs absolute path from tree root.
-        It's up to the caller to free result.
-        @relative must have leading slash.
-     */
-    char * cportage_porttree_get_path(const void * _self, const char * relative);
+/*@newref@*/ CPortagePorttree
+cportage_porttree_ref(/*@returned@*/ CPortagePorttree self) /*@modifies self@*/;
+
+void
+cportage_porttree_unref(/*@killref@*/ CPortagePorttree self) /*@modifies self@*/;
+
+/**
+    Constructs absolute path from tree root.
+    It's up to the caller to free result.
+    @relative must have leading slash.
+ */
+char *
+cportage_porttree_get_path(const CPortagePorttree self, const char *relative) /*@*/;
 
 #pragma GCC visibility pop
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif

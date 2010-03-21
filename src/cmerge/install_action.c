@@ -17,11 +17,10 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdlib.h>
-
 #include "cmerge/actions.h"
 
-int cmerge_install_action(const struct cmerge_mopts * options) {
-    // TODO: implement this
-    return EXIT_FAILURE;
+void
+cmerge_install_action(const MergeOptions options, GError **error) {
+    g_assert(error == NULL || *error == NULL);
+    (void)options;
 }

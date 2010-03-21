@@ -17,17 +17,13 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <assert.h>
-#include <pcre.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "cportage/atom.h"
-#include "cportage/object_impl.h"
 
-enum OP_TYPE {
+typedef enum OP_TYPE {
     OP_NONE,
     OP_LT,
     OP_LE,
@@ -36,190 +32,164 @@ enum OP_TYPE {
     OP_GT,
     OP_TILDE,
     OP_STAR
-};
+} OpType;
 
 struct CPortageAtom {
-    struct CPortageObject _;
-    const char * category;
-    const char * package;
+    /*@refs@*/  int refcount;
+    OpType operator;
+    char *category;
+    char *package;
     /* Nullable */
-    const char * version;
-    int operator;
-    /* Nullable */
-    const char * slot;
+    char *slot;
 };
 
-struct AtomClass {
-    const struct CPortageClass _;
-    pcre * atom_re;
-    pcre_extra * atom_re_extra;
-    int atom_re_nsub;
-};
+static struct {
+  GRegex *regex;
+  int op_idx, star_idx, simple_idx, slot_idx, use_idx;
+} *atom_re;
 
-extern const void * AtomClass;
-
-static void * Atom_new(const void * _class, va_list ap) {
-    const struct AtomClass * class = cportage_cast(AtomClass, _class);
-    const char * s = va_arg(ap, char *);
-    assert(s);
-    assert(class->atom_re);
-
-    /* See man 3 pcreapi "How pcre_exec() returns captured substrings" */
-    int m_data[(class->atom_re_nsub + 1) * 3];
-
-    const int m = pcre_exec(class->atom_re, class->atom_re_extra,
-                            s, strlen(s), 0, 0, m_data, sizeof(m_data) / sizeof(*m_data));
-    if (m == PCRE_ERROR_NOMATCH) {
-        return NULL;
-    }
-    assert(m > 0);
-    // TODO: calculate these once when regex is compiled?
-    const int op_idx = pcre_get_stringnumber(class->atom_re, "op");
-    const int star_idx = pcre_get_stringnumber(class->atom_re, "star");
-    const int simple_idx = pcre_get_stringnumber(class->atom_re, "simple");
-    const int slot_idx = pcre_get_stringnumber(class->atom_re, "slot");
-    const int use_idx = pcre_get_stringnumber(class->atom_re, "use");
-    assert(op_idx > 0 && star_idx > 0 && simple_idx > 0 && slot_idx > 0
-           && use_idx > 0);
-
-    const char * type;
-    int rc, cat_idx, op;
-    if ((rc = pcre_get_substring(s, m_data, m, op_idx, &type)) > 0) {
-        cat_idx = op_idx + 2;
-        if (strcmp(type, "<") == 0) {
-            op = OP_LT;
-        } else if (strcmp(type, "<=") == 0) {
-            op = OP_LE;
-        } else if (strcmp(type, "=") == 0) {
-            op = OP_EQ;
-        } else if (strcmp(type, ">=") == 0) {
-            op = OP_GE;
-        } else if (strcmp(type, ">") == 0) {
-            op = OP_GT;
-        } else if (strcmp(type, "~") == 0) {
-            op = OP_TILDE;
-        } else {
-            fprintf(stderr, "Unknown operator: %s\n", type);
-            abort();
-        }
-    } else if ((rc = pcre_get_substring(s, m_data, m, star_idx, &type)) > 0) {
-        cat_idx = star_idx + 2;
-        op = OP_STAR;
-    } else if ((rc = pcre_get_substring(s, m_data, m, simple_idx, &type)) > 0) {
-        cat_idx = simple_idx + 2;
-        op = OP_NONE;
-    } else {
-        /* Getting here means we have a bug in atom regex */
-        fprintf(stderr, "Could not determine atom type for '%s'", s);
-        abort();
-    }
-    pcre_free_substring(type);
-
-    const char * invalid_version;
-    rc = pcre_get_substring(s, m_data, m, cat_idx + 2, &invalid_version);
-    if (rc > 0) {
-        /* Pkg name ends with version string, that's disallowed */
-        pcre_free_substring(invalid_version);
-        return NULL;
-    }
-    struct CPortageAtom * atom = cportage_super_ctor(CPortageAtom, cportage_alloc(class), NULL);
-    rc = pcre_get_substring(s, m_data, m, cat_idx, &atom->category);
-    assert(rc > 0);
-    rc = pcre_get_substring(s, m_data, m, cat_idx + 1, &atom->package);
-    assert(rc > 0);
-    pcre_get_named_substring(class->atom_re, s, m_data, m, "slot", &atom->slot);
-    atom->operator = op;
-    // TODO: store version and useflags
-    return atom;
-}
-
-static void * Atom_dtor(void *_self) {
-    struct CPortageAtom * self = cportage_cast(CPortageAtom, _self);
-    pcre_free_substring(self->category);
-    pcre_free_substring(self->package);
-    pcre_free_substring(self->slot);
-    return self;
-}
-
-static void * AtomClass_ctor(void * _self, va_list ap) {
-    cportage_super_ctor(AtomClass, _self, ap);
-    struct AtomClass * self = cportage_cast(AtomClass, _self);
-
+static void
+init_atom_re(void) /*@globals undef atom_re@*/ {
     /*
         2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
      */
-    const char * cat = "([\\w+][\\w+.-]*)";
+    const char *cat = "([\\w+][\\w+.-]*)";
     /*
         2.1.2 A package name may contain any of the characters [A-Za-z0-9+_-].
         It must not begin with a hyphen,
         and must not end in a hyphen followed by _valid version string_.
     */
-    const char * pkg = "([\\w+][\\w+-]*?)";
+    const char *pkg = "([\\w+][\\w+-]*?)";
     /*
         2.1.3 A slot name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
      */
-    const char * slot = "(?P<slot>[\\w+][\\w+.-]*)";
+    const char *slot = "(?P<slot>[\\w+][\\w+.-]*)";
     /*
         2.1.4 A USE flag name may contain any of the characters [A-Za-z0-9+_@-].
         It must begin with an alphanumeric character.
      */
-    const char * use_name = "[A-Za-z0-9][\\w+@-]*";
+    const char *use_name = "[A-Za-z0-9][\\w+@-]*";
     /* See 2.2 section for version syntax. */
-    const char * ver
-    = "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?";
-    // TODO: add reference to PMS
-    const char * op = "(?P<op>[=~]|[><]=?)";
-
-    char * use, * use_item, * cp, * cpv, * atom_re_str;
-    if (asprintf(&use_item, "(?:!?%s[=?]|-?%s)",
-                 use_name, use_name) == -1) abort();
-    if (asprintf(&use, "(?P<use>\\[%s(?:,%s)*\\])?",
-                 use_item, use_item) == -1) abort();
-    if (asprintf(&cp, "(%s/%s(-%s)\?\?)", cat, pkg, ver) == -1) abort();
-    if (asprintf(&cpv, "%s-%s", cp, ver) == -1) abort();
-    if (asprintf(&atom_re_str,
-                 "^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
-                 op, cpv, cpv, cp, slot, use) == -1) abort();
+    const char *ver = "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?";
+    /* TODO: add reference to PMS */
+    const char *op = "(?P<op>[=~]|[><]=?)";
+    char *use_item = g_strdup_printf("(?:!?%s[=?]|-?%s)", use_name, use_name);
+    char *use = g_strdup_printf("(?P<use>\\[%s(?:,%s)*\\])?", use_item, use_item);
+    char *cp = g_strdup_printf("(%s/%s(-%s)\?\?)", cat, pkg, ver);
+    char *cpv = g_strdup_printf("%s-%s", cp, ver);
+    char *atom_re_str = g_strdup_printf("^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
+                 op, cpv, cpv, cp, slot, use);
+    GError *error = NULL;
     free(use_item);
     free(use);
     free(cp);
     free(cpv);
-    const char *err;
-    int erroffset;
-    self->atom_re = pcre_compile(atom_re_str, 0, &err, &erroffset, NULL);
-    if (!self->atom_re) {
-        fprintf(stderr, "Atom regex compilation failed at offset %d: %s",
-                erroffset, err);
-        abort();
-    }
+
+    atom_re = g_malloc(sizeof(*atom_re));
+
+    atom_re->regex = g_regex_new(atom_re_str, 0, 0, &error);
+    g_assert_no_error(error);
+
     free(atom_re_str);
 
-    self->atom_re_extra = pcre_study(self->atom_re, 0, &err);
-    if (err) {
-        fprintf(stderr, "Atom regex study failed: %s", err);
-        abort();
-    }
+    atom_re->op_idx = g_regex_get_string_number(atom_re->regex, "op");
+    atom_re->star_idx = g_regex_get_string_number(atom_re->regex, "star");
+    atom_re->simple_idx = g_regex_get_string_number(atom_re->regex, "simple");
+    atom_re->slot_idx = g_regex_get_string_number(atom_re->regex, "slot");
+    atom_re->use_idx = g_regex_get_string_number(atom_re->regex, "use");
+    g_assert(atom_re->op_idx != -1
+        && atom_re->star_idx != -1
+        && atom_re->simple_idx != -1
+        && atom_re->slot_idx != -1
+        && atom_re->use_idx != -1);
+}
 
-    const int rc = pcre_fullinfo(self->atom_re, self->atom_re_extra,
-                                 PCRE_INFO_CAPTURECOUNT, &self->atom_re_nsub);
-    assert(rc == 0);
+CPortageAtom
+cportage_atom_new(const char *str, GError **error) {
+    CPortageAtom atom;
+    GMatchInfo *match;
+    char *invalid_version;
 
+    g_assert(error == NULL || *error == NULL);
+
+    if (atom_re == NULL)
+        init_atom_re();
+
+    if (g_regex_match_full(atom_re->regex, str, strlen(str), 0, 0, &match, error)) {
+        char *type;
+        OpType op;
+        int cat_idx;
+        if ((type = g_match_info_fetch(match, atom_re->op_idx)) != NULL) {
+            cat_idx = atom_re->op_idx + 2;
+            if (strcmp(type, "<") == 0) {
+                op = OP_LT;
+            } else if (strcmp(type, "<=") == 0) {
+                op = OP_LE;
+            } else if (strcmp(type, "=") == 0) {
+                op = OP_EQ;
+            } else if (strcmp(type, ">=") == 0) {
+                op = OP_GE;
+            } else if (strcmp(type, ">") == 0) {
+                op = OP_GT;
+            } else if (strcmp(type, "~") == 0) {
+                op = OP_TILDE;
+            } else {
+                g_assert_not_reached();
+            }
+        } else if ((type = g_match_info_fetch(match, atom_re->star_idx)) != NULL) {
+            cat_idx = atom_re->star_idx + 2;
+            op = OP_STAR;
+        } else if ((type = g_match_info_fetch(match, atom_re->simple_idx)) != NULL) {
+            cat_idx = atom_re->simple_idx + 2;
+            op = OP_NONE;
+        } else {
+            /* Getting here means we have a bug in atom regex */
+            g_assert_not_reached();
+            cat_idx = -1;
+        }
+        free(type);
+
+        if ((invalid_version = g_match_info_fetch(match, cat_idx + 2)) != NULL) {
+            /* Pkg name ends with version string, that's disallowed */
+            free(invalid_version);
+            return NULL;
+        }
+        atom = g_malloc(sizeof(*atom));
+        atom->refcount = 1;
+        atom->operator = op;
+
+        atom->category = g_match_info_fetch(match, cat_idx);
+        g_assert(atom->category != NULL);
+
+        atom->package = g_match_info_fetch(match, cat_idx + 1);
+        g_assert(atom->package != NULL);
+
+        atom->slot = g_match_info_fetch(match, atom_re->slot_idx);
+        g_assert(atom->slot != NULL);
+        /* TODO: store version and useflags */
+    } else
+        atom = NULL;
+    g_match_info_free(match);
+    return atom;
+}
+
+CPortageAtom
+cportage_atom_ref(CPortageAtom self) {
+    ++self->refcount;
     return self;
 }
 
-const void * AtomClass;
-
-static void * cportage_initAtomClass(void) {
-    return cportage_new(CPortageClass, "AtomClass", CPortageClass, sizeof(struct AtomClass),
-               cportage_ctor, AtomClass_ctor);
-}
-
-const void * CPortageAtom;
-
-void * cportage_initCPortageAtom(void) {
-    return cportage_new(CPortageClass(AtomClass), "Atom", CPortageObject, sizeof(struct CPortageAtom),
-               cportage_new , Atom_new,
-               cportage_dtor, Atom_dtor);
+void
+cportage_atom_unref(CPortageAtom self) {
+    g_assert(self->refcount > 0);
+    if (--self->refcount == 0) {
+        free(self->category);
+        free(self->package);
+        free(self->slot);
+        /*@-refcounttrans@*/
+        free(self);
+        /*@=refcounttrans@*/
+    }
 }

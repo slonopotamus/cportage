@@ -20,23 +20,25 @@
 #ifndef CPORTAGE_ATOM_H
 #define CPORTAGE_ATOM_H
 
-#include "cportage/object.h"
+#include <glib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-    void * cportage_initCPortageAtom(void);
+typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
 
-    /* new(Class(Atom), "=foo/bar-1.0") */
-    extern const void * CPortageAtom;
+/*@newref@*/ /*@null@*/ CPortageAtom
+cportage_atom_new(const char *str, /*@out@*/ GError **error);
+
+/*@newref@*/ CPortageAtom
+cportage_atom_ref(/*@returned@*/ CPortageAtom self) /*@modifies self@*/;
+
+void
+cportage_atom_unref(/*@killref@*/ CPortageAtom self) /*@modifies self@*/;
 
 #pragma GCC visibility pop
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif

@@ -18,7 +18,6 @@
 */
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "cportage/atom.h"
 
@@ -116,16 +115,18 @@ int main(void) {
         { "=sys-apps/portage-2.2*:foo[bar,-baz][doc?,!build?]", false },
         { "=sys-apps/portage-2.2*:foo[bar][doc,build]", false }
     };
+    size_t i = 0;
     int retval = 0;
-    for (unsigned int i = 0; i < sizeof(data) / sizeof(data[0]); ++i) {
+    while (i < G_N_ELEMENTS(data)) {
         const char * s = data[i].str;
         const char * msg = data[i].valid ? "valid" : "invalid";
-        void * atom = cportage_new(CPortageClass(CPortageAtom), s);
+        void *atom = cportage_atom_new(s, NULL);
         if (data[i].valid == (atom == NULL)) {
-            fprintf(stderr, "'%s' must be %s, but it isn't\n", s, msg);
+            g_error("'%s' must be %s, but it isn't\n", s, msg);
             --retval;
         }
-        cportage_unref(atom);
+        cportage_atom_unref(atom);
+        ++i;
     }
     return retval;
 }

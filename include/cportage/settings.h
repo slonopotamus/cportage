@@ -20,39 +20,33 @@
 #ifndef CPORTAGE_SETTINGS_H
 #define CPORTAGE_SETTINGS_H
 
-#include "cportage/object.h"
+#include <glib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
-    void * cportage_initCPortageSettings(void);
+typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 
-    /* cportage_new(CPortageClass(CPortageSettings), "/path/to/config/root") */
-    extern const void * CPortageSettings;
+/*@newref@*/ /*@null@*/ CPortageSettings
+cportage_settings_new(const char *config_root, /*@out@*/ GError **error);
 
-    /* Same as settings_get_default(self, key, NULL) */
-    char * cportage_settings_get(const void * _self, const char * key);
+/*@newref@*/ CPortageSettings
+cportage_settings_ref(/*@returned@*/ CPortageSettings self) /*@modifies self@*/;
 
-    /**S
-        Searches settings value with given key.
-        It's caller responsibility to free returned value.
-        If no matching entry found, default is returned (strdup'ed if nonnull).
-     */
-    char * cportage_settings_get_default(const void * _self,
-                                         const char * key,
-                                         const char * _default);
+void
+cportage_settings_unref(/*@killref@*/ CPortageSettings self) /*@modifies self@*/;
 
-    char * cportage_settings_get_profile(const void * _self);
+char *
+cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) /*@*/;
 
-    char * cportage_settings_get_portdir(const void * _self);
+char *
+cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
+
+char *
+cportage_settings_get_profile(const CPortageSettings self) /*@*/;
 
 #pragma GCC visibility pop
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif

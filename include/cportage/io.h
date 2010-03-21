@@ -22,40 +22,23 @@
 #ifndef CPORTAGE_IO_H
 #define CPORTAGE_IO_H
 
-#include <hash.h>
 #include <stdbool.h>
+#include <glib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-    /**
-        Reads file line-by-line an invokes passed function for each line.
-        Skips lines that contain \0 char.
-        @return true if file was read successfully, false otherwise.
-    */
-    bool cportage_processrawlines(const char * filename,
-                                  /* Arbitrary object that is passed to func. Useful to accumulate result. */
-                                  void * ctx,
-                                  /* Line handling function */
-                                  void (* func) (void *ctx, char * s));
+typedef void (*CPortageCtxFunc) (/*@null@*/ void *ctx, char *s) /*@modifies ctx@*/;
 
-    /**
-        Similar to getlines but additionally trims lines, skips empty lines
-        and comments starting with #.
-     */
-    bool cportage_processlines(const char * filename,
-                               void * ctx,
-                               void (* func) (void *ctx, char * s));
+void
+cportage_read_shellconfig(const char *path, const bool allow_source, GHashTable *into, /*@out@*/ GError **error) /*@modifies into@*/;
 
-    int cportage_read_shellconfig(const char * path, const bool allow_source, hash ** into);
+/*@null@*/ char **
+cportage_read_lines(const char *path, const bool ignore_comments, /*@out@*/ GError **error);
 
 #pragma GCC visibility pop
 
-#ifdef __cplusplus
-}
-#endif
+G_END_DECLS
 
 #endif
