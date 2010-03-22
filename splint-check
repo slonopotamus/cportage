@@ -1,5 +1,5 @@
 #!/bin/sh
-splint +strict +posixstrictlib \
+find src -name \*.c -exec splint +posixstrictlib \
 	-sys-dir-errors -protoparamname \
-	-Iinclude `pkg-config --cflags glib-2.0` \
-	src/cportage/*.c
+	-Iinclude -Ibuild/src/cmerge `pkg-config --cflags glib-2.0` \
+	{} +
