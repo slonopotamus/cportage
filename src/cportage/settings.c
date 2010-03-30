@@ -25,9 +25,9 @@
 #include "cportage/settings.h"
 
 struct CPortageSettings {
-    /*@refs@*/ int refcount;
-    char * config_root;
-    GHashTable * entries;
+    /*@refs@*/ int refs;
+    /*@only@*/ char * config_root;
+    /*@only@*/ GHashTable * entries;
 };
 
 CPortageSettings
@@ -39,7 +39,7 @@ cportage_settings_new(const char *config_root, /*@out@*/ GError **error) {
     g_assert(error == NULL || *error == NULL);
 
     self = g_malloc0(sizeof(*self));
-    self->refcount = 1;
+    self->refs = 1;
 
     self->config_root = g_strdup(config_root);
     /* Strip slashes at the end */
@@ -52,8 +52,10 @@ cportage_settings_new(const char *config_root, /*@out@*/ GError **error) {
 
     self->entries = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
     make_conf = g_build_path(self->config_root, "etc/make.conf", NULL);
-    /* cportage_read_shellconfig(make_conf, TRUE, self->entries, error); */
+    /*
+    cportage_read_shellconfig(make_conf, TRUE, self->entries, error);
     g_assert_no_error(*error);
+    */
     free(make_conf);
 
     return self;
@@ -61,14 +63,15 @@ cportage_settings_new(const char *config_root, /*@out@*/ GError **error) {
 
 CPortageSettings
 cportage_settings_ref(CPortageSettings self) {
-    ++self->refcount;
+    ++self->refs;
     return self;
 }
 
 void
 cportage_settings_unref(CPortageSettings self) {
-    g_assert(self->refcount > 0);
-    if (--self->refcount == 0) {
+    g_return_if_fail(self != NULL);
+    g_assert(self->refs > 0);
+    if (--self->refs == 0) {
         g_hash_table_unref(self->entries);
         free(self->config_root);
         /*@-refcounttrans@*/
@@ -80,10 +83,11 @@ cportage_settings_unref(CPortageSettings self) {
 char *
 cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) {
     const char *retval = g_hash_table_lookup(self->entries, key);
-    if (retval == NULL)
+    if (retval == NULL) {
         return g_strdup(dflt);
-    else
+    } else {
         return g_strdup(retval);
+    }
 }
 
 char *

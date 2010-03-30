@@ -29,13 +29,20 @@ G_BEGIN_DECLS
 typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
 
 /*@newref@*/ /*@null@*/ CPortageAtom
-cportage_atom_new(const char *str, /*@out@*/ GError **error);
+cportage_atom_new(
+    const char *str,
+    /*@null@*/ GError **error
+) /*@modifies error@*/;
 
 /*@newref@*/ CPortageAtom
-cportage_atom_ref(/*@returned@*/ CPortageAtom self) /*@modifies self@*/;
+cportage_atom_ref(
+    /*@returned@*/ CPortageAtom self
+) /*@modifies self@*/;
 
 void
-cportage_atom_unref(/*@killref@*/ CPortageAtom self) /*@modifies self@*/;
+cportage_atom_unref(
+    /*@killref@*/ /*@only@*/ /*@null@*/ CPortageAtom self
+) /*@modifies self@*/;
 
 #pragma GCC visibility pop
 

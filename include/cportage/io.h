@@ -29,13 +29,20 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef void (*CPortageCtxFunc) (/*@null@*/ void *ctx, char *s) /*@modifies ctx@*/;
-
-void
-cportage_read_shellconfig(const char *path, const bool allow_source, GHashTable *into, /*@out@*/ GError **error) /*@modifies into@*/;
+bool
+cportage_read_shellconfig(
+    const char *path,
+    const bool allow_source,
+    GHashTable *into,
+    /*@null@*/ GError **error
+) /*@modifies *error@*/;
 
 /*@null@*/ char **
-cportage_read_lines(const char *path, const bool ignore_comments, /*@out@*/ GError **error);
+cportage_read_lines(
+    const char *path,
+    const bool ignore_comments,
+    /*@null@*/ GError **error
+) /*@modifies *error@*/;
 
 #pragma GCC visibility pop
 

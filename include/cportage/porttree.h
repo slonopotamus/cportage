@@ -31,13 +31,17 @@ G_BEGIN_DECLS
 typedef /*@abstract@*/ /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
 
 /*@newref@*/ CPortagePorttree
-cportage_porttree_new(CPortageSettings settings);
+cportage_porttree_new(CPortageSettings settings) /*@modifies settings*/;
 
 /*@newref@*/ CPortagePorttree
-cportage_porttree_ref(/*@returned@*/ CPortagePorttree self) /*@modifies self@*/;
+cportage_porttree_ref(
+    /*@returned@*/ CPortagePorttree self
+) /*@modifies self@*/;
 
 void
-cportage_porttree_unref(/*@killref@*/ CPortagePorttree self) /*@modifies self@*/;
+cportage_porttree_unref(
+    /*@killref@*/ /*@only@*/ /*@null@*/ CPortagePorttree self
+) /*@modifies self@*/;
 
 /**
     Constructs absolute path from tree root.
@@ -45,7 +49,10 @@ cportage_porttree_unref(/*@killref@*/ CPortagePorttree self) /*@modifies self@*/
     @relative must have leading slash.
  */
 char *
-cportage_porttree_get_path(const CPortagePorttree self, const char *relative) /*@*/;
+cportage_porttree_get_path(
+    const CPortagePorttree self,
+    const char *relative
+) /*@*/;
 
 #pragma GCC visibility pop
 

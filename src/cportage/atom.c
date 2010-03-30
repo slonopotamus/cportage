@@ -35,21 +35,21 @@ typedef enum OP_TYPE {
 } OpType;
 
 struct CPortageAtom {
-    /*@refs@*/  int refcount;
+    /*@refs@*/ int refs;
     OpType operator;
-    char *category;
-    char *package;
+    /*@only@*/ char *category;
+    /*@only@*/ char *package;
     /* Nullable */
-    char *slot;
+    /*@only@*/ char *slot;
 };
 
-static struct {
-  GRegex *regex;
+/*@only@*/ static struct {
+  /*@only@*/ GRegex *regex;
   int op_idx, star_idx, simple_idx, slot_idx, use_idx;
 } *atom_re;
 
 static void
-init_atom_re(void) /*@globals undef atom_re@*/ {
+init_atom_re(void) /*@globals undef atom_re@*/ /*@modifies atom_re@*/ {
     /*
         2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
@@ -81,7 +81,7 @@ init_atom_re(void) /*@globals undef atom_re@*/ {
     char *cpv = g_strdup_printf("%s-%s", cp, ver);
     char *atom_re_str = g_strdup_printf("^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
                  op, cpv, cpv, cp, slot, use);
-    GError *error = NULL;
+    /*@null@*/ GError *error = NULL;
     free(use_item);
     free(use);
     free(cp);
@@ -157,7 +157,7 @@ cportage_atom_new(const char *str, GError **error) {
             return NULL;
         }
         atom = g_malloc(sizeof(*atom));
-        atom->refcount = 1;
+        atom->refs = 1;
         atom->operator = op;
 
         atom->category = g_match_info_fetch(match, cat_idx);
@@ -177,14 +177,15 @@ cportage_atom_new(const char *str, GError **error) {
 
 CPortageAtom
 cportage_atom_ref(CPortageAtom self) {
-    ++self->refcount;
+    ++self->refs;
     return self;
 }
 
 void
 cportage_atom_unref(CPortageAtom self) {
-    g_assert(self->refcount > 0);
-    if (--self->refcount == 0) {
+    g_return_if_fail(self != NULL);
+    g_assert(self->refs > 0);
+    if (--self->refs == 0) {
         free(self->category);
         free(self->package);
         free(self->slot);

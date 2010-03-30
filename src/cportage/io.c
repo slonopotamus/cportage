@@ -41,7 +41,7 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
                 char *comment = strchr(line, '#');
                 if (comment != NULL)
                     *comment = '\0';
-                g_strstrip(line);
+                (void)g_strstrip(line);
                 if (line[0] != '\0')
                     result[j++] = line;
             }

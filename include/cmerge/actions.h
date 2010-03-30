@@ -23,16 +23,27 @@
 #include "cmerge/options.h"
 
 void
-cmerge_clean_action(const MergeOptions options, /*@out@*/ GError **error);
+cmerge_clean_action(
+    const MergeOptions options,
+    /*@null@*/ GError **error
+) /*@modifies error @*/;
 
 void
-cmerge_info_action(const GlobalOptions options, /*@out@*/ GError **error);
+cmerge_info_action(
+    const GlobalOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
 
 void
-cmerge_install_action(const MergeOptions options, /*@out@*/ GError **error);
+cmerge_install_action(
+    const MergeOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
 
 void
-cmerge_search_action(const GlobalOptions options, /*@out@*/ GError **error);
+cmerge_search_action(
+    const GlobalOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
 
 #endif
-

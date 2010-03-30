@@ -22,28 +22,29 @@
 #include "cportage/porttree.h"
 
 struct CPortagePorttree {
-    /*@refs@*/ int refcount;
-    CPortageSettings settings;
+    /*@refs@*/ int refs;
+    /*@refcounted@*/ CPortageSettings settings;
 };
 
 CPortagePorttree
 cportage_porttree_new(CPortageSettings settings) {
     CPortagePorttree self = g_malloc0(sizeof(*self));
-    self->refcount = 1;
+    self->refs = 1;
     self->settings = cportage_settings_ref(settings);
     return self;
 }
 
 CPortagePorttree
 cportage_porttree_ref(CPortagePorttree self) {
-    ++self->refcount;
+    ++self->refs;
     return self;
 }
 
 void
 cportage_porttree_unref(CPortagePorttree self) {
-    g_assert(self->refcount > 0);
-    if (--self->refcount == 0) {
+    g_return_if_fail(self != NULL);
+    g_assert(self->refs > 0);
+    if (--self->refs == 0) {
         cportage_settings_unref(self->settings);
         /*@-refcounttrans@*/
         free(self);

@@ -25,16 +25,18 @@
 G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
-typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
+typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 
 /*@newref@*/ /*@null@*/ CPortageSettings
-cportage_settings_new(const char *config_root, /*@out@*/ GError **error);
+cportage_settings_new(const char *config_root, /*@out@*/ /*@null@*/ GError **error) /*@modifies *error@*/;
 
 /*@newref@*/ CPortageSettings
-cportage_settings_ref(/*@returned@*/ CPortageSettings self) /*@modifies self@*/;
+cportage_settings_ref(
+    /*@returned@*/ CPortageSettings self
+) /*@modifies self@*/;
 
 void
-cportage_settings_unref(/*@killref@*/ CPortageSettings self) /*@modifies self@*/;
+cportage_settings_unref(/*@killref@*/ /*@only@*/ /*@null@*/ CPortageSettings self) /*@modifies self@*/;
 
 char *
 cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) /*@*/;
