@@ -18,8 +18,6 @@
 */
 
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "cportage/atom.h"
 
@@ -43,7 +41,7 @@ struct CPortageAtom {
     /*@only@*/ char *slot;
 };
 
-/*@only@*/ static struct {
+/*@only@*/ static struct atom_re_info {
   /*@only@*/ GRegex *regex;
   int op_idx, star_idx, simple_idx, slot_idx, use_idx;
 } *atom_re;
@@ -82,29 +80,45 @@ init_atom_re(void) /*@globals undef atom_re@*/ /*@modifies atom_re@*/ {
     char *atom_re_str = g_strdup_printf("^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
                  op, cpv, cpv, cp, slot, use);
     /*@null@*/ GError *error = NULL;
-    free(use_item);
-    free(use);
-    free(cp);
-    free(cpv);
+    g_free(use_item);
+    g_free(use);
+    g_free(cp);
+    g_free(cpv);
 
-    atom_re = g_malloc(sizeof(*atom_re));
+    atom_re = g_new(struct atom_re_info, 1);
 
-    atom_re->regex = g_regex_new(atom_re_str, 0, 0, &error);
+    atom_re->regex = g_regex_new(atom_re_str, G_REGEX_OPTIMIZE, 0, &error);
     g_assert_no_error(error);
 
-    free(atom_re_str);
+    g_free(atom_re_str);
 
     atom_re->op_idx = g_regex_get_string_number(atom_re->regex, "op");
     atom_re->star_idx = g_regex_get_string_number(atom_re->regex, "star");
     atom_re->simple_idx = g_regex_get_string_number(atom_re->regex, "simple");
     atom_re->slot_idx = g_regex_get_string_number(atom_re->regex, "slot");
     atom_re->use_idx = g_regex_get_string_number(atom_re->regex, "use");
-    g_assert(atom_re->op_idx != -1
-        && atom_re->star_idx != -1
-        && atom_re->simple_idx != -1
-        && atom_re->slot_idx != -1
-        && atom_re->use_idx != -1);
+
+    g_assert_cmpint(atom_re->op_idx, !=, -1);
+    g_assert_cmpint(atom_re->star_idx, !=, -1);
+    g_assert_cmpint(atom_re->simple_idx, !=, -1);
+    g_assert_cmpint(atom_re->slot_idx, !=, -1);
+    g_assert_cmpint(atom_re->use_idx, !=, -1);
 }
+
+static char *
+safe_fetch(const GMatchInfo *match_info, int match_num) {
+    char *result = g_match_info_fetch(match_info, match_num);
+    if (result == NULL && match_num >= 0) {
+        const GRegex *regex = g_match_info_get_regex(match_info);
+        const int capture_count = g_regex_get_capture_count(regex);
+        if (match_num <= capture_count) {
+            result = g_strdup("");
+        } else {
+            g_error("Could not get match group %d", match_num);
+        }
+    }
+    return result;
+} G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 
 CPortageAtom
 cportage_atom_new(const char *str, GError **error) {
@@ -113,64 +127,65 @@ cportage_atom_new(const char *str, GError **error) {
     char *invalid_version;
 
     g_assert(error == NULL || *error == NULL);
+    g_assert(g_utf8_validate(str, -1, NULL));
 
-    if (atom_re == NULL)
+    if (atom_re == NULL) {
         init_atom_re();
+        g_assert(atom_re != NULL);
+    }
 
-    if (g_regex_match_full(atom_re->regex, str, strlen(str), 0, 0, &match, error)) {
+    if (g_regex_match_full(atom_re->regex, str, -1, 0, 0, &match, error)) {
         char *type;
         OpType op;
         int cat_idx;
-        if ((type = g_match_info_fetch(match, atom_re->op_idx)) != NULL) {
+        /* TODO: free empty srings */
+        if ((type = safe_fetch(match, atom_re->op_idx))[0] != '\0') {
             cat_idx = atom_re->op_idx + 2;
-            if (strcmp(type, "<") == 0) {
+            if (g_utf8_collate(type, "<") == 0) {
                 op = OP_LT;
-            } else if (strcmp(type, "<=") == 0) {
+            } else if (g_utf8_collate(type, "<=") == 0) {
                 op = OP_LE;
-            } else if (strcmp(type, "=") == 0) {
+            } else if (g_utf8_collate(type, "=") == 0) {
                 op = OP_EQ;
-            } else if (strcmp(type, ">=") == 0) {
+            } else if (g_utf8_collate(type, ">=") == 0) {
                 op = OP_GE;
-            } else if (strcmp(type, ">") == 0) {
+            } else if (g_utf8_collate(type, ">") == 0) {
                 op = OP_GT;
-            } else if (strcmp(type, "~") == 0) {
+            } else if (g_utf8_collate(type, "~") == 0) {
                 op = OP_TILDE;
             } else {
                 g_assert_not_reached();
             }
-        } else if ((type = g_match_info_fetch(match, atom_re->star_idx)) != NULL) {
+        } else if ((type = safe_fetch(match, atom_re->star_idx))[0] != '\0') {
             cat_idx = atom_re->star_idx + 2;
             op = OP_STAR;
-        } else if ((type = g_match_info_fetch(match, atom_re->simple_idx)) != NULL) {
+        } else if ((type = safe_fetch(match, atom_re->simple_idx))[0] != '\0') {
             cat_idx = atom_re->simple_idx + 2;
             op = OP_NONE;
         } else {
             /* Getting here means we have a bug in atom regex */
             g_assert_not_reached();
-            cat_idx = -1;
         }
-        free(type);
+        g_free(type);
 
-        if ((invalid_version = g_match_info_fetch(match, cat_idx + 2)) != NULL) {
+        if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
             /* Pkg name ends with version string, that's disallowed */
-            free(invalid_version);
+            g_free(invalid_version);
             return NULL;
         }
-        atom = g_malloc(sizeof(*atom));
+        atom = g_new(struct CPortageAtom, 1);
         atom->refs = 1;
         atom->operator = op;
 
-        atom->category = g_match_info_fetch(match, cat_idx);
-        g_assert(atom->category != NULL);
+        atom->category = safe_fetch(match, cat_idx);
 
-        atom->package = g_match_info_fetch(match, cat_idx + 1);
-        g_assert(atom->package != NULL);
+        atom->package = safe_fetch(match, cat_idx + 1);
 
-        atom->slot = g_match_info_fetch(match, atom_re->slot_idx);
-        g_assert(atom->slot != NULL);
+        atom->slot = safe_fetch(match, atom_re->slot_idx);
         /* TODO: store version and useflags */
-    } else
+    } else {
         atom = NULL;
+    }
     g_match_info_free(match);
     return atom;
 }
@@ -184,13 +199,13 @@ cportage_atom_ref(CPortageAtom self) {
 void
 cportage_atom_unref(CPortageAtom self) {
     g_return_if_fail(self != NULL);
-    g_assert(self->refs > 0);
+    g_assert_cmpint(self->refs, >, 0);
     if (--self->refs == 0) {
-        free(self->category);
-        free(self->package);
-        free(self->slot);
+        g_free(self->category);
+        g_free(self->package);
+        g_free(self->slot);
         /*@-refcounttrans@*/
-        free(self);
+        g_free(self);
         /*@=refcounttrans@*/
     }
 }

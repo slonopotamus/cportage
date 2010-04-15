@@ -17,8 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CMERGE_OPTIONS_H
-#define CMERGE_OPTIONS_H
+#ifndef CMERGE_ACTIONS_H
+#define CMERGE_ACTIONS_H
 
 #include <glib.h>
 #include <stdbool.h>
@@ -39,10 +39,34 @@ typedef struct GlobalOptions {
 
 /* Merge/unmerge options */
 typedef struct MergeOptions {
-    struct GlobalOptions global;
+    GlobalOptions global;
     bool pretend;
     bool update;
 } *MergeOptions;
 
-#endif
+void
+cmerge_clean_action(
+    const MergeOptions options,
+    bool with_deps,
+    /*@null@*/ GError **error
+) /*@modifies error @*/;
 
+void
+cmerge_info_action(
+    const GlobalOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
+
+void
+cmerge_install_action(
+    const MergeOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
+
+void
+cmerge_search_action(
+    const GlobalOptions options,
+    /*@null@*/ GError **error
+) /*@modifies *error @*/;
+
+#endif

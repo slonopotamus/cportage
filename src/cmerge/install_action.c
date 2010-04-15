@@ -17,10 +17,9 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cmerge/actions.h"
+#include "actions.h"
 
 void
-cmerge_install_action(const MergeOptions options, GError **error) {
+cmerge_install_action(const MergeOptions options G_GNUC_UNUSED, GError **error) {
     g_assert(error == NULL || *error == NULL);
-    (void)options;
 }

@@ -18,10 +18,28 @@
 */
 
 #include <locale.h>
+/* TODO: this is only included for puts(). Have some glib alternative? */
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "config.h"
-#include "cmerge/actions.h"
+#include "actions.h"
+
+#define OPTIONS_TABLEEND {NULL, '\0', 0, 0, NULL, NULL, NULL}
+#define DEFAULT_CONFIG_ROOT "/"
+
+static struct {
+    int clean;
+    int depclean;
+    int info;
+    int install;
+    int search;
+    int version;
+} actions;
+
+static struct GlobalOptions gopts = { VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL };
+
+static struct MergeOptions mopts = { &gopts, 0, 0 };
 
 static void
 print_version(void) {
@@ -32,94 +50,140 @@ print_version(void) {
          "There is NO WARRANTY, to the extent permitted by law.\n");
 }
 
+static bool verbose_cb(
+        const char *option_name G_GNUC_UNUSED,
+        const char *value G_GNUC_UNUSED,
+        void *data G_GNUC_UNUSED,
+        GError **error G_GNUC_UNUSED) {
+    gopts.verbosity = VERBOSITY_VERBOSE;
+    return true;
+}
+
+static bool quiet_cb(
+        const char *option_name G_GNUC_UNUSED,
+        const char *value G_GNUC_UNUSED,
+        void *data G_GNUC_UNUSED,
+        GError **error G_GNUC_UNUSED) {
+    gopts.verbosity = VERBOSITY_QUIET;
+    return true;
+}
+
+static const GOptionEntry actions_options[] = {
+    {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean,
+        "Clean the system by removing packages that are not associated"
+        " with explicitly merged packages", NULL},
+    {"info", '\0', 0, G_OPTION_ARG_NONE, &actions.info,
+        "Produce a list of information to include in bug reports", NULL},
+    {"install", '\0', 0, G_OPTION_ARG_NONE, &actions.install,
+        "Install packages (default action)", NULL},
+    {"search", 's', 0, G_OPTION_ARG_NONE, &actions.search,
+        "Search for matches of the supplied string in the portage tree", NULL},
+    {"unmerge", 'C', 0, G_OPTION_ARG_NONE, &actions.clean,
+        "Remove all matching packages", NULL},
+    {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version,
+        "Output version", NULL},
+    OPTIONS_TABLEEND
+};
+
+/* Know how to compile this without extension? Tell me */
+G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
+    {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args,
+        "Leftover args", NULL},
+    {"config-root", '\0', 0, G_OPTION_ARG_FILENAME, &gopts.config_root,
+        "Set location for configuration files", "DIR"},
+    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb,
+        "Enable quiet output mode", NULL},
+    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb,
+        "Enable verbose output mode", NULL},
+    OPTIONS_TABLEEND
+};
+
+static const GOptionEntry mopts_options[] = {
+    {"pretend", 'p', 0, G_OPTION_ARG_NONE, &mopts.pretend,
+        "Instead of actually performing any action, only display what would be done", NULL},
+    {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update,
+        "Update packages to the best version available", NULL},
+    OPTIONS_TABLEEND
+};
+
+/*static const GOptionEntry popts[] = {
+    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &actions_options, 0,
+        "Actions (only one can be specified)", NULL},
+    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &gopts_options, 0, "General Options", NULL},
+    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &mopts_options, 0, "Merge Options"
+        " (taken into account when requested action performes"
+        " package (un)merging)", NULL},
+    OPTIONS_TABLEEND
+};*/
+
+static GOptionContext *
+create_option_ctx(void) {
+    GOptionContext *ctx = g_option_context_new("[ACTION] [ARGS...]");
+
+    GOptionGroup *actions_group = g_option_group_new("actions",
+        "Actions (only one can be specified):",
+        "Show available actions to perform", NULL, NULL);
+    GOptionGroup *gopts_group = g_option_group_new("global",
+        "Global options (applicable to all actions):",
+        "Show global options", NULL, NULL);
+    GOptionGroup *mopts_group = g_option_group_new("merge",
+        "Merge/unmerge options:",
+        "Show merge/unmerge options", NULL, NULL);
+
+    g_option_group_add_entries(actions_group, actions_options);
+    g_option_context_add_group(ctx, actions_group);
+    g_option_group_add_entries(gopts_group, gopts_options);
+    g_option_context_add_group(ctx, gopts_group);
+    g_option_group_add_entries(mopts_group, mopts_options);
+    g_option_context_add_group(ctx, mopts_group);
+
+    return ctx;
+}
+
 int
 main(int argc, char *argv[]) {
-    int clean = 0,
-        help = 0,
-        info = 0,
-        install = 0,
-        search = 0,
-        version = 0;
-    /*const struct poptOption actions[] = {
-        // TODO: alias this to --clean, -c, --prune, -P, --unmerge
-        {"depclean", 'C', POPT_ARG_NONE, &clean, 0, "Cleans the system"
-            " by removing packages that are not associated"
-            " with explicitly merged packages", NULL},
-        {"help", 'h', POPT_ARG_NONE, &help, 0, "Shows this help message", NULL},
-        {"info", 0, POPT_ARG_NONE, &info, 0, "Produces a list of information"
-         " to include in bug reports", NULL},
-        {"install", 0, POPT_ARG_NONE, &install, 0, "Installs package", NULL},
-        {"search", 's', POPT_ARG_NONE, &search, 0, "Searches for matches"
-         " of the supplied string in the portage tree.", NULL},
-        {"version", 'V', POPT_ARG_NONE, &version, 0, "Outputs version", NULL},
-        POPT_TABLEEND
-    };
-    */
-    struct MergeOptions mopts = { { VERBOSITY_NORMAL, "/", NULL }, 0, 0 };
-    /*
-    const struct poptOption moptions[] = {
-        {"pretend", 'p', POPT_ARG_NONE, &mopts.pretend, 0, "Instead of actually"
-            " performing any action, only displays what would be done", NULL},
-        {"update", 'u', POPT_ARG_NONE, &mopts.update, 0, "Updates packages"
-         " to the best version available", NULL},
-        POPT_TABLEEND
-    };
-    const struct poptOption popts[] = {
-        {NULL, 0, POPT_ARG_INCLUDE_TABLE, &actions, 0,
-            "Actions (only one can be specified)", NULL},
-        {NULL, 0, POPT_ARG_INCLUDE_TABLE, &goptions, 0, "General Options", NULL},
-        {NULL, 0, POPT_ARG_INCLUDE_TABLE, &moptions, 0, "Merge Options"
-         " (taken into account when requested action performes"
-         " package (un)merging)", NULL},
-        POPT_TABLEEND
-    };
-    */
-    const GOptionEntry entries[] = {
-        /*{"config-root", 0, POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
-            &gopts.config_root, 0, "Specifies the location"
-            " for configuration files", "DIR"},
-        {"quiet", 'q', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_QUIET,
-         "Enables quiet output mode", NULL},
-        {"verbose", 'v', POPT_ARG_VAL, &gopts.verbosity, VERBOSITY_VERBOSE,
-         "Enables verbose output mode", NULL},
-         */
-        { NULL, 0, 0, 0, NULL, NULL, NULL }
-    };
     GOptionContext *ctx;
     GError *error = NULL;
 
-    setlocale(LC_ALL, "");
+    (void)setlocale(LC_ALL, "");
 
-    ctx = g_option_context_new("ACTION [ARGS...]");
-    g_option_context_add_main_entries(ctx, entries, NULL);
+    ctx = create_option_ctx();
 
     if (g_option_context_parse(ctx, &argc, &argv, &error)) {
-        int actions = clean + help + info + install + search + version;
+        int actions_sum = actions.clean + actions.depclean + actions.info
+            + actions.install + actions.search + actions.version;
 
         /*
             Special case for `cmerge foo/bar`.
             We treat it as if --install was specified.
          */
-        if (actions == 0 && mopts.global.args != NULL)
-            actions = install = 1;
+        if (actions_sum == 0 && gopts.args != NULL) {
+            actions_sum = actions.install = 1;
+        }
 
-        if (actions == 0 || help)
-            (void)0;
-            /* poptPrintHelp(ctx, stdout, 0); */
-        else if (actions > 1)
+        if (actions_sum == 0) {
+            char *help = g_option_context_get_help(ctx, false, NULL);
+            puts(help);
+            g_free(help);
+        } else if (actions_sum > 1) {
+            /* TODO: set error */
             g_error("Only one action can be given\n");
-        else if (version)
-            print_version();
-        else if (clean)
-            cmerge_clean_action(&mopts, &error);
-        else if (info)
-            cmerge_info_action(&mopts.global, &error);
-        else if (install)
+        } else if (actions.clean > 0) {
+            cmerge_clean_action(&mopts, FALSE, &error);
+        } else if (actions.depclean > 0) {
+            cmerge_clean_action(&mopts, TRUE, &error);
+        } else if (actions.info > 0) {
+            cmerge_info_action(&gopts, &error);
+        } else if (actions.install > 0) {
            cmerge_install_action(&mopts, &error);
-        else if (search)
-            cmerge_search_action(&mopts.global, &error);
-        else
+        } else if (actions.search > 0) {
+            cmerge_search_action(&gopts, &error);
+        } else if (actions.version > 0) {
+            print_version();
+        } else {
+            /* TODO: set error */
             g_error("Unknown action");
+        }
     }
     g_option_context_free(ctx);
 

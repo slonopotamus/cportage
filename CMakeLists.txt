@@ -9,11 +9,20 @@ find_package(GLIB2 REQUIRED)
 #find_package(FLEX REQUIRED)
 
 set(CMAKE_REQUIRED_FLAGS -pedantic -ansi
-  -fvisibility=hidden -fstack-protector
-  -Wall -Wextra -Werror -Wwrite-strings -Wstrict-prototypes -Wstack-protector
-  -Wmissing-prototypes -Wold-style-definition -Wmissing-format-attribute)
+  -fvisibility=hidden -fstack-protector -fstrict-aliasing -fdiagnostics-show-option
+  -Wall -Wextra -Werror -Wno-import -Wformat=2 -Wmissing-include-dirs
+  -Wswitch-default -Wswitch-enum -Wfloat-equal
+  -Wdeclaration-after-statement -Wundef -Wshadow
+  -Wunsafe-loop-optimizations -Wbad-function-cast -Wcast-align
+  -Wwrite-strings -Wlogical-op -Wstrict-prototypes
+  -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations
+  -Wmissing-noreturn -Wmissing-format-attribute -Wpacked
+  -Wredundant-decls -Wnested-externs -Wunreachable-code -Winline
+  -Wvolatile-register-var -Wstack-protector
+)
+# -Wconversion
 set(CMAKE_REQUIRED_DEFINITIONS -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=700
-  -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES -DG_LOG_DOMAIN="cportage"
+  -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES
 )
 
 include_directories(${GLIB2_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)

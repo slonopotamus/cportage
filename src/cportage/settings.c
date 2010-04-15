@@ -17,10 +17,6 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-
 #include "cportage/io.h"
 #include "cportage/settings.h"
 
@@ -33,30 +29,23 @@ struct CPortageSettings {
 CPortageSettings
 cportage_settings_new(const char *config_root, /*@out@*/ GError **error) {
     CPortageSettings self;
-    ssize_t i;
     char *make_conf;
 
     g_assert(error == NULL || *error == NULL);
+    g_assert(g_utf8_validate(config_root, -1, NULL));
 
-    self = g_malloc0(sizeof(*self));
+    self = g_new(struct CPortageSettings, 1);
     self->refs = 1;
 
     self->config_root = g_strdup(config_root);
-    /* Strip slashes at the end */
-    i = strlen(self->config_root) - 1;
-    while (i >= 0) {
-        if (self->config_root[i] == '/')
-            self->config_root[i] = '\0';
-        --i;
-    }
 
-    self->entries = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
-    make_conf = g_build_path(self->config_root, "etc/make.conf", NULL);
+    self->entries = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
     /*
     cportage_read_shellconfig(make_conf, TRUE, self->entries, error);
     g_assert_no_error(*error);
     */
-    free(make_conf);
+    g_free(make_conf);
 
     return self;
 }
@@ -70,32 +59,41 @@ cportage_settings_ref(CPortageSettings self) {
 void
 cportage_settings_unref(CPortageSettings self) {
     g_return_if_fail(self != NULL);
-    g_assert(self->refs > 0);
+    g_assert_cmpint(self->refs, >, 0);
     if (--self->refs == 0) {
         g_hash_table_unref(self->entries);
-        free(self->config_root);
+        g_free(self->config_root);
         /*@-refcounttrans@*/
-        free(self);
+        g_free(self);
         /*@=refcounttrans@*/
     }
 }
 
 char *
-cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) {
-    const char *retval = g_hash_table_lookup(self->entries, key);
-    if (retval == NULL) {
-        return g_strdup(dflt);
+cportage_settings_get(const CPortageSettings self, const char *key) {
+    const char *result;
+
+    g_assert(g_utf8_validate(key, -1, NULL));
+
+    result = g_hash_table_lookup(self->entries, key);
+    if (result == NULL) {
+        return NULL;
     } else {
-        return g_strdup(retval);
+        return g_strdup(result);
     }
 }
 
 char *
 cportage_settings_get_portdir(const CPortageSettings self) {
-    return cportage_settings_get_entry(self, "PORTDIR", "usr/portage");
+    char *result = cportage_settings_get(self, "PORTDIR");
+    if (result == NULL) {
+        return g_build_filename("/", "usr", "portage", NULL);
+    } else {
+        return result;
+    }
 }
 
 char *
 cportage_settings_get_profile(const CPortageSettings self) {
-    return g_build_filename(self->config_root, "etc/make.profile", NULL);
+    return g_build_filename(self->config_root, "etc", "make.profile", NULL);
 }

@@ -28,7 +28,10 @@ G_BEGIN_DECLS
 typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 
 /*@newref@*/ /*@null@*/ CPortageSettings
-cportage_settings_new(const char *config_root, /*@out@*/ /*@null@*/ GError **error) /*@modifies *error@*/;
+cportage_settings_new(
+    const char *config_root,
+    /*@out@*/ /*@null@*/ GError **error
+) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 /*@newref@*/ CPortageSettings
 cportage_settings_ref(
@@ -36,16 +39,25 @@ cportage_settings_ref(
 ) /*@modifies self@*/;
 
 void
-cportage_settings_unref(/*@killref@*/ /*@only@*/ /*@null@*/ CPortageSettings self) /*@modifies self@*/;
+cportage_settings_unref(
+    /*@killref@*/ /*@only@*/ /*@null@*/ CPortageSettings self
+) /*@modifies self@*/;
+
+/*@null@*/ char *
+cportage_settings_get(
+    const CPortageSettings self,
+    const char *key
+) /*@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+
+/*@null@*/ char *
+cportage_settings_get_portdir(
+    const CPortageSettings self
+) /*@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 char *
-cportage_settings_get_entry(const CPortageSettings self, const char *key, const char *dflt) /*@*/;
-
-char *
-cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
-
-char *
-cportage_settings_get_profile(const CPortageSettings self) /*@*/;
+cportage_settings_get_profile(
+    const CPortageSettings self
+) /*@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 #pragma GCC visibility pop
 

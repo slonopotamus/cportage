@@ -32,7 +32,7 @@ typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
 cportage_atom_new(
     const char *str,
     /*@null@*/ GError **error
-) /*@modifies error@*/;
+) /*@modifies error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 /*@newref@*/ CPortageAtom
 cportage_atom_ref(

@@ -37,12 +37,18 @@ cportage_read_shellconfig(
     /*@null@*/ GError **error
 ) /*@modifies *error@*/;
 
+/*@null@*/ char *
+cportage_canonical_path(
+    char *path,
+    /*@null@*/ GError **error
+) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+
 /*@null@*/ char **
 cportage_read_lines(
     const char *path,
     const bool ignore_comments,
     /*@null@*/ GError **error
-) /*@modifies *error@*/;
+) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 #pragma GCC visibility pop
 

@@ -1,5 +1,7 @@
 #!/bin/sh
-find src -name \*.c -exec splint +posixstrictlib \
-	-sys-dir-errors -protoparamname \
-	-Iinclude -Ibuild/src/cmerge `pkg-config --cflags glib-2.0` \
+find src/cportage/io.c -name \*.c -exec \
+	splint +strict +posixstrictlib \
+	-sys-dir-errors -protoparamname -exportfcn -exporttype \
+	-Iinclude -Ibuild/src/cmerge \
+	-I../glib -I../glib/glib -sys-dirs /usr/include:../glib:../glib/glib \
 	{} +

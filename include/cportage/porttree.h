@@ -31,7 +31,9 @@ G_BEGIN_DECLS
 typedef /*@abstract@*/ /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
 
 /*@newref@*/ CPortagePorttree
-cportage_porttree_new(CPortageSettings settings) /*@modifies settings*/;
+cportage_porttree_new(
+    CPortageSettings settings
+) /*@modifies settings*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
 
 /*@newref@*/ CPortagePorttree
 cportage_porttree_ref(
@@ -43,16 +45,12 @@ cportage_porttree_unref(
     /*@killref@*/ /*@only@*/ /*@null@*/ CPortagePorttree self
 ) /*@modifies self@*/;
 
-/**
-    Constructs absolute path from tree root.
-    It's up to the caller to free result.
-    @relative must have leading slash.
- */
 char *
 cportage_porttree_get_path(
     const CPortagePorttree self,
-    const char *relative
-) /*@*/;
+    const char *first_element,
+    ...
+) /*@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC G_GNUC_NULL_TERMINATED;
 
 #pragma GCC visibility pop
 

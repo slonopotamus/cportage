@@ -2,7 +2,7 @@
 #flex_target(ShellScanner shelllexer.l  ${CMAKE_CURRENT_BINARY_DIR}/shelllexer.c)
 #add_flex_bison_dependency(ShellScanner ShellParser)
 
-#include_directories(${GLIB2_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
 # Executables
 add_library(cportage SHARED
