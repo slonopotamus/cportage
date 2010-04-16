@@ -54,13 +54,18 @@ char *
 cportage_porttree_get_path(const CPortagePorttree self, const char *first_element, ...) {
     char *portdir = cportage_settings_get_portdir(self->settings);
     va_list args;
+    char *tmp;
     char *result;
 
     va_start(args, first_element);
-    /* TODO: we already got NULL passed in. Why gcc wants one more? */
-    result = g_build_filename(portdir, first_element, args, NULL);
-    va_end (args);
+    tmp = g_build_filenamev(args);
+    va_end(args);
+
+    result = g_build_filename(portdir, first_element, tmp, NULL);
+    g_assert(g_utf8_validate(result, -1, NULL));
 
     g_free(portdir);
+    g_free(tmp);
+
     return result;
 }

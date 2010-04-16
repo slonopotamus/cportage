@@ -52,10 +52,10 @@ static char *relative_path(char *base, char *path, GError **error) {
 }
 
 static void
-print_version(const CPortageSettings settings, const struct utsname *utsname) {
-    char *portdir = cportage_settings_get_portdir(settings);
+print_version(const CPortageSettings settings, const CPortagePorttree porttree, const struct utsname *utsname) {
+    char *profiles_dir = cportage_porttree_get_path(porttree, "profiles", NULL);
     char *profile = cportage_settings_get_profile(settings);
-    char *profile_str = relative_path(portdir, profile, NULL);
+    char *profile_str = relative_path(profiles_dir, profile, NULL);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
     /* TODO: read libc from vartree */
@@ -64,7 +64,7 @@ print_version(const CPortageSettings settings, const struct utsname *utsname) {
     g_print("cportage %s (%s, %s, %s, %s %s)\n",
            CPORTAGE_VERSION, profile_str, gcc_ver, libc_ver,
            utsname->release, utsname->machine);
-    g_free(portdir);
+    g_free(profiles_dir);
     g_free(profile);
     g_free(profile_str);
 }
@@ -152,7 +152,7 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
     rc = uname(&utsname);
     g_assert_cmpint(rc, ==, 0);
 
-    print_version(settings, &utsname);
+    print_version(settings, porttree, &utsname);
     g_print("=================================================================\n");
     g_print("System uname: ");
     g_print("%s-%s-%s-%s-with-%s\n",

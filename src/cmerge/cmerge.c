@@ -89,7 +89,7 @@ static const GOptionEntry actions_options[] = {
 G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args,
         "Leftover args", NULL},
-    {"config-root", '\0', 0, G_OPTION_ARG_FILENAME, &gopts.config_root,
+    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root,
         "Set location for configuration files", "DIR"},
     {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb,
         "Enable quiet output mode", NULL},
