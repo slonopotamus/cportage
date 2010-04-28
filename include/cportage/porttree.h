@@ -28,29 +28,18 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef /*@abstract@*/ /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
+typedef /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
 
 /*@newref@*/ CPortagePorttree
 cportage_porttree_new(
     CPortageSettings settings
-) /*@modifies settings*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /*@newref@*/ CPortagePorttree
-cportage_porttree_ref(
-    /*@returned@*/ CPortagePorttree self
-) /*@modifies self@*/;
+cportage_porttree_ref(CPortagePorttree self);
 
 void
-cportage_porttree_unref(
-    /*@killref@*/ /*@only@*/ /*@null@*/ CPortagePorttree self
-) /*@modifies self@*/;
-
-char *
-cportage_porttree_get_path(
-    const CPortagePorttree self,
-    const char *first_element,
-    ...
-) /*@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC G_GNUC_NULL_TERMINATED;
+cportage_porttree_unref(/*@killref@*/ /*@null@*/ CPortagePorttree self);
 
 #pragma GCC visibility pop
 

@@ -26,23 +26,19 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef /*@abstract@*/ /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
+typedef /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
 
 /*@newref@*/ /*@null@*/ CPortageAtom
 cportage_atom_new(
     const char *str,
     /*@null@*/ GError **error
-) /*@modifies error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /*@newref@*/ CPortageAtom
-cportage_atom_ref(
-    /*@returned@*/ CPortageAtom self
-) /*@modifies self@*/;
+cportage_atom_ref(CPortageAtom self);
 
 void
-cportage_atom_unref(
-    /*@killref@*/ /*@only@*/ /*@null@*/ CPortageAtom self
-) /*@modifies self@*/;
+cportage_atom_unref(/*@killref@*/ /*@null@*/ CPortageAtom self);
 
 #pragma GCC visibility pop
 

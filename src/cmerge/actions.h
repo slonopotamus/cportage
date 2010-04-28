@@ -34,12 +34,12 @@ typedef struct GlobalOptions {
     VerbosityLevel verbosity;
     const char *config_root;
     /* Leftover args */
-    const char **args;
+    /*@null@*/ const char **args;
 } *GlobalOptions;
 
 /* Merge/unmerge options */
 typedef struct MergeOptions {
-    GlobalOptions global;
+    /*@observer@*/ GlobalOptions global;
     bool pretend;
     bool update;
 } *MergeOptions;
@@ -49,24 +49,24 @@ cmerge_clean_action(
     const MergeOptions options,
     bool with_deps,
     /*@null@*/ GError **error
-) /*@modifies error @*/;
+);
 
 void
 cmerge_info_action(
     const GlobalOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error @*/;
+) /*@globals errno@*/;
 
 void
 cmerge_install_action(
     const MergeOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error @*/;
+);
 
 void
 cmerge_search_action(
     const GlobalOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error @*/;
+);
 
 #endif

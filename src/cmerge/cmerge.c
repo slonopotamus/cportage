@@ -18,8 +18,6 @@
 */
 
 #include <locale.h>
-/* TODO: this is only included for puts(). Have some glib alternative? */
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "config.h"
@@ -51,19 +49,19 @@ print_version(void) {
 }
 
 static bool verbose_cb(
-        const char *option_name G_GNUC_UNUSED,
-        const char *value G_GNUC_UNUSED,
-        void *data G_GNUC_UNUSED,
-        GError **error G_GNUC_UNUSED) {
+        /*@unused@*/ const char *option_name G_GNUC_UNUSED,
+        /*@unused@*/ const char *value G_GNUC_UNUSED,
+        /*@unused@*/ void *data G_GNUC_UNUSED,
+        /*@unused@*/ GError **error G_GNUC_UNUSED) {
     gopts.verbosity = VERBOSITY_VERBOSE;
     return true;
 }
 
 static bool quiet_cb(
-        const char *option_name G_GNUC_UNUSED,
-        const char *value G_GNUC_UNUSED,
-        void *data G_GNUC_UNUSED,
-        GError **error G_GNUC_UNUSED) {
+        /*@unused@*/ const char *option_name G_GNUC_UNUSED,
+        /*@unused@*/ const char *value G_GNUC_UNUSED,
+        /*@unused@*/ void *data G_GNUC_UNUSED,
+        /*@unused@*/ GError **error G_GNUC_UNUSED) {
     gopts.verbosity = VERBOSITY_QUIET;
     return true;
 }
@@ -82,7 +80,9 @@ static const GOptionEntry actions_options[] = {
         "Remove all matching packages", NULL},
     {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version,
         "Output version", NULL},
+    /*@-nullassign@*/
     OPTIONS_TABLEEND
+    /*@=nullassign@*/
 };
 
 /* Know how to compile this without extension? Tell me */
@@ -91,11 +91,15 @@ G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
         "Leftover args", NULL},
     {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root,
         "Set location for configuration files", "DIR"},
+    /*@-type@*/
     {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb,
         "Enable quiet output mode", NULL},
     {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb,
         "Enable verbose output mode", NULL},
+    /*@=type@*/
+    /*@-nullassign@*/
     OPTIONS_TABLEEND
+    /*@=nullassign@*/
 };
 
 static const GOptionEntry mopts_options[] = {
@@ -103,18 +107,10 @@ static const GOptionEntry mopts_options[] = {
         "Instead of actually performing any action, only display what would be done", NULL},
     {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update,
         "Update packages to the best version available", NULL},
+    /*@-nullassign@*/
     OPTIONS_TABLEEND
+    /*@=nullassign@*/
 };
-
-/*static const GOptionEntry popts[] = {
-    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &actions_options, 0,
-        "Actions (only one can be specified)", NULL},
-    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &gopts_options, 0, "General Options", NULL},
-    {NULL, 0, POPT_ARG_INCLUDE_TABLE, &mopts_options, 0, "Merge Options"
-        " (taken into account when requested action performes"
-        " package (un)merging)", NULL},
-    OPTIONS_TABLEEND
-};*/
 
 static GOptionContext *
 create_option_ctx(void) {
@@ -141,7 +137,7 @@ create_option_ctx(void) {
 }
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[]) /*@globals errno@*/ {
     GOptionContext *ctx;
     GError *error = NULL;
 
@@ -163,7 +159,7 @@ main(int argc, char *argv[]) {
 
         if (actions_sum == 0) {
             char *help = g_option_context_get_help(ctx, false, NULL);
-            puts(help);
+            g_print("%s", help);
             g_free(help);
         } else if (actions_sum > 1) {
             /* TODO: set error */

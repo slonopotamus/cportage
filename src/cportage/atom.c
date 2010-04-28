@@ -47,7 +47,7 @@ struct CPortageAtom {
 } *atom_re;
 
 static void
-init_atom_re(void) /*@globals undef atom_re@*/ /*@modifies atom_re@*/ {
+init_atom_re(void) /*@globals atom_re@*/ {
     /*
         2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
@@ -79,15 +79,16 @@ init_atom_re(void) /*@globals undef atom_re@*/ /*@modifies atom_re@*/ {
     char *cpv = g_strdup_printf("%s-%s", cp, ver);
     char *atom_re_str = g_strdup_printf("^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
                  op, cpv, cpv, cp, slot, use);
-    /*@null@*/ GError *error = NULL;
+    GError *error = NULL;
     g_free(use_item);
     g_free(use);
     g_free(cp);
     g_free(cpv);
 
+    /*@-mustfreeonly@*/
     atom_re = g_new(struct atom_re_info, 1);
-
     atom_re->regex = g_regex_new(atom_re_str, G_REGEX_OPTIMIZE, 0, &error);
+    /*@=mustfreeonly@*/
     g_assert_no_error(error);
 
     g_free(atom_re_str);
@@ -108,15 +109,21 @@ init_atom_re(void) /*@globals undef atom_re@*/ /*@modifies atom_re@*/ {
 static char *
 safe_fetch(const GMatchInfo *match_info, int match_num) {
     char *result = g_match_info_fetch(match_info, match_num);
+
+    /* Workaround for gregex bug. TODO: provide a link. */
     if (result == NULL && match_num >= 0) {
         const GRegex *regex = g_match_info_get_regex(match_info);
         const int capture_count = g_regex_get_capture_count(regex);
         if (match_num <= capture_count) {
+            /*@-mustfreefresh@*/
             result = g_strdup("");
+            /*@=mustfreefresh@*/
         } else {
             g_error("Could not get match group %d", match_num);
         }
     }
+
+    g_assert(result != NULL);
     return result;
 } G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 
@@ -135,53 +142,61 @@ cportage_atom_new(const char *str, GError **error) {
     }
 
     if (g_regex_match_full(atom_re->regex, str, -1, 0, 0, &match, error)) {
-        char *type;
+        char *op_match = NULL;
+        char *star_match = NULL;
+        char *simple_match = NULL;
         OpType op;
         int cat_idx;
-        /* TODO: free empty srings */
-        if ((type = safe_fetch(match, atom_re->op_idx))[0] != '\0') {
+
+        if ((op_match = safe_fetch(match, atom_re->op_idx))[0] != '\0') {
             cat_idx = atom_re->op_idx + 2;
-            if (g_utf8_collate(type, "<") == 0) {
+            if (g_utf8_collate(op_match, "<") == 0) {
                 op = OP_LT;
-            } else if (g_utf8_collate(type, "<=") == 0) {
+            } else if (g_utf8_collate(op_match, "<=") == 0) {
                 op = OP_LE;
-            } else if (g_utf8_collate(type, "=") == 0) {
+            } else if (g_utf8_collate(op_match, "=") == 0) {
                 op = OP_EQ;
-            } else if (g_utf8_collate(type, ">=") == 0) {
+            } else if (g_utf8_collate(op_match, ">=") == 0) {
                 op = OP_GE;
-            } else if (g_utf8_collate(type, ">") == 0) {
+            } else if (g_utf8_collate(op_match, ">") == 0) {
                 op = OP_GT;
-            } else if (g_utf8_collate(type, "~") == 0) {
+            } else if (g_utf8_collate(op_match, "~") == 0) {
                 op = OP_TILDE;
             } else {
+                op = -1;
                 g_assert_not_reached();
             }
-        } else if ((type = safe_fetch(match, atom_re->star_idx))[0] != '\0') {
+        } else if ((star_match = safe_fetch(match, atom_re->star_idx))[0] != '\0') {
             cat_idx = atom_re->star_idx + 2;
             op = OP_STAR;
-        } else if ((type = safe_fetch(match, atom_re->simple_idx))[0] != '\0') {
+        } else if ((simple_match = safe_fetch(match, atom_re->simple_idx))[0] != '\0') {
             cat_idx = atom_re->simple_idx + 2;
             op = OP_NONE;
         } else {
             /* Getting here means we have a bug in atom regex */
+            op = cat_idx = -1;
             g_assert_not_reached();
         }
-        g_free(type);
+        g_free(op_match);
+        g_free(star_match);
+        g_free(simple_match);
 
         if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
             /* Pkg name ends with version string, that's disallowed */
             g_free(invalid_version);
             return NULL;
         }
+        g_free(invalid_version);
+
         atom = g_new(struct CPortageAtom, 1);
         atom->refs = 1;
         atom->operator = op;
-
+        /*@-mustfreeonly@*/
         atom->category = safe_fetch(match, cat_idx);
-
         atom->package = safe_fetch(match, cat_idx + 1);
-
         atom->slot = safe_fetch(match, atom_re->slot_idx);
+        /*@=mustfreeonly@*/
+
         /* TODO: store version and useflags */
     } else {
         atom = NULL;
@@ -198,7 +213,11 @@ cportage_atom_ref(CPortageAtom self) {
 
 void
 cportage_atom_unref(CPortageAtom self) {
-    g_return_if_fail(self != NULL);
+    if (self == NULL) {
+        /*@-mustfreeonly@*/
+        return;
+        /*@=mustfreeonly@*/
+    }
     g_assert_cmpint(self->refs, >, 0);
     if (--self->refs == 0) {
         g_free(self->category);

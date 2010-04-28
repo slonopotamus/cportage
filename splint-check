@@ -1,7 +1,6 @@
 #!/bin/sh
-find src/cportage/io.c -name \*.c -exec \
-	splint +strict +posixstrictlib \
-	-sys-dir-errors -protoparamname -exportfcn -exporttype \
-	-Iinclude -Ibuild/src/cmerge \
+find src -name \*.c -exec \
+	splint +posixstrictlib -newreftrans \
+	-DGETTEXT_PACKAGE=\"cportage\" -Iinclude -Ibuild/src/cmerge \
 	-I../glib -I../glib/glib -sys-dirs /usr/include:../glib:../glib/glib \
 	{} +

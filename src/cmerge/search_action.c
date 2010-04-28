@@ -20,6 +20,6 @@
 #include "actions.h"
 
 void
-cmerge_search_action(const GlobalOptions options G_GNUC_UNUSED, GError **error) {
+cmerge_search_action(/*@unused@*/ const GlobalOptions options G_GNUC_UNUSED, GError **error) {
     g_assert(error == NULL || *error == NULL);
 }

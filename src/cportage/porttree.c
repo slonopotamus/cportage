@@ -21,7 +21,7 @@
 
 struct CPortagePorttree {
     /*@refs@*/ int refs;
-    /*@refcounted@*/ CPortageSettings settings;
+    CPortageSettings settings;
 };
 
 CPortagePorttree
@@ -40,7 +40,11 @@ cportage_porttree_ref(CPortagePorttree self) {
 
 void
 cportage_porttree_unref(CPortagePorttree self) {
-    g_return_if_fail(self != NULL);
+    if (self == NULL) {
+        /*@-mustfreeonly@*/
+        return;
+        /*@=mustfreeonly@*/
+    }
     g_assert_cmpint(self->refs, >, 0);
     if (--self->refs == 0) {
         cportage_settings_unref(self->settings);
@@ -48,24 +52,4 @@ cportage_porttree_unref(CPortagePorttree self) {
         g_free(self);
         /*@=refcounttrans@*/
     }
-}
-
-char *
-cportage_porttree_get_path(const CPortagePorttree self, const char *first_element, ...) {
-    char *portdir = cportage_settings_get_portdir(self->settings);
-    va_list args;
-    char *tmp;
-    char *result;
-
-    va_start(args, first_element);
-    tmp = g_build_filenamev(args);
-    va_end(args);
-
-    result = g_build_filename(portdir, first_element, tmp, NULL);
-    g_assert(g_utf8_validate(result, -1, NULL));
-
-    g_free(portdir);
-    g_free(tmp);
-
-    return result;
 }

@@ -24,18 +24,21 @@
 #include "cportage/io.h"
 
 char *
-cportage_canonical_path(char *path, GError **error) {
+cportage_canonical_path(const char *path, GError **error) {
     char *path_enc;
     char *result;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(path, -1, NULL));
 
-    if ((path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error)) == NULL) {
+    path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
+    if (path_enc == NULL) {
         result = NULL;
     } else {
         /* TODO: altertative impl using glibc canonicalize_path? */
+        /*@-unrecog@*/
         char *result_enc = realpath(path_enc, NULL);
+        /*@=unrecog@*/
         if (result_enc == NULL) {
             int save_errno = errno;
             g_set_error (error,
@@ -52,20 +55,20 @@ cportage_canonical_path(char *path, GError **error) {
     }
 
     g_free(path_enc);
-    g_assert(g_utf8_validate(result, -1, NULL));
     return result;
 }
 
 char **
 cportage_read_lines(const char *path, const bool ignore_comments, GError **error) {
-    char *path_enc = NULL;
+    char *path_enc;
     char *data = NULL;
     char **result;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(path, -1, NULL));
 
-    if ((path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error)) == NULL) {
+    path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
+    if (path_enc == NULL) {
         result = NULL;
     } else if (!g_file_get_contents(path_enc, &data, NULL, error)) {
         result = NULL;
@@ -87,10 +90,14 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
                 }
             }
             result[j] = NULL;
-            g_strfreev(lines);
         } else {
-            result = lines;
+            /*
+              TODO: is it possible to avoid copying without triggering
+              splint warning?
+             */
+            result = g_strdupv(lines);
         }
+        g_strfreev(lines);
     } else {
         g_set_error(error, G_CONVERT_ERROR,
             G_CONVERT_ERROR_ILLEGAL_SEQUENCE,

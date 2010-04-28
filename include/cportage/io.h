@@ -35,20 +35,20 @@ cportage_read_shellconfig(
     const bool allow_source,
     GHashTable *into,
     /*@null@*/ GError **error
-) /*@modifies *error@*/;
+);
 
 /*@null@*/ char *
 cportage_canonical_path(
-    char *path,
+    const char *path,
     /*@null@*/ GError **error
-) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@globals errno@*/;
 
 /*@null@*/ char **
 cportage_read_lines(
     const char *path,
     const bool ignore_comments,
     /*@null@*/ GError **error
-) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT G_GNUC_MALLOC;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@globals errno@*/;
 
 #pragma GCC visibility pop
 

@@ -22,12 +22,13 @@
 
 #include "cportage/atom.h"
 #include "cportage/io.h"
-#include "cportage/porttree.h"
+#include "cportage/settings.h"
 
 #include "config.h"
 #include "actions.h"
 
-static char *relative_path(char *base, char *path, GError **error) {
+static char *
+relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*@globals errno@*/ {
     char *path_abs = NULL;
     char *base_abs = NULL;
     char *result;
@@ -52,9 +53,10 @@ static char *relative_path(char *base, char *path, GError **error) {
 }
 
 static void
-print_version(const CPortageSettings settings, const CPortagePorttree porttree, const struct utsname *utsname) {
-    char *profiles_dir = cportage_porttree_get_path(porttree, "profiles", NULL);
-    char *profile = cportage_settings_get_profile(settings);
+print_version(const CPortageSettings settings, const struct utsname *utsname) /*@globals errno@*/ {
+    const char *portdir = cportage_settings_get_portdir(settings);
+    char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
+    const char *profile = cportage_settings_get_profile(settings);
     char *profile_str = relative_path(profiles_dir, profile, NULL);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
@@ -65,14 +67,14 @@ print_version(const CPortageSettings settings, const CPortagePorttree porttree, 
            CPORTAGE_VERSION, profile_str, gcc_ver, libc_ver,
            utsname->release, utsname->machine);
     g_free(profiles_dir);
-    g_free(profile);
     g_free(profile_str);
 }
 
 static void
-print_porttree_timestamp(const CPortagePorttree porttree) {
-    char *path = cportage_porttree_get_path(porttree, "metadata", "timestamp.chk", NULL);
-    GError *error = NULL;
+print_porttree_timestamp(const CPortageSettings settings) /*@globals errno@*/ {
+    const char *portdir = cportage_settings_get_portdir(settings);
+    char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
+    /*@null@*/ GError *error = NULL;
     char **data = cportage_read_lines(path, false, &error);
     g_print("Timestamp of tree: %s\n",
         data != NULL && data[0] != NULL ? data[0] : "Unknown");
@@ -85,8 +87,9 @@ print_porttree_timestamp(const CPortagePorttree porttree) {
 }
 
 static void
-print_packages(const CPortagePorttree porttree) {
-    char *path = cportage_porttree_get_path(porttree, "profiles", "info_pkgs", NULL);
+print_packages(const CPortageSettings settings) /*@globals errno@*/ {
+    const char *portdir = cportage_settings_get_portdir(settings);
+    char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
     char **data = cportage_read_lines(path, true, NULL);
 
     if (data != NULL) {
@@ -95,10 +98,12 @@ print_packages(const CPortagePorttree porttree) {
         while ((line = data[i++]) != NULL) {
             CPortageAtom atom = cportage_atom_new(line, NULL);
             char *atom_label = g_strconcat(line, ":", NULL);
-            if (atom)
-                g_print("%-20s %s\n", atom_label, "3.2_p39");
-            else
+            if (atom == NULL) {
                 g_print("%-20s [NOT VALID]\n", atom_label);
+            } else {
+                /* TODO: read version from vdb */
+                g_print("%-20s %s\n", atom_label, "3.2_p39");
+            }
             g_free(atom_label);
             cportage_atom_unref(atom);
         }
@@ -108,21 +113,21 @@ print_packages(const CPortagePorttree porttree) {
 }
 
 static void
-print_settings(const CPortagePorttree porttree, const CPortageSettings settings) {
-    char *path = cportage_porttree_get_path(porttree, "profiles", "info_vars", NULL);
+print_settings(const CPortageSettings settings) /*@globals errno@*/ {
+    const char *portdir = cportage_settings_get_portdir(settings);
+    char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cportage_read_lines(path, true, NULL);
 
     if (data != NULL) {
         char *line;
         int i = 0;
         while ((line = data[i++]) != NULL) {
-            char *value = cportage_settings_get(settings, line);
+            const char *value = cportage_settings_get(settings, line);
             if (value == NULL) {
                 g_print("%s unset\n", line);
             } else {
                 g_print("%s=\"%s\"\n", line, value);
             }
-            g_free(value);
         }
     }
     g_free(path);
@@ -132,7 +137,6 @@ print_settings(const CPortagePorttree porttree, const CPortageSettings settings)
 void
 cmerge_info_action(const GlobalOptions options, GError **error) {
     CPortageSettings settings;
-    CPortagePorttree porttree;
     struct utsname utsname;
     int rc;
     /* TODO: read cpu name from /proc/cpuinfo */
@@ -144,23 +148,21 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
 
     settings = cportage_settings_new(options->config_root, error);
     if (settings == NULL) {
-        return;
+        goto ERR;
     }
-
-    porttree = cportage_porttree_new(settings);
 
     rc = uname(&utsname);
     g_assert_cmpint(rc, ==, 0);
 
-    print_version(settings, porttree, &utsname);
+    print_version(settings, &utsname);
     g_print("=================================================================\n");
     g_print("System uname: ");
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
-    print_porttree_timestamp(porttree);
-    print_packages(porttree);
-    print_settings(porttree, settings);
+    print_porttree_timestamp(settings);
+    print_packages(settings);
+    print_settings(settings);
 
+ERR:
     cportage_settings_unref(settings);
-    cportage_porttree_unref(porttree);
 }
