@@ -35,22 +35,26 @@ cportage_canonical_path(const char *path, GError **error) {
     if (path_enc == NULL) {
         result = NULL;
     } else {
-        /* TODO: altertative impl using glibc canonicalize_path? */
+        /* TODO: alternative impl using glibc canonicalize_path? */
         /*@-unrecog@*/
         char *result_enc = realpath(path_enc, NULL);
         /*@=unrecog@*/
+
         if (result_enc == NULL) {
             int save_errno = errno;
-            g_set_error (error,
-                G_FILE_ERROR,
-                (int)g_file_error_from_errno (save_errno),
+            /*@-type@*/
+            int error_code = g_file_error_from_errno(save_errno);
+            /*@=type@*/
+            g_set_error(error, G_FILE_ERROR,
+                error_code,
                 _("Failed to canonicalize file '%s': realpath() failed: %s"),
                 path, 
-		            g_strerror (save_errno));
+		            g_strerror(save_errno));
 		        result = NULL;
         } else {
             result = g_filename_to_utf8(result_enc, -1, NULL, NULL, error);
         }
+
         free(result_enc);
     }
 
