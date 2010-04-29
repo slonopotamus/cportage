@@ -28,7 +28,7 @@
 #include "actions.h"
 
 static char *
-relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*@globals errno@*/ {
+relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*@modifies errno@*/ {
     char *path_abs = NULL;
     char *base_abs = NULL;
     char *result;
@@ -53,7 +53,7 @@ relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*
 }
 
 static void
-print_version(const CPortageSettings settings, const struct utsname *utsname) /*@globals errno@*/ {
+print_version(const CPortageSettings settings, const struct utsname *utsname) /*@modifies errno@*/ {
     const char *portdir = cportage_settings_get_portdir(settings);
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cportage_settings_get_profile(settings);
@@ -71,7 +71,7 @@ print_version(const CPortageSettings settings, const struct utsname *utsname) /*
 }
 
 static void
-print_porttree_timestamp(const CPortageSettings settings) /*@globals errno@*/ {
+print_porttree_timestamp(const CPortageSettings settings) /*@modifies errno@*/ {
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     /*@null@*/ GError *error = NULL;
@@ -87,7 +87,7 @@ print_porttree_timestamp(const CPortageSettings settings) /*@globals errno@*/ {
 }
 
 static void
-print_packages(const CPortageSettings settings) /*@globals errno@*/ {
+print_packages(const CPortageSettings settings) /*@modifies errno@*/ {
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
     char **data = cportage_read_lines(path, true, NULL);
@@ -113,7 +113,7 @@ print_packages(const CPortageSettings settings) /*@globals errno@*/ {
 }
 
 static void
-print_settings(const CPortageSettings settings) /*@globals errno@*/ {
+print_settings(const CPortageSettings settings) /*@modifies errno@*/ {
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cportage_read_lines(path, true, NULL);

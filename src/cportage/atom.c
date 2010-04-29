@@ -47,7 +47,7 @@ struct CPortageAtom {
 } *atom_re;
 
 static void
-init_atom_re(void) /*@globals atom_re@*/ {
+init_atom_re(void) /*@modifies atom_re@*/ {
     /*
         2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
@@ -87,7 +87,7 @@ init_atom_re(void) /*@globals atom_re@*/ {
 
     /*@-mustfreeonly@*/
     atom_re = g_new(struct atom_re_info, 1);
-    atom_re->regex = g_regex_new(atom_re_str, G_REGEX_OPTIMIZE, 0, &error);
+    atom_re->regex = g_regex_new(atom_re_str, 0 | G_REGEX_OPTIMIZE, 0, &error);
     /*@=mustfreeonly@*/
     g_assert_no_error(error);
 
@@ -163,7 +163,9 @@ cportage_atom_new(const char *str, GError **error) {
             } else if (g_utf8_collate(op_match, "~") == 0) {
                 op = OP_TILDE;
             } else {
+                /*@-type@*/
                 op = -1;
+                /*@=type@*/
                 g_assert_not_reached();
             }
         } else if ((star_match = safe_fetch(match, atom_re->star_idx))[0] != '\0') {
@@ -174,7 +176,9 @@ cportage_atom_new(const char *str, GError **error) {
             op = OP_NONE;
         } else {
             /* Getting here means we have a bug in atom regex */
+            /*@-type@*/
             op = cat_idx = -1;
+            /*@=type@*/
             g_assert_not_reached();
         }
         g_free(op_match);

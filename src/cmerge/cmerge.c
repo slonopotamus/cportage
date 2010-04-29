@@ -23,10 +23,13 @@
 #include "config.h"
 #include "actions.h"
 
-#define OPTIONS_TABLEEND {NULL, '\0', 0, 0, NULL, NULL, NULL}
+#define OPTIONS_TABLEEND \
+    /*@-nullassign@*/ /*@-type@*/ \
+    {NULL, '\0', 0, 0, NULL, NULL, NULL} \
+    /*@=type@*/ /*@=nullassign@*/
 #define DEFAULT_CONFIG_ROOT "/"
 
-static struct {
+/*@unchecked@*/ static struct {
     int clean;
     int depclean;
     int info;
@@ -35,9 +38,9 @@ static struct {
     int version;
 } actions;
 
-static struct GlobalOptions gopts = { VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL };
+/*@unchecked@*/ static struct GlobalOptions gopts = { VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL };
 
-static struct MergeOptions mopts = { &gopts, 0, 0 };
+/*@unchecked@*/ static struct MergeOptions mopts = { &gopts, false, false };
 
 static void
 print_version(void) {
@@ -66,7 +69,7 @@ static bool quiet_cb(
     return true;
 }
 
-static const GOptionEntry actions_options[] = {
+/*@unchecked@*/ static const GOptionEntry actions_options[] = {
     {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean,
         "Clean the system by removing packages that are not associated"
         " with explicitly merged packages", NULL},
@@ -80,13 +83,11 @@ static const GOptionEntry actions_options[] = {
         "Remove all matching packages", NULL},
     {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version,
         "Output version", NULL},
-    /*@-nullassign@*/
     OPTIONS_TABLEEND
-    /*@=nullassign@*/
 };
 
 /* Know how to compile this without extension? Tell me */
-G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
+/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args,
         "Leftover args", NULL},
     {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root,
@@ -97,19 +98,15 @@ G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
     {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb,
         "Enable verbose output mode", NULL},
     /*@=type@*/
-    /*@-nullassign@*/
     OPTIONS_TABLEEND
-    /*@=nullassign@*/
 };
 
-static const GOptionEntry mopts_options[] = {
+/*@unchecked@*/ static const GOptionEntry mopts_options[] = {
     {"pretend", 'p', 0, G_OPTION_ARG_NONE, &mopts.pretend,
         "Instead of actually performing any action, only display what would be done", NULL},
     {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update,
         "Update packages to the best version available", NULL},
-    /*@-nullassign@*/
     OPTIONS_TABLEEND
-    /*@=nullassign@*/
 };
 
 static GOptionContext *
@@ -137,7 +134,7 @@ create_option_ctx(void) {
 }
 
 int
-main(int argc, char *argv[]) /*@globals errno@*/ {
+main(int argc, char *argv[]) /*@modifies errno@*/ {
     GOptionContext *ctx;
     GError *error = NULL;
 
@@ -165,9 +162,9 @@ main(int argc, char *argv[]) /*@globals errno@*/ {
             /* TODO: set error */
             g_error("Only one action can be given\n");
         } else if (actions.clean > 0) {
-            cmerge_clean_action(&mopts, FALSE, &error);
+            cmerge_clean_action(&mopts, false, &error);
         } else if (actions.depclean > 0) {
-            cmerge_clean_action(&mopts, TRUE, &error);
+            cmerge_clean_action(&mopts, true, &error);
         } else if (actions.info > 0) {
             cmerge_info_action(&gopts, &error);
         } else if (actions.install > 0) {

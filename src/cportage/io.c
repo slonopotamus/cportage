@@ -43,7 +43,7 @@ cportage_canonical_path(const char *path, GError **error) {
             int save_errno = errno;
             g_set_error (error,
                 G_FILE_ERROR,
-                g_file_error_from_errno (save_errno),
+                (int)g_file_error_from_errno (save_errno),
                 _("Failed to canonicalize file '%s': realpath() failed: %s"),
                 path, 
 		            g_strerror (save_errno));
@@ -100,7 +100,7 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
         g_strfreev(lines);
     } else {
         g_set_error(error, G_CONVERT_ERROR,
-            G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+            (int)G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
             _("Invalid byte sequence in %s"), path);
         result = NULL;
     }

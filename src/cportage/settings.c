@@ -42,7 +42,7 @@ cportage_settings_new(const char *config_root, GError **error) {
 
     /*
     make_conf = g_build_filename(config_root, "etc", "make.conf", NULL);
-    cportage_read_shellconfig(make_conf, TRUE, self->entries, error);
+    cportage_read_shellconfig(make_conf, true, self->entries, error);
     g_assert_no_error(*error);
     g_free(make_conf);
     */

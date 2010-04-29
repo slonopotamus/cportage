@@ -32,7 +32,7 @@ typedef enum {
 /* Global options */
 typedef struct GlobalOptions {
     VerbosityLevel verbosity;
-    const char *config_root;
+    /*@observer@*/ const char *config_root;
     /* Leftover args */
     /*@null@*/ const char **args;
 } *GlobalOptions;
@@ -55,7 +55,7 @@ void
 cmerge_info_action(
     const GlobalOptions options,
     /*@null@*/ GError **error
-) /*@globals errno@*/;
+) /*@modifies errno@*/;
 
 void
 cmerge_install_action(
