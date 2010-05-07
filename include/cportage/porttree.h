@@ -33,13 +33,17 @@ typedef /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
 /*@newref@*/ CPortagePorttree
 cportage_porttree_new(
     CPortageSettings settings
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *settings@*/;
 
 /*@newref@*/ CPortagePorttree
-cportage_porttree_ref(CPortagePorttree self);
+cportage_porttree_ref(
+    CPortagePorttree self
+) /*@modifies *self@*/;
 
 void
-cportage_porttree_unref(/*@killref@*/ /*@null@*/ CPortagePorttree self);
+cportage_porttree_unref(
+    /*@killref@*/ /*@null@*/ CPortagePorttree self
+) /*@modifies self@*/;
 
 #pragma GCC visibility pop
 

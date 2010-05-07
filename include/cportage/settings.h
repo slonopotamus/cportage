@@ -31,22 +31,26 @@ typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 cportage_settings_new(
     const char *config_root,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 /*@newref@*/ CPortageSettings
-cportage_settings_ref(CPortageSettings self);
+cportage_settings_ref(
+    CPortageSettings self
+) /*@modifies *self@*/;
 
 void
-cportage_settings_unref(/*@killref@*/ /*@null@*/ CPortageSettings self);
+cportage_settings_unref(
+    /*@killref@*/ /*@null@*/ CPortageSettings self
+) /*@modifies self@*/;
 
 G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
-cportage_settings_get(const CPortageSettings self, const char *key);
+cportage_settings_get(const CPortageSettings self, const char *key) /*@*/;
 
 G_CONST_RETURN /*@observer@*/ char *
-cportage_settings_get_portdir(const CPortageSettings self);
+cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
 
 G_CONST_RETURN /*@observer@*/ char *
-cportage_settings_get_profile(const CPortageSettings self);
+cportage_settings_get_profile(const CPortageSettings self) /*@*/;
 
 #pragma GCC visibility pop
 

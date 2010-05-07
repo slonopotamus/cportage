@@ -32,13 +32,16 @@ typedef /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
 cportage_atom_new(
     const char *str,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+    /*@modifies *error@*/;
 
 /*@newref@*/ CPortageAtom
-cportage_atom_ref(CPortageAtom self);
+cportage_atom_ref(CPortageAtom self) /*@modifies *self@*/;
 
 void
-cportage_atom_unref(/*@killref@*/ /*@null@*/ CPortageAtom self);
+cportage_atom_unref(
+    /*@killref@*/ /*@null@*/ CPortageAtom self
+) /*@modifies self@*/;
 
 #pragma GCC visibility pop
 

@@ -41,13 +41,13 @@ struct CPortageAtom {
     /*@only@*/ char *slot;
 };
 
-/*@only@*/ static struct atom_re_info {
+typedef struct AtomRegex {
   /*@only@*/ GRegex *regex;
   int op_idx, star_idx, simple_idx, slot_idx, use_idx;
-} *atom_re;
+} *AtomRegex;
 
-static void
-init_atom_re(void) /*@modifies atom_re@*/ {
+static AtomRegex
+create_atom_re(void) /*@*/ {
     /*
         2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
         It must not begin with a hyphen or a dot.
@@ -77,58 +77,61 @@ init_atom_re(void) /*@modifies atom_re@*/ {
     char *use = g_strdup_printf("(?P<use>\\[%s(?:,%s)*\\])?", use_item, use_item);
     char *cp = g_strdup_printf("(%s/%s(-%s)\?\?)", cat, pkg, ver);
     char *cpv = g_strdup_printf("%s-%s", cp, ver);
-    char *atom_re_str = g_strdup_printf("^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
-                 op, cpv, cpv, cp, slot, use);
+    char *atom_re_str = g_strdup_printf(
+        "^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
+        op, cpv, cpv, cp, slot, use
+    );
     GError *error = NULL;
+    AtomRegex result;
     g_free(use_item);
     g_free(use);
     g_free(cp);
     g_free(cpv);
 
+    result = g_new(struct AtomRegex, 1);
     /*@-mustfreeonly@*/
-    atom_re = g_new(struct atom_re_info, 1);
-    atom_re->regex = g_regex_new(atom_re_str, 0 | G_REGEX_OPTIMIZE, 0, &error);
+    result->regex = g_regex_new(atom_re_str, (int)G_REGEX_OPTIMIZE, 0, &error);
     /*@=mustfreeonly@*/
     g_assert_no_error(error);
 
     g_free(atom_re_str);
 
-    atom_re->op_idx = g_regex_get_string_number(atom_re->regex, "op");
-    atom_re->star_idx = g_regex_get_string_number(atom_re->regex, "star");
-    atom_re->simple_idx = g_regex_get_string_number(atom_re->regex, "simple");
-    atom_re->slot_idx = g_regex_get_string_number(atom_re->regex, "slot");
-    atom_re->use_idx = g_regex_get_string_number(atom_re->regex, "use");
+    result->op_idx = g_regex_get_string_number(result->regex, "op");
+    result->star_idx = g_regex_get_string_number(result->regex, "star");
+    result->simple_idx = g_regex_get_string_number(result->regex, "simple");
+    result->slot_idx = g_regex_get_string_number(result->regex, "slot");
+    result->use_idx = g_regex_get_string_number(result->regex, "use");
 
-    g_assert_cmpint(atom_re->op_idx, !=, -1);
-    g_assert_cmpint(atom_re->star_idx, !=, -1);
-    g_assert_cmpint(atom_re->simple_idx, !=, -1);
-    g_assert_cmpint(atom_re->slot_idx, !=, -1);
-    g_assert_cmpint(atom_re->use_idx, !=, -1);
+    g_assert_cmpint(result->op_idx, !=, -1);
+    g_assert_cmpint(result->star_idx, !=, -1);
+    g_assert_cmpint(result->simple_idx, !=, -1);
+    g_assert_cmpint(result->slot_idx, !=, -1);
+    g_assert_cmpint(result->use_idx, !=, -1);
+    return result;
 }
 
-static char *
-safe_fetch(const GMatchInfo *match_info, int match_num) {
+static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
     char *result = g_match_info_fetch(match_info, match_num);
 
     /* Workaround for gregex bug. TODO: provide a link. */
     if (result == NULL && match_num >= 0) {
         const GRegex *regex = g_match_info_get_regex(match_info);
         const int capture_count = g_regex_get_capture_count(regex);
-        if (match_num <= capture_count) {
-            /*@-mustfreefresh@*/
-            result = g_strdup("");
-            /*@=mustfreefresh@*/
-        } else {
-            g_error("Could not get match group %d", match_num);
-        }
+        g_assert(match_num <= capture_count);
+        /*@-mustfreefresh@*/
+        result = g_strdup("");
+        /*@=mustfreefresh@*/
     }
 
     g_assert(result != NULL);
     return result;
-} G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+}
 
 CPortageAtom
 cportage_atom_new(const char *str, GError **error) {
+    /*@only@*/ static AtomRegex atom_re;
+
     CPortageAtom atom;
     GMatchInfo *match;
     char *invalid_version;
@@ -137,7 +140,9 @@ cportage_atom_new(const char *str, GError **error) {
     g_assert(g_utf8_validate(str, -1, NULL));
 
     if (atom_re == NULL) {
-        init_atom_re();
+        /*@-mustfreeonly@*/
+        atom_re = create_atom_re();
+        /*@=mustfreeonly@*/
         g_assert(atom_re != NULL);
     }
 

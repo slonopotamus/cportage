@@ -27,13 +27,14 @@
 #include "config.h"
 #include "actions.h"
 
-static char *
-relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*@modifies errno@*/ {
+static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+relative_path(const char *base, const char *path)
+    /*@modifies errno@*/
+{
     char *path_abs = NULL;
     char *base_abs = NULL;
     char *result;
 
-    g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(base, -1, NULL));
     g_assert(g_utf8_validate(path, -1, NULL));
 
@@ -53,11 +54,14 @@ relative_path(const char *base, const char *path, /*@null@*/  GError **error) /*
 }
 
 static void
-print_version(const CPortageSettings settings, const struct utsname *utsname) /*@modifies errno@*/ {
+print_version(const CPortageSettings settings, const struct utsname *utsname)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout@*/
+{
     const char *portdir = cportage_settings_get_portdir(settings);
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cportage_settings_get_profile(settings);
-    char *profile_str = relative_path(profiles_dir, profile, NULL);
+    char *profile_str = relative_path(profiles_dir, profile);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
     /* TODO: read libc from vartree */
@@ -71,10 +75,13 @@ print_version(const CPortageSettings settings, const struct utsname *utsname) /*
 }
 
 static void
-print_porttree_timestamp(const CPortageSettings settings) /*@modifies errno@*/ {
+print_porttree_timestamp(const CPortageSettings settings)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout@*/
+{
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
-    /*@null@*/ GError *error = NULL;
+    GError *error = NULL;
     char **data = cportage_read_lines(path, false, &error);
     g_print("Timestamp of tree: %s\n",
         data != NULL && data[0] != NULL ? data[0] : "Unknown");
@@ -87,7 +94,10 @@ print_porttree_timestamp(const CPortageSettings settings) /*@modifies errno@*/ {
 }
 
 static void
-print_packages(const CPortageSettings settings) /*@modifies errno@*/ {
+print_packages(const CPortageSettings settings)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout@*/
+{
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
     char **data = cportage_read_lines(path, true, NULL);
@@ -113,7 +123,10 @@ print_packages(const CPortageSettings settings) /*@modifies errno@*/ {
 }
 
 static void
-print_settings(const CPortageSettings settings) /*@modifies errno@*/ {
+print_settings(const CPortageSettings settings)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout@*/
+{
     const char *portdir = cportage_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cportage_read_lines(path, true, NULL);
@@ -155,7 +168,7 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
     g_assert_cmpint(rc, ==, 0);
 
     print_version(settings, &utsname);
-    g_print("=================================================================\n");
+    g_print("===============================================================\n");
     g_print("System uname: ");
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);

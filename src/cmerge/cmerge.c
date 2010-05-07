@@ -43,7 +43,10 @@
 /*@unchecked@*/ static struct MergeOptions mopts = { &gopts, false, false };
 
 static void
-print_version(void) {
+print_version(void)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout@*/
+{
     g_print("cportage " CPORTAGE_VERSION "\n\n");
     g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
          "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
@@ -52,10 +55,13 @@ print_version(void) {
 }
 
 static bool verbose_cb(
-        /*@unused@*/ const char *option_name G_GNUC_UNUSED,
-        /*@unused@*/ const char *value G_GNUC_UNUSED,
-        /*@unused@*/ void *data G_GNUC_UNUSED,
-        /*@unused@*/ GError **error G_GNUC_UNUSED) {
+    /*@unused@*/ const char *option_name G_GNUC_UNUSED,
+    /*@unused@*/ const char *value G_GNUC_UNUSED,
+    /*@unused@*/ void *data G_GNUC_UNUSED,
+    /*@unused@*/ GError **error G_GNUC_UNUSED
+)
+    /*@modifies gopts@*/
+{
     gopts.verbosity = VERBOSITY_VERBOSE;
     return true;
 }
@@ -64,7 +70,10 @@ static bool quiet_cb(
         /*@unused@*/ const char *option_name G_GNUC_UNUSED,
         /*@unused@*/ const char *value G_GNUC_UNUSED,
         /*@unused@*/ void *data G_GNUC_UNUSED,
-        /*@unused@*/ GError **error G_GNUC_UNUSED) {
+        /*@unused@*/ GError **error G_GNUC_UNUSED
+)
+    /*@modifies gopts@*/
+{
     gopts.verbosity = VERBOSITY_QUIET;
     return true;
 }
@@ -110,7 +119,7 @@ static bool quiet_cb(
 };
 
 static GOptionContext *
-create_option_ctx(void) {
+create_option_ctx(void) /*@*/ {
     GOptionContext *ctx = g_option_context_new("[ACTION] [ARGS...]");
 
     GOptionGroup *actions_group = g_option_group_new("actions",
@@ -134,7 +143,9 @@ create_option_ctx(void) {
 }
 
 int
-main(int argc, char *argv[]) /*@modifies errno@*/ {
+main(int argc, char *argv[])
+    /*@modifies actions,errno,*stdout,internalState,fileSystem,argc,argv@*/
+{
     GOptionContext *ctx;
     GError *error = NULL;
 
@@ -180,9 +191,9 @@ main(int argc, char *argv[]) /*@modifies errno@*/ {
     }
     g_option_context_free(ctx);
 
-    if (error == NULL)
+    if (error == NULL) {
         return EXIT_SUCCESS;
-    else {
+    } else {
       g_print("%s\n", error->message);
       g_error_free(error);
       return EXIT_FAILURE;

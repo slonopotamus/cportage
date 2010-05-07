@@ -49,24 +49,29 @@ cmerge_clean_action(
     const MergeOptions options,
     bool with_deps,
     /*@null@*/ GError **error
-);
+)
+    /*@modifies *error@*/;
 
 void
 cmerge_info_action(
     const GlobalOptions options,
     /*@null@*/ GError **error
-) /*@modifies errno@*/;
+)
+    /*@globals stdout@*/
+    /*@modifies fileSystem,errno,*stdout,*error@*/;
 
 void
 cmerge_install_action(
     const MergeOptions options,
     /*@null@*/ GError **error
-);
+)
+    /*@modifies *error@*/;
 
 void
 cmerge_search_action(
     const GlobalOptions options,
     /*@null@*/ GError **error
-);
+)
+    /*@modifies *error@*/;
 
 #endif
