@@ -5,3 +5,4 @@ macro(add_cportage_test _test_name _test_source)
 endmacro()
 
 add_cportage_test(atom_test atom_test.c)
+add_cportage_test(strings_test strings_test.c)

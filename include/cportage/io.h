@@ -25,6 +25,8 @@
 #include <stdbool.h>
 #include <glib.h>
 
+/*@-exportany@*/
+
 G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)

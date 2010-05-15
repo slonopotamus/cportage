@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <stdbool.h>
 
+/*@-exportany@*/
+
 typedef enum {
     VERBOSITY_QUIET = -1,
     VERBOSITY_NORMAL = 0,
@@ -34,7 +36,7 @@ typedef struct GlobalOptions {
     VerbosityLevel verbosity;
     /*@observer@*/ const char *config_root;
     /* Leftover args */
-    /*@null@*/ const char **args;
+    /*@null@*/ char * const *args;
 } *GlobalOptions;
 
 /* Merge/unmerge options */

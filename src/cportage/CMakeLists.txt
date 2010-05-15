@@ -6,10 +6,10 @@ add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
 # Executables
 add_library(cportage SHARED
-    atom.c io.c porttree.c settings.c ${BISON_ShellParser_OUTPUTS} ${FLEX_ShellScanner_OUTPUTS})
+    atom.c io.c porttree.c settings.c strings.c
+    ${BISON_ShellParser_OUTPUTS} ${FLEX_ShellScanner_OUTPUTS}
+)
 target_link_libraries(cportage ${GLIB2_LIBRARIES})
 
 # Installation
-install(TARGETS
-  cportage
-  LIBRARY DESTINATION lib)
+install(TARGETS cportage LIBRARY DESTINATION lib)

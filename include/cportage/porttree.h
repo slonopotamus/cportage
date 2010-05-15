@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+/*@-exportany@*/
+
 #include "cportage/settings.h"
 
 G_BEGIN_DECLS

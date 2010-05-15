@@ -2,7 +2,6 @@
 find src -name \*.c -exec \
 	splint +strict +posixstrictlib \
 	-sys-dir-errors -proto-param-name -warn-missing-globs \
-	-export-type -export-fcn -export-const \
 	-sizeof-type -bounds-read -bounds-write \
 	-DGETTEXT_PACKAGE=\"cportage\" -Iinclude -Ibuild/src/cmerge \
 	-I../glib -I../glib/glib -sys-dirs /usr/include:../glib:../glib/glib \

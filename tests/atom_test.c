@@ -23,7 +23,7 @@
 #include "cportage/atom.h"
 
 struct item {
-    const char * str;
+    const char *str;
     const bool valid;
 };
 
@@ -114,13 +114,13 @@ int main(void) {
         { "=sys-apps/portage-2.2*:foo[bar,-baz,doc?,!build?,]", false },
         { "=sys-apps/portage-2.2*:foo[,bar,-baz,doc?,!build?]", false },
         { "=sys-apps/portage-2.2*:foo[bar,-baz][doc?,!build?]", false },
-        { "=sys-apps/portage-2.2*:foo[bar][doc,build]", false }
+        { "=sys-apps/portage-2.2*:foo[bar][doc,build]", false },
     };
 
     size_t i = 0;
     while (i < G_N_ELEMENTS(data)) {
-        const char * s = data[i].str;
-        const char * msg = data[i].valid ? "valid" : "invalid";
+        const char *s = data[i].str;
+        const char *msg = data[i].valid ? "valid" : "invalid";
         void *atom = cportage_atom_new(s, NULL);
         if (data[i].valid == (atom == NULL)) {
             g_error("'%s' must be %s, but it isn't\n", s, msg);

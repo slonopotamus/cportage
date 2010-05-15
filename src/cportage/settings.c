@@ -19,20 +19,21 @@
 
 #include "cportage/io.h"
 #include "cportage/settings.h"
+#include "cportage/strings.h"
 
 struct CPortageSettings {
     /*@refs@*/ int refs;
 
     /*@only@*/ char *config_root;
     GHashTable *entries;
-    /*@only@*/ char *portdir;
+    /*@observer@*/ const char *portdir;
     /*@only@*/ char *profile;
+    /*@only@*/ char **features;
 };
 
 CPortageSettings
 cportage_settings_new(const char *config_root, GError **error) {
     CPortageSettings self;
-    const char *portdir;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(config_root, -1, NULL));
@@ -50,14 +51,14 @@ cportage_settings_new(const char *config_root, GError **error) {
     /*@-mustfreeonly@*/
     self->config_root = g_strdup(config_root);
     self->entries = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    portdir = cportage_settings_get(self, "PORTDIR");
-    if (portdir == NULL) {
-        self->portdir = g_build_filename("/", "usr", "portage", NULL);
-    } else {
-        self->portdir = g_strdup(portdir);
-    }
+    self->portdir = cportage_settings_get_default(self, "PORTDIR", "/usr/portage");
     self->profile = g_build_filename(config_root, "etc", "make.profile", NULL);
-    /*@=mustfreeonly@*/
+
+    self->features = cportage_strings_pysplit(
+        cportage_settings_get_default(self, "FEATURES", "")
+    );
+     /*@=mustfreeonly@*/
+    cportage_strings_sort(self->features);
 
     return self;
 }
@@ -82,12 +83,22 @@ cportage_settings_unref(CPortageSettings self) {
         g_hash_table_unref(self->entries);
         self->entries = NULL;
         /*@=mustfreeonly@*/
-        g_free(self->portdir);
         g_free(self->profile);
+        g_strfreev(self->features);
         /*@-refcounttrans@*/
         g_free(self);
         /*@=refcounttrans@*/
     }
+}
+
+G_CONST_RETURN char *
+cportage_settings_get_default(
+    const CPortageSettings self,
+    const char *key,
+    const char *fallback
+) {
+    const char *result = cportage_settings_get(self, key);
+    return result == NULL ? fallback : result;
 }
 
 G_CONST_RETURN char *
@@ -104,4 +115,20 @@ cportage_settings_get_portdir(const CPortageSettings self) {
 G_CONST_RETURN char *
 cportage_settings_get_profile(const CPortageSettings self) {
     return self->profile;
+}
+
+bool cportage_settings_has_feature(
+    const CPortageSettings self,
+    const char *feature
+) {
+
+    g_assert(g_utf8_validate(feature, -1, NULL));
+
+    CPORTAGE_STRV_ITER(self->features, f) {
+        if (g_strcmp0(f, feature) == 0) {
+            return true;
+        }
+    } end_CPORTAGE_STRV_ITER
+
+    return false;
 }

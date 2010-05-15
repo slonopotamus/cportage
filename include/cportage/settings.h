@@ -21,8 +21,12 @@
 #define CPORTAGE_SETTINGS_H
 
 #include <glib.h>
+#include <stdbool.h>
+
+/*@-exportany@*/
 
 G_BEGIN_DECLS
+
 #pragma GCC visibility push(default)
 
 typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
@@ -43,6 +47,13 @@ cportage_settings_unref(
     /*@killref@*/ /*@null@*/ CPortageSettings self
 ) /*@modifies self@*/;
 
+G_CONST_RETURN /*@observer@*/ char *
+cportage_settings_get_default(
+    const CPortageSettings self,
+    const char *key,
+    const char *fallback
+) /*@*/;
+
 G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
 cportage_settings_get(const CPortageSettings self, const char *key) /*@*/;
 
@@ -51,6 +62,11 @@ cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
 
 G_CONST_RETURN /*@observer@*/ char *
 cportage_settings_get_profile(const CPortageSettings self) /*@*/;
+
+bool cportage_settings_has_feature(
+    const CPortageSettings self,
+    const char *feature
+) /*@*/;
 
 #pragma GCC visibility pop
 

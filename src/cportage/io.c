@@ -80,8 +80,8 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
         char **lines = g_strsplit(data, "\n", -1);
         if (ignore_comments) {
             char *line;
-            int i = 0;
-            int j = 0;
+            size_t i = 0;
+            size_t j = 0;
             result = g_new(char *, g_strv_length(lines) + 1);
             while ((line = lines[i++]) != NULL) {
                 char *comment = g_utf8_strchr(line, -1, '#');
@@ -113,4 +113,3 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
     g_free(data);
     return result;
 }
-
