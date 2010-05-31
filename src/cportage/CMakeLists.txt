@@ -1,6 +1,12 @@
-#bison_target(ShellParser shellparser.y ${CMAKE_CURRENT_BINARY_DIR}/shellparser.c)
-#flex_target(ShellScanner shelllexer.l  ${CMAKE_CURRENT_BINARY_DIR}/shelllexer.c)
-#add_flex_bison_dependency(ShellScanner ShellParser)
+bison_target(ShellParser
+    shellparser.y
+    "${CMAKE_CURRENT_BINARY_DIR}/shellparser.c"
+    COMPILE_FLAGS "-Wall -Werror")
+flex_target(ShellScanner
+    shellscanner.l
+    "${CMAKE_CURRENT_BINARY_DIR}/shellscanner.c"
+    COMPILE_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/shellscanner.h")
+add_flex_bison_dependency(ShellScanner ShellParser)
 
 add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 

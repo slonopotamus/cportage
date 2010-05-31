@@ -128,5 +128,6 @@ int main(void) {
         cportage_atom_unref(atom);
         ++i;
     }
+    
     return EXIT_SUCCESS;
 }

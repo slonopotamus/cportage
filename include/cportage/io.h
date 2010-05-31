@@ -33,11 +33,11 @@ G_BEGIN_DECLS
 
 bool
 cportage_read_shellconfig(
-    const char *path,
-    const bool allow_source,
     GHashTable *into,
+    const char *path,
+    bool allow_source,
     /*@null@*/ GError **error
-);
+) /*@modifies *into,*error,errno@*/;
 
 /*@null@*/ char *
 cportage_canonical_path(

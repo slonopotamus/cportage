@@ -6,3 +6,4 @@ endmacro()
 
 add_cportage_test(atom_test atom_test.c)
 add_cportage_test(strings_test strings_test.c)
+add_cportage_test(shellconfig_test shellconfig_test.c)
