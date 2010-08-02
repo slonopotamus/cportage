@@ -28,29 +28,27 @@
 
 %{
 
-#include <glib/gi18n-lib.h>
-#include <stdio.h>
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wlogical-op"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 
 #include "cportage/io.h"
+#include "cportage/strings.h"
 
 #include "shellparser.h"
 #include "shellscanner.h"
 
 #define scanner ctx->yyscanner
 #define YY_ _
-#define YYSTACK_USE_ALLOCA 1
-
-/* TODO: guard pragmas with GCC ifdef */
-#pragma GCC diagnostic ignored "-Wstack-protector"
-#pragma GCC diagnostic ignored "-Wunreachable-code"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 
 typedef struct cportage_shellconfig_ctx_t {
+    yyscan_t yyscanner;
     const char *filename;
     GHashTable *entries;
     GError **error;
-    bool allow_source;
-    yyscan_t yyscanner;
+    int allow_source;
 } cportage_shellconfig_ctx;
 
 %}
@@ -163,7 +161,9 @@ cportage_read_shellconfig(
     cportage_shellconfig_lex_init(&ctx.yyscanner);
     cportage_shellconfig_set_extra(&ctx, ctx.yyscanner);
     cportage_shellconfig_set_in(f, ctx.yyscanner);
+    /*
     cportage_shellconfig_set_debug(1, ctx.yyscanner);
+    */
 
     retval = cportage_shellconfig_parse(&ctx) == 0;
 

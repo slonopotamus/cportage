@@ -45,7 +45,7 @@ cportage_porttree_unref(CPortagePorttree self) {
         return;
         /*@=mustfreeonly@*/
     }
-    g_assert_cmpint(self->refs, >, 0);
+    g_assert(self->refs > 0);
     if (--self->refs == 0) {
         cportage_settings_unref(self->settings);
         /*@-refcounttrans@*/

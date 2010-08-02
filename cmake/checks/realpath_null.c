@@ -17,39 +17,11 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** String functions. */
+#include <stdlib.h>
 
-#ifndef CPORTAGE_STRINGS_H
-#define CPORTAGE_STRINGS_H
-
-#include <glib.h>
-
-/*@-exportany@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
-
-#define  _(String) g_dgettext(GETTEXT_PACKAGE, (String))
-
-/*@iter CPORTAGE_STRV_ITER(sef char **arr, yield char *elem)@*/
-
-#define CPORTAGE_STRV_ITER(arr, m_elem) { \
-    char **m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        char *m_elem = *m_iter;
-#define end_CPORTAGE_STRV_ITER }}
-
-char **
-cportage_strings_pysplit(
-    const char *str
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-void
-cportage_strings_sort(char **str_array) /*@modifies *str_array@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
-
-#endif
+int main(void) {
+    char *path = realpath(".", NULL);
+    int retval = path == NULL ? EXIT_FAILURE : EXIT_SUCCESS;
+    free(path);
+    return retval;
+}

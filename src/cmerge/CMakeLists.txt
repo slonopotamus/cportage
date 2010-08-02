@@ -1,9 +1,8 @@
 # Executables
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 add_definitions(-DG_LOG_DOMAIN="cmerge")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(cmerge
     clean_action.c cmerge.c info_action.c install_action.c search_action.c)

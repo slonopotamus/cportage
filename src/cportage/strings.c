@@ -17,6 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
+
 #include "cportage/strings.h"
 
 /* This could work much faster with handcoded loop, but i'm lazy */
@@ -41,16 +43,12 @@ cportage_strings_pysplit(const char *str) {
 }
 
 static int
-cmpstrp(
-    const void *p1,
-    const void *p2,
-    /*@unused@*/ void *unused G_GNUC_UNUSED
-) /*@*/ {
+cmpstrp(const void *p1, const void *p2) /*@*/ {
     return g_utf8_collate(*(char * const *)p1, *(char * const *)p2);
 }
 
 void
 cportage_strings_sort(char **str_array) {
-    size_t len = g_strv_length(str_array);
-    g_qsort_with_data(str_array, len, sizeof(*str_array), cmpstrp, NULL);
+    const size_t len = g_strv_length(str_array);
+    qsort(str_array, len, sizeof(*str_array), cmpstrp);
 }

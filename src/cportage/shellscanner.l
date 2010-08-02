@@ -23,6 +23,16 @@
 
 %{
 
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic ignored "-Wunreachable-code"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include <glib.h>
 
 #include "shellparser.h"
@@ -33,14 +43,6 @@
 #define YY_EXTRA_TYPE cportage_shellconfig_ctx *
 #define DUPVAL(idx) yylval->str = g_strdup(&yytext[idx])
 
-/* TODO: guard pragmas with GCC ifdef */
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wswitch-default"
-#pragma GCC diagnostic ignored "-Wunreachable-code"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 typedef struct cportage_shellconfig_ctx_t cportage_shellconfig_ctx;
 
 %}
@@ -49,10 +51,11 @@ typedef struct cportage_shellconfig_ctx_t cportage_shellconfig_ctx;
 
 NewLine \r\n|\n|\r
 VarName [a-zA-Z][a-zA-Z0-9_]*
+Whitespace [ \t]+
 
 %%
 
-[ \t]+ /* skip whitespace */
+{Whitespace} /* skip whitespace */
 #[^\r\n]*  /* skip comments */
 {VarName} { DUPVAL(0); return VAR; }
 = { BEGIN VALUE_STATE; return yytext[0]; }

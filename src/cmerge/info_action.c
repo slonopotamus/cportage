@@ -152,38 +152,14 @@ print_settings(const CPortageSettings settings)
                 g_print("%s=\"%s\"\n", s, value);
             }
         } end_CPORTAGE_STRV_ITER
-        
+
         if (unset != NULL) {
             g_print("%s\n", unset->str);
         }
-        g_string_free(unset, true);
+        (void)g_string_free(unset, true);
     }
     g_free(path);
     g_strfreev(data);
-}
-
-static void print_program_version(
-    const char *program,
-    const CPortageSettings settings,
-    const char *feature
-)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    char *out = NULL;
-    char *err = NULL;
-    if (g_spawn_command_line_sync(program, &out, &err, NULL, NULL)) {
-        char **lines = g_strsplit(out, "\n", 2);
-        g_print("%s [%s]\n",
-            lines[0],
-            cportage_settings_has_feature(settings, feature)
-                ? "enabled"
-                : "disabled"
-        );
-        g_free(lines);
-    }
-    g_free(out);
-    g_free(err);
 }
 
 void
@@ -204,7 +180,7 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
 
     {
         int rc = uname(&utsname);
-        g_assert_cmpint(rc, ==, 0);
+        g_assert(rc == 0);
     }
 
     print_version(settings, &utsname);
@@ -213,9 +189,6 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
     print_porttree_timestamp(settings);
-    print_program_version("distcc --version", settings, "distcc");
-    print_program_version("ccache -V", settings, "ccache");
-
     print_packages(settings);
     print_settings(settings);
 

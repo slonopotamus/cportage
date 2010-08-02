@@ -42,8 +42,8 @@ typedef struct GlobalOptions {
 /* Merge/unmerge options */
 typedef struct MergeOptions {
     /*@observer@*/ GlobalOptions global;
-    bool pretend;
-    bool update;
+    int pretend;
+    int update;
 } *MergeOptions;
 
 void

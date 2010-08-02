@@ -24,7 +24,7 @@
 
 struct item {
     const char *str;
-    const bool valid;
+    const int valid;
 };
 
 int main(void) {
@@ -128,6 +128,6 @@ int main(void) {
         cportage_atom_unref(atom);
         ++i;
     }
-    
+
     return EXIT_SUCCESS;
 }

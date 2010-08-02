@@ -39,6 +39,13 @@ cportage_read_shellconfig(
     /*@null@*/ GError **error
 ) /*@modifies *into,*error,errno@*/;
 
+/**
+ * GLib-style realpath(3) wrapper.
+ *
+ * @param path UTF8-encoded filename.
+ * @param error will be set if error happens.
+ * @return UTF8-encoded real path for given filename, NULL on error.
+ */
 /*@null@*/ char *
 cportage_canonical_path(
     const char *path,
@@ -46,6 +53,15 @@ cportage_canonical_path(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
     /*@modifies *error,errno@*/;
 
+/**
+ * Fully reads text file and splits it at line endings.
+ * File is checked to be valid UTF8.
+ *
+ * @param path UTF8-encoded filename.
+ * @param ignore_comments if true, comments starting with '#' will be excluded.
+ * @param error will be set if error happens.
+ * @return NULL on error.
+ */
 /*@null@*/ char **
 cportage_read_lines(
     const char *path,

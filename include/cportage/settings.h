@@ -35,7 +35,7 @@ typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 cportage_settings_new(
     const char *config_root,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
 /*@newref@*/ CPortageSettings
 cportage_settings_ref(

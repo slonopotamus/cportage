@@ -34,7 +34,7 @@ typedef enum OP_TYPE {
 
 struct CPortageAtom {
     /*@refs@*/ int refs;
-    OpType operator;
+    OpType op;
     /*@only@*/ char *category;
     /*@only@*/ char *package;
     /* Nullable */
@@ -46,75 +46,45 @@ typedef struct AtomRegex {
   int op_idx, star_idx, simple_idx, slot_idx, use_idx;
 } *AtomRegex;
 
-static AtomRegex
-create_atom_re(void) /*@*/ {
-    /*
-        2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
-        It must not begin with a hyphen or a dot.
-     */
-    const char *cat = "([\\w+][\\w+.-]*)";
-    /*
-        2.1.2 A package name may contain any of the characters [A-Za-z0-9+_-].
-        It must not begin with a hyphen,
-        and must not end in a hyphen followed by _valid version string_.
-    */
-    const char *pkg = "([\\w+][\\w+-]*?)";
-    /*
-        2.1.3 A slot name may contain any of the characters [A-Za-z0-9+_.-].
-        It must not begin with a hyphen or a dot.
-     */
-    const char *slot = "(?P<slot>[\\w+][\\w+.-]*)";
-    /*
-        2.1.4 A USE flag name may contain any of the characters [A-Za-z0-9+_@-].
-        It must begin with an alphanumeric character.
-     */
-    const char *use_name = "[A-Za-z0-9][\\w+@-]*";
-    /* See 2.2 section for version syntax. */
-    const char *ver = "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?";
-    /* TODO: add reference to PMS */
-    const char *op = "(?P<op>[=~]|[><]=?)";
-    char *use_item = g_strdup_printf("(?:!?%s[=?]|-?%s)", use_name, use_name);
-    char *use = g_strdup_printf("(?P<use>\\[%s(?:,%s)*\\])?", use_item, use_item);
-    char *cp = g_strdup_printf("(%s/%s(-%s)\?\?)", cat, pkg, ver);
-    char *cpv = g_strdup_printf("%s-%s", cp, ver);
-    char *atom_re_str = g_strdup_printf(
-        "^(?:(?:%s%s)|(?P<star>=%s\\*)|(?P<simple>%s))(?::%s)?%s$",
-        op, cpv, cpv, cp, slot, use
-    );
-    GError *error = NULL;
-    AtomRegex result;
-    g_free(use_item);
-    g_free(use);
-    g_free(cp);
-    g_free(cpv);
-
-    result = g_new(struct AtomRegex, 1);
-    /*@-mustfreeonly@*/
-    result->regex = g_regex_new(atom_re_str, (int)G_REGEX_OPTIMIZE, 0, &error);
-    /*@=mustfreeonly@*/
-    g_assert_no_error(error);
-
-    g_free(atom_re_str);
-
-    result->op_idx = g_regex_get_string_number(result->regex, "op");
-    result->star_idx = g_regex_get_string_number(result->regex, "star");
-    result->simple_idx = g_regex_get_string_number(result->regex, "simple");
-    result->slot_idx = g_regex_get_string_number(result->regex, "slot");
-    result->use_idx = g_regex_get_string_number(result->regex, "use");
-
-    g_assert_cmpint(result->op_idx, !=, -1);
-    g_assert_cmpint(result->star_idx, !=, -1);
-    g_assert_cmpint(result->simple_idx, !=, -1);
-    g_assert_cmpint(result->slot_idx, !=, -1);
-    g_assert_cmpint(result->use_idx, !=, -1);
-    return result;
-}
+/*
+    2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
+    It must not begin with a hyphen or a dot.
+ */
+#define CAT "([\\w+][\\w+.-]*)"
+/*
+    2.1.2 A package name may contain any of the characters [A-Za-z0-9+_-].
+    It must not begin with a hyphen,
+    and must not end in a hyphen followed by _valid version string_.
+ */
+#define PKG "([\\w+][\\w+-]*?)"
+/*
+    2.1.3 A slot name may contain any of the characters [A-Za-z0-9+_.-].
+    It must not begin with a hyphen or a dot.
+ */
+#define SLOT "(?P<slot>[\\w+][\\w+.-]*)"
+/*
+    2.1.4 A USE flag name may contain any of the characters [A-Za-z0-9+_@-].
+    It must begin with an alphanumeric character.
+ */
+#define USE_NAME "[A-Za-z0-9][\\w+@-]*"
+/* See 2.2 section for version syntax. */
+#define VER "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?"
+/* TODO: add reference to PMS */
+#define OP "(?P<op>[=~]|[><]=?)"
+#define USE_ITEM "(?:!?" USE_NAME "[=?]|-?" USE_NAME ")"
+#define USE "(?P<use>\\[" USE_ITEM "(?:," USE_ITEM ")*\\])?"
+#define CP "(" CAT "/" PKG "(-" VER ")\?\?)"
+#define CPV CP "-" VER
+#define ATOM "^(?:(?:" OP CPV ")|(?P<star>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
     char *result = g_match_info_fetch(match_info, match_num);
 
-    /* Workaround for gregex bug. TODO: provide a link. */
+    /*
+        Workaround for gregex bug:
+        https://bugzilla.gnome.org/show_bug.cgi?id=588217
+     */
     if (result == NULL && match_num >= 0) {
         const GRegex *regex = g_match_info_get_regex(match_info);
         const int capture_count = g_regex_get_capture_count(regex);
@@ -130,7 +100,10 @@ safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
 
 CPortageAtom
 cportage_atom_new(const char *str, GError **error) {
-    /*@only@*/ static AtomRegex atom_re;
+    /*@only@*/ static struct {
+        /*@only@*/ GRegex *regex;
+        int op_idx, star_idx, simple_idx, slot_idx, use_idx;
+    } atom_re;
 
     CPortageAtom atom;
     GMatchInfo *match;
@@ -139,22 +112,36 @@ cportage_atom_new(const char *str, GError **error) {
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(str, -1, NULL));
 
-    if (atom_re == NULL) {
+    if (atom_re.regex == NULL) {
         /*@-mustfreeonly@*/
-        atom_re = create_atom_re();
+        atom_re.regex = g_regex_new(ATOM, (int)G_REGEX_OPTIMIZE, 0, error);
         /*@=mustfreeonly@*/
-        g_assert(atom_re != NULL);
+        if (atom_re.regex == NULL) {
+            return NULL;
+        }
+
+        atom_re.op_idx = g_regex_get_string_number(atom_re.regex, "op");
+        atom_re.star_idx = g_regex_get_string_number(atom_re.regex, "star");
+        atom_re.simple_idx = g_regex_get_string_number(atom_re.regex, "simple");
+        atom_re.slot_idx = g_regex_get_string_number(atom_re.regex, "slot");
+        atom_re.use_idx = g_regex_get_string_number(atom_re.regex, "use");
+
+        g_assert(atom_re.op_idx != -1);
+        g_assert(atom_re.star_idx != -1);
+        g_assert(atom_re.simple_idx != -1);
+        g_assert(atom_re.slot_idx != -1);
+        g_assert(atom_re.use_idx != -1);
     }
 
-    if (g_regex_match_full(atom_re->regex, str, -1, 0, 0, &match, error)) {
+    if (g_regex_match_full(atom_re.regex, str, -1, 0, 0, &match, error)) {
         char *op_match = NULL;
         char *star_match = NULL;
         char *simple_match = NULL;
         OpType op;
         int cat_idx;
 
-        if ((op_match = safe_fetch(match, atom_re->op_idx))[0] != '\0') {
-            cat_idx = atom_re->op_idx + 2;
+        if ((op_match = safe_fetch(match, atom_re.op_idx))[0] != '\0') {
+            cat_idx = atom_re.op_idx + 2;
             if (g_utf8_collate(op_match, "<") == 0) {
                 op = OP_LT;
             } else if (g_utf8_collate(op_match, "<=") == 0) {
@@ -173,11 +160,11 @@ cportage_atom_new(const char *str, GError **error) {
                 /*@=type@*/
                 g_assert_not_reached();
             }
-        } else if ((star_match = safe_fetch(match, atom_re->star_idx))[0] != '\0') {
-            cat_idx = atom_re->star_idx + 2;
+        } else if ((star_match = safe_fetch(match, atom_re.star_idx))[0] != '\0') {
+            cat_idx = atom_re.star_idx + 2;
             op = OP_STAR;
-        } else if ((simple_match = safe_fetch(match, atom_re->simple_idx))[0] != '\0') {
-            cat_idx = atom_re->simple_idx + 2;
+        } else if ((simple_match = safe_fetch(match, atom_re.simple_idx))[0] != '\0') {
+            cat_idx = atom_re.simple_idx + 2;
             op = OP_NONE;
         } else {
             /* Getting here means we have a bug in atom regex */
@@ -199,11 +186,11 @@ cportage_atom_new(const char *str, GError **error) {
 
         atom = g_new(struct CPortageAtom, 1);
         atom->refs = 1;
-        atom->operator = op;
+        atom->op = op;
         /*@-mustfreeonly@*/
         atom->category = safe_fetch(match, cat_idx);
         atom->package = safe_fetch(match, cat_idx + 1);
-        atom->slot = safe_fetch(match, atom_re->slot_idx);
+        atom->slot = safe_fetch(match, atom_re.slot_idx);
         /*@=mustfreeonly@*/
 
         /* TODO: store version and useflags */
@@ -227,7 +214,7 @@ cportage_atom_unref(CPortageAtom self) {
         return;
         /*@=mustfreeonly@*/
     }
-    g_assert_cmpint(self->refs, >, 0);
+    g_assert(self->refs > 0);
     if (--self->refs == 0) {
         g_free(self->category);
         g_free(self->package);

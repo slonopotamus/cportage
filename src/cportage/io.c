@@ -17,11 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* Disabled because of realpath(3) */
+#pragma GCC diagnostic ignored "-Wunreachable-code"
+
 #include <errno.h>
-#include <glib/gi18n-lib.h>
 #include <stdlib.h>
 
 #include "cportage/io.h"
+#include "cportage/strings.h"
 
 char *
 cportage_canonical_path(const char *path, GError **error) {
@@ -35,7 +38,7 @@ cportage_canonical_path(const char *path, GError **error) {
     if (path_enc == NULL) {
         result = NULL;
     } else {
-        /* TODO: alternative impl using glibc canonicalize_path? */
+        /* TODO: alternative impl using canonicalize_file_name(3)? */
         /*@-unrecog@*/
         char *result_enc = realpath(path_enc, NULL);
         /*@=unrecog@*/
