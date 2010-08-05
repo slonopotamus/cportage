@@ -30,8 +30,9 @@ cportage_strings_pysplit(const char *str) {
     char **result;
 
     if (regex == NULL) {
-        regex = g_regex_new("\\s+", 0, 0, NULL);
-        g_assert(regex != NULL);
+        GError *error = NULL;
+        regex = g_regex_new("\\s+", 0, 0, &error);
+        g_assert_no_error(error);
     }
 
     /* strdup/trim can be avoided if regex will find tokens, not separators */

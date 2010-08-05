@@ -31,22 +31,44 @@ G_BEGIN_DECLS
 
 typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
 
+/**
+ * Reads configuration data and stores it in a #CPortageSettings structure.
+ *
+ * @param config_root path to configuration files root dir (typically "/")
+ * @param error       return location for a #GError, or %NULL
+ * @return a #CPortageSettings structure, free it using cportage_settings_unref()
+ */
 /*@newref@*/ /*@null@*/ CPortageSettings
 cportage_settings_new(
     const char *config_root,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
+/**
+ * Increases reference count of @self by 1.
+ *
+ * @param self a #CPortageSettings
+ * @return @self
+ */
 /*@newref@*/ CPortageSettings
 cportage_settings_ref(
     CPortageSettings self
 ) /*@modifies *self@*/;
 
+/**
+ * Decreases reference count of @self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * @param self a #CPortageSettings
+ */
 void
 cportage_settings_unref(
     /*@killref@*/ /*@null@*/ CPortageSettings self
 ) /*@modifies self@*/;
 
+/**
+ * @return readonly value of @key variable or @fallback if variable is not set
+ */
 G_CONST_RETURN /*@observer@*/ char *
 cportage_settings_get_default(
     const CPortageSettings self,
@@ -54,15 +76,27 @@ cportage_settings_get_default(
     const char *fallback
 ) /*@*/;
 
+/**
+ * @return readonly value of @key variable or %NULL if variable is not set
+ */
 G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
 cportage_settings_get(const CPortageSettings self, const char *key) /*@*/;
 
+/**
+ * @return readonly value of PORTDIR variable
+ */
 G_CONST_RETURN /*@observer@*/ char *
 cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
 
+/**
+ * @return readonly absolute path to make.profile dir
+ */
 G_CONST_RETURN /*@observer@*/ char *
 cportage_settings_get_profile(const CPortageSettings self) /*@*/;
 
+/**
+ * @return %true if @feature is enabled in FEATURES variable, %false otherwise
+ */
 bool cportage_settings_has_feature(
     const CPortageSettings self,
     const char *feature

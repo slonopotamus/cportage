@@ -38,7 +38,7 @@ cportage_canonical_path(const char *path, GError **error) {
     if (path_enc == NULL) {
         result = NULL;
     } else {
-        /* TODO: alternative impl using canonicalize_file_name(3)? */
+        /* TODO: alternative impl using glibc canonicalize_file_name(3)? */
         /*@-unrecog@*/
         char *result_enc = realpath(path_enc, NULL);
         /*@=unrecog@*/
@@ -65,19 +65,33 @@ cportage_canonical_path(const char *path, GError **error) {
     return result;
 }
 
-char **
-cportage_read_lines(const char *path, const bool ignore_comments, GError **error) {
+bool
+cportage_read_file(const char *path, char **data, size_t *len, GError **error) {
     char *path_enc;
-    char *data = NULL;
-    char **result;
+    bool result;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(path, -1, NULL));
 
     path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
-    if (path_enc == NULL) {
-        result = NULL;
-    } else if (!g_file_get_contents(path_enc, &data, NULL, error)) {
+    result = path_enc != NULL && g_file_get_contents(path_enc, data, len, error);
+
+    g_free(path_enc);
+    return result;
+}
+
+char **
+cportage_read_lines(const char *path, const bool ignore_comments, GError **error) {
+    char *data = NULL;
+    char **result;
+
+    g_assert(error == NULL || *error == NULL);
+
+    /*
+        TODO: current impl temporarily allocs 3x size of file.
+        Could be rewritten to 1x.
+     */
+    if (!cportage_read_file(path, &data, NULL, error)) {
         result = NULL;
     } else if (g_utf8_validate(data, -1, NULL)) {
         char **lines = g_strsplit(data, "\n", -1);
@@ -112,7 +126,6 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
         result = NULL;
     }
 
-    g_free(path_enc);
     g_free(data);
     return result;
 }

@@ -31,6 +31,15 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
+/**
+ * Reads shell-like config file into given #GHashTable.
+ *
+ * @param path          UTF8-encoded filename
+ * @param into          #GHashTable to collect config entries into
+ * @param allow_source  if #true, 'source' statements are handled
+ * @param error         return location for a #GError, or %NULL
+ * @return              %true on success, %false if an error occurred
+ */
 bool
 cportage_read_shellconfig(
     GHashTable *into,
@@ -42,9 +51,10 @@ cportage_read_shellconfig(
 /**
  * GLib-style realpath(3) wrapper.
  *
- * @param path UTF8-encoded filename.
- * @param error will be set if error happens.
- * @return UTF8-encoded real path for given filename, NULL on error.
+ * @param path  UTF8-encoded filename
+ * @param error return location for a #GError, or %NULL
+ * @return      UTF8-encoded path or %NULL if an error occured,
+ *              free it using g_free()
  */
 /*@null@*/ char *
 cportage_canonical_path(
@@ -54,13 +64,32 @@ cportage_canonical_path(
     /*@modifies *error,errno@*/;
 
 /**
+ * Same as g_file_get_contents_utf8 but expects UTF8-encoded filename.
+ *
+ * @param path  UTF8-encoded filename.
+ * @param data  location to store an allocated string, free it using g_free()
+ * @param len   location to store length in bytes of the contents, or %NULL
+ * @param error return location for a #GError, or %NULL
+ * @return      %true on success, %false if an error occurred
+ */
+bool
+cportage_read_file(
+    const char *path,
+    /*@out@*/ char **data,
+    /*@out@*/ size_t *len,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT
+    /*@modifies *error,errno@*/;
+
+/**
  * Fully reads text file and splits it at line endings.
  * File is checked to be valid UTF8.
  *
- * @param path UTF8-encoded filename.
- * @param ignore_comments if true, comments starting with '#' will be excluded.
- * @param error will be set if error happens.
- * @return NULL on error.
+ * @param path            UTF8-encoded filename
+ * @param ignore_comments if %true, comments starting with '#' will be excluded
+ * @param error           return location for a #GError, or %NULL
+ * @return                a %NULL-terminated char ** array or %NULL if an error
+ *                        occurred, free it using g_strfreev()
  */
 /*@null@*/ char **
 cportage_read_lines(

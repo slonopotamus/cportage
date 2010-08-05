@@ -40,11 +40,21 @@ G_BEGIN_DECLS
         char *m_elem = *m_iter;
 #define end_CPORTAGE_STRV_ITER }}
 
+/**
+ * Splits given string at whitespace (greedy). Empty elements are filtered out.
+ *
+ * @param str a string to split
+ * @return a %NULL-terminated char ** array, free it using g_strfreev()
+ */
 char **
 cportage_strings_pysplit(
     const char *str
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * Sorts %NULL-terminated string array in place.
+ * @param str_array array to sort.
+ */
 void
 cportage_strings_sort(char **str_array) /*@modifies *str_array@*/;
 

@@ -10,11 +10,17 @@ add_flex_bison_dependency(ShellScanner ShellParser)
 
 add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
+configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
+
 # Executables
 add_library(cportage SHARED
-    atom.c io.c porttree.c settings.c strings.c
-    ${BISON_ShellParser_OUTPUTS} ${FLEX_ShellScanner_OUTPUTS}
-)
+    atom.c
+    io.c
+    porttree.c
+    settings.c
+    strings.c
+    ${BISON_ShellParser_OUTPUTS}
+    ${FLEX_ShellScanner_OUTPUTS})
 target_link_libraries(cportage ${GLIB2_LIBRARIES})
 
 set_target_properties(cportage PROPERTIES
@@ -23,3 +29,4 @@ set_target_properties(cportage PROPERTIES
 
 # Installation
 install(TARGETS cportage LIBRARY DESTINATION lib)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc" DESTINATION lib/pkgconfig)

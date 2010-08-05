@@ -47,7 +47,7 @@ typedef struct cportage_shellconfig_ctx_t cportage_shellconfig_ctx;
 
 %}
 
-%x VALUE_STATE DOLLAR_STATE
+%x VALUE_STATE DOLLAR_STATE SOURCE_STATE
 
 NewLine \r\n|\n|\r
 VarName [a-zA-Z][a-zA-Z0-9_]*
@@ -55,10 +55,11 @@ Whitespace [ \t]+
 
 %%
 
-{Whitespace} /* skip whitespace */
-#[^\r\n]*  /* skip comments */
-{VarName} { DUPVAL(0); return VAR; }
-= { BEGIN VALUE_STATE; return yytext[0]; }
+<INITIAL>{Whitespace} /* skip whitespace */
+<INITIAL>#[^\r\n]*  /* skip comments */
+<INITIAL>source { BEGIN SOURCE_STATE; return SOURCE; }
+<INITIAL>{VarName} { DUPVAL(0); return VAR; }
+<INITIAL>= { BEGIN VALUE_STATE; return yytext[0]; }
 
 <INITIAL,VALUE_STATE>{NewLine} { BEGIN INITIAL; return '\n'; }
 <INITIAL,VALUE_STATE>\\{NewLine} /* line continuation */

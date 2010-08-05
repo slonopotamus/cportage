@@ -24,7 +24,7 @@
 
 /*@-exportany@*/
 
-#include "cportage/settings.h"
+#include "settings.h"
 
 G_BEGIN_DECLS
 
@@ -37,11 +37,23 @@ cportage_porttree_new(
     CPortageSettings settings
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *settings@*/;
 
+/**
+ * Increases reference count of @self by 1.
+ *
+ * @param self a #CPortagePorttree
+ * @return @self
+ */
 /*@newref@*/ CPortagePorttree
 cportage_porttree_ref(
     CPortagePorttree self
 ) /*@modifies *self@*/;
 
+/**
+ * Decreases reference count of @self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * @param self a #CPortagePorttree
+ */
 void
 cportage_porttree_unref(
     /*@killref@*/ /*@null@*/ CPortagePorttree self

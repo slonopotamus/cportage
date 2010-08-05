@@ -37,9 +37,21 @@ cportage_atom_new(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
     /*@modifies *error@*/;
 
+/**
+ * Increases reference count of @self by 1.
+ *
+ * @param self a #CPortageAtom
+ * @return @self
+ */
 /*@newref@*/ CPortageAtom
 cportage_atom_ref(CPortageAtom self) /*@modifies *self@*/;
 
+/**
+ * Decreases reference count of @self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * @param self a #CPortageAtom
+ */
 void
 cportage_atom_unref(
     /*@killref@*/ /*@null@*/ CPortageAtom self

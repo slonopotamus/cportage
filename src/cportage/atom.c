@@ -100,7 +100,7 @@ safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
 
 CPortageAtom
 cportage_atom_new(const char *str, GError **error) {
-    /*@only@*/ static struct {
+    static struct {
         /*@only@*/ GRegex *regex;
         int op_idx, star_idx, simple_idx, slot_idx, use_idx;
     } atom_re;

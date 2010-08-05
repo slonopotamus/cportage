@@ -8,6 +8,4 @@ add_executable(cmerge
     clean_action.c cmerge.c info_action.c install_action.c search_action.c)
 target_link_libraries(cmerge cportage)
 
-install(TARGETS
-  cmerge
-  RUNTIME DESTINATION bin)
+install(TARGETS cmerge RUNTIME DESTINATION bin)

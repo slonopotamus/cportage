@@ -92,7 +92,7 @@ dolookup(const cportage_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token  <str> VAR STRING
+%token  <str> PATH STRING VAR
 %token        SOURCE
 %type   <str> value value_item
 
@@ -114,9 +114,8 @@ config:
     | config '\n' config_elem;
 
 config_elem:
-    /* TODO: handle stacking */
     VAR '=' '"' value '"' { g_hash_table_replace(ctx->entries, $1, $4); }
-    | SOURCE STRING { if (!dosource(ctx, $2)) { YYERROR; } g_free($2); }
+    | SOURCE PATH { if (!dosource(ctx, $2)) { YYERROR; } g_free($2); }
 
 value:
     /* empty */         { $$ = g_strdup(""); }
