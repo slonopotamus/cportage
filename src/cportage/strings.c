@@ -53,3 +53,21 @@ cportage_strings_sort(char **str_array) {
     const size_t len = g_strv_length(str_array);
     qsort(str_array, len, sizeof(*str_array), cmpstrp);
 }
+
+static const char * const trues[] = {"true", "t", "yes", "y", "1"};
+
+bool cportage_string_is_true(const char *str) {
+    size_t i;
+
+    if (str == NULL) {
+        return false;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(trues); ++i) {
+        if (g_strcmp0(trues[i], str) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}

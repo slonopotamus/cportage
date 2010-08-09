@@ -23,6 +23,7 @@
 #define CPORTAGE_STRINGS_H
 
 #include <glib.h>
+#include <stdbool.h>
 
 /*@-exportany@*/
 
@@ -30,7 +31,7 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-#define  _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+#define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
 
 /*@iter CPORTAGE_STRV_ITER(sef char **arr, yield char *elem)@*/
 
@@ -57,6 +58,11 @@ cportage_strings_pysplit(
  */
 void
 cportage_strings_sort(char **str_array) /*@modifies *str_array@*/;
+
+/**
+ * @return %true if @str is one of "true", "t", "yes", "y", "1", %false otherwise
+ */
+bool cportage_string_is_true(/*@null@*/ const char *str) /*@*/;
 
 #pragma GCC visibility pop
 

@@ -78,6 +78,7 @@ endif()
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 # Subdirs
+add_subdirectory(doc)
 add_subdirectory(include)
 add_subdirectory(src)
 

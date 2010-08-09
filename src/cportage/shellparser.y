@@ -41,6 +41,7 @@
 #include "shellscanner.h"
 
 #define scanner ctx->yyscanner
+#define YYDEBUG 1
 #define YY_ _
 
 typedef struct cportage_shellconfig_ctx_t {
@@ -135,6 +136,9 @@ cportage_read_shellconfig(
     bool allow_source,
     GError **error
 ) {
+    /* Documented in MagicEnvVars.txt */
+    bool debug = cportage_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"));
+
     cportage_shellconfig_ctx ctx;
     bool retval;
     FILE *f;
@@ -160,11 +164,18 @@ cportage_read_shellconfig(
     cportage_shellconfig_lex_init(&ctx.yyscanner);
     cportage_shellconfig_set_extra(&ctx, ctx.yyscanner);
     cportage_shellconfig_set_in(f, ctx.yyscanner);
-    /*
-    cportage_shellconfig_set_debug(1, ctx.yyscanner);
-    */
+
+    if (debug) {
+        cportage_shellconfig_debug = 1;
+        cportage_shellconfig_set_debug(debug, ctx.yyscanner);
+        g_debug("begin shellparser on %s", path);
+    }
 
     retval = cportage_shellconfig_parse(&ctx) == 0;
+
+    if (debug) {
+        g_debug("end shellparser on %s: %s", path, retval ? "success" : "fail");
+    }
 
     cportage_shellconfig_lex_destroy(ctx.yyscanner);
     fclose(f);
