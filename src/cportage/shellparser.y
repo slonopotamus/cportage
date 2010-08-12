@@ -80,9 +80,20 @@ cportage_shellconfig_error(
 
 static bool
 dosource(cportage_shellconfig_ctx *ctx, const char *path) {
-    /* TODO: resolve relative path using realpath(ctx->filename) as base */
     /* TODO: protect against include loop? */
-    return cportage_read_shellconfig(ctx->entries, path, true, ctx->error);
+    char *full;
+    bool result;
+
+    if (g_path_is_absolute(path)) {
+        full = g_strdup(path);
+    } else {
+        char *dirname = g_path_get_dirname(ctx->filename);
+        full = g_build_filename(dirname, path, NULL);
+        g_free(dirname);
+    }
+    result = cportage_read_shellconfig(ctx->entries, full, true, ctx->error);
+    g_free(full);
+    return result;
 }
 
 static char *
