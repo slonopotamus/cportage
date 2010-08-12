@@ -1,0 +1,14 @@
+TODO: something better should be here.
+
+For now, I can just tell you that cportage uses CMake.
+So, in order to build cportage, you need to install cmake.
+Refer to your distro docs on package installation.
+Gentoo users: emerge cmake
+
+1) Create an empty directory and cd into it.
+2) Run `cmake /path/to/cportage/dir/`.
+That'll generate a makefile and various cmake helper things.
+3) Run `ccmake .` and configure build options.
+4) Now, `make` to compile cportage sources and `make install` to install it to your fs.
+
+Attention, CMake doesn't support `make uninstall`

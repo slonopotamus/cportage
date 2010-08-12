@@ -1,0 +1,33 @@
+cportage - damn fast Gentoo Linux Package Manager.
+http://git.slonopotamus.org/?p=cportage
+
+Dependencies
+------------
+
+Build time only:
+ - CMake >= 2.8
+ - bison (tested with 2.4.2)
+ - flex(tested with 2.5.35)
+
+Both build and runtime:
+ - GLib >= 2.14
+
+Compiling
+---------
+See the INSTALL document for build instructions.
+
+Documentation
+-------------
+See 'doc' dir.
+
+License
+-------
+cportage is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Contact
+-------
+If you have some ideas about cportage improvements, please feel
+free to send a message to <marat@slonopotamus.org>
