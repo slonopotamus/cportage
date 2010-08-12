@@ -34,9 +34,7 @@ find_package(FLEX REQUIRED)
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
 include_directories(SYSTEM ${GLIB2_INCLUDE_DIR})
-include_directories(
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_BINARY_DIR}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Platform checks
 include(CheckIncludeFile)
@@ -74,8 +72,6 @@ check_symbol_exists(qsort stdlib.h HAVE_QSORT)
 if(NOT HAVE_QSORT)
     message(FATAL_ERROR "Your system doesn't have qsort(3) function")
 endif()
-
-configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 # Subdirs
 add_subdirectory(doc)

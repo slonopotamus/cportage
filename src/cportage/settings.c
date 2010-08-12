@@ -21,8 +21,6 @@
 #include "cportage/settings.h"
 #include "cportage/strings.h"
 
-#include "config.h"
-
 struct CPortageSettings {
     /*@refs@*/ int refs;
 
