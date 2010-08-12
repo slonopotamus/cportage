@@ -62,7 +62,8 @@ cportage_strings_sort(char **str_array) /*@modifies *str_array@*/;
 /**
  * @return %true if @str is one of "true", "t", "yes", "y", "1", %false otherwise
  */
-bool cportage_string_is_true(/*@null@*/ const char *str) /*@*/;
+bool
+cportage_string_is_true(/*@null@*/ const char *str) /*@*/;
 
 #pragma GCC visibility pop
 
