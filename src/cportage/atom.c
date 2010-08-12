@@ -32,7 +32,7 @@ typedef enum OP_TYPE {
     OP_STAR
 } OpType;
 
-struct CPortageAtom {
+struct CPAtom {
     /*@refs@*/ int refs;
     OpType op;
     /*@only@*/ char *category;
@@ -98,14 +98,14 @@ safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
     return result;
 }
 
-CPortageAtom
-cportage_atom_new(const char *str, GError **error) {
+CPAtom
+cp_atom_new(const char *str, GError **error) {
     static struct {
         /*@only@*/ GRegex *regex;
         int op_idx, star_idx, simple_idx, slot_idx, use_idx;
     } atom_re;
 
-    CPortageAtom atom;
+    CPAtom atom;
     GMatchInfo *match;
     char *invalid_version;
 
@@ -184,7 +184,7 @@ cportage_atom_new(const char *str, GError **error) {
         }
         g_free(invalid_version);
 
-        atom = g_new(struct CPortageAtom, 1);
+        atom = g_new(struct CPAtom, 1);
         atom->refs = 1;
         atom->op = op;
         /*@-mustfreeonly@*/
@@ -201,14 +201,14 @@ cportage_atom_new(const char *str, GError **error) {
     return atom;
 }
 
-CPortageAtom
-cportage_atom_ref(CPortageAtom self) {
+CPAtom
+cp_atom_ref(CPAtom self) {
     ++self->refs;
     return self;
 }
 
 void
-cportage_atom_unref(CPortageAtom self) {
+cp_atom_unref(CPAtom self) {
     if (self == NULL) {
         /*@-mustfreeonly@*/
         return;

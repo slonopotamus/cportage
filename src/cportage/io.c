@@ -27,7 +27,7 @@
 #include "cportage/strings.h"
 
 char *
-cportage_canonical_path(const char *path, GError **error) {
+cp_canonical_path(const char *path, GError **error) {
     char *path_enc;
     char *result;
 
@@ -66,7 +66,7 @@ cportage_canonical_path(const char *path, GError **error) {
 }
 
 bool
-cportage_read_file(const char *path, char **data, size_t *len, GError **error) {
+cp_read_file(const char *path, char **data, size_t *len, GError **error) {
     char *path_enc;
     bool result;
 
@@ -81,7 +81,7 @@ cportage_read_file(const char *path, char **data, size_t *len, GError **error) {
 }
 
 char **
-cportage_read_lines(const char *path, const bool ignore_comments, GError **error) {
+cp_read_lines(const char *path, const bool ignore_comments, GError **error) {
     char *data = NULL;
     char **result;
 
@@ -91,7 +91,7 @@ cportage_read_lines(const char *path, const bool ignore_comments, GError **error
         TODO: current impl temporarily allocs 3x size of file.
         Could be rewritten to 1x.
      */
-    if (!cportage_read_file(path, &data, NULL, error)) {
+    if (!cp_read_file(path, &data, NULL, error)) {
         result = NULL;
     } else if (g_utf8_validate(data, -1, NULL)) {
         char **lines = g_strsplit(data, "\n", -1);

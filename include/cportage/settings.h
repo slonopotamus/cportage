@@ -17,8 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_SETTINGS_H
-#define CPORTAGE_SETTINGS_H
+#ifndef CP_SETTINGS_H
+#define CP_SETTINGS_H
 
 #include <glib.h>
 #include <stdbool.h>
@@ -29,17 +29,17 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef /*@refcounted@*/ struct CPortageSettings *CPortageSettings;
+typedef /*@refcounted@*/ struct CPSettings *CPSettings;
 
 /**
- * Reads configuration data and stores it in a #CPortageSettings structure.
+ * Reads configuration data and stores it in a #CPSettings structure.
  *
  * @param config_root path to configuration files root dir (typically "/")
  * @param error       return location for a #GError, or %NULL
- * @return a #CPortageSettings structure, free it using cportage_settings_unref()
+ * @return a #CPSettings structure, free it using cp_settings_unref()
  */
-/*@newref@*/ /*@null@*/ CPortageSettings
-cportage_settings_new(
+/*@newref@*/ /*@null@*/ CPSettings
+cp_settings_new(
     const char *config_root,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
@@ -47,31 +47,31 @@ cportage_settings_new(
 /**
  * Increases reference count of @self by 1.
  *
- * @param self a #CPortageSettings
+ * @param self a #CPSettings
  * @return @self
  */
-/*@newref@*/ CPortageSettings
-cportage_settings_ref(
-    CPortageSettings self
+/*@newref@*/ CPSettings
+cp_settings_ref(
+    CPSettings self
 ) /*@modifies *self@*/;
 
 /**
  * Decreases reference count of @self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * @param self a #CPortageSettings
+ * @param self a #CPSettings
  */
 void
-cportage_settings_unref(
-    /*@killref@*/ /*@null@*/ CPortageSettings self
+cp_settings_unref(
+    /*@killref@*/ /*@null@*/ CPSettings self
 ) /*@modifies self@*/;
 
 /**
  * @return readonly value of @key variable or @fallback if variable is not set
  */
 G_CONST_RETURN /*@observer@*/ char *
-cportage_settings_get_default(
-    const CPortageSettings self,
+cp_settings_get_default(
+    const CPSettings self,
     const char *key,
     const char *fallback
 ) /*@*/;
@@ -80,25 +80,25 @@ cportage_settings_get_default(
  * @return readonly value of @key variable or %NULL if variable is not set
  */
 G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
-cportage_settings_get(const CPortageSettings self, const char *key) /*@*/;
+cp_settings_get(const CPSettings self, const char *key) /*@*/;
 
 /**
  * @return readonly value of PORTDIR variable
  */
 G_CONST_RETURN /*@observer@*/ char *
-cportage_settings_get_portdir(const CPortageSettings self) /*@*/;
+cp_settings_get_portdir(const CPSettings self) /*@*/;
 
 /**
  * @return readonly absolute path to make.profile dir
  */
 G_CONST_RETURN /*@observer@*/ char *
-cportage_settings_get_profile(const CPortageSettings self) /*@*/;
+cp_settings_get_profile(const CPSettings self) /*@*/;
 
 /**
  * @return %true if @feature is enabled in FEATURES variable, %false otherwise
  */
-bool cportage_settings_has_feature(
-    const CPortageSettings self,
+bool cp_settings_has_feature(
+    const CPSettings self,
     const char *feature
 ) /*@*/;
 

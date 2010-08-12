@@ -19,8 +19,8 @@
 
 /** String functions. */
 
-#ifndef CPORTAGE_STRINGS_H
-#define CPORTAGE_STRINGS_H
+#ifndef CP_STRINGS_H
+#define CP_STRINGS_H
 
 #include <glib.h>
 #include <stdbool.h>
@@ -33,13 +33,13 @@ G_BEGIN_DECLS
 
 #define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
 
-/*@iter CPORTAGE_STRV_ITER(sef char **arr, yield char *elem)@*/
+/*@iter CP_STRV_ITER(sef char **arr, yield char *elem)@*/
 
-#define CPORTAGE_STRV_ITER(arr, m_elem) { \
+#define CP_STRV_ITER(arr, m_elem) { \
     char **m_iter; \
     for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
         char *m_elem = *m_iter;
-#define end_CPORTAGE_STRV_ITER }}
+#define end_CP_STRV_ITER }}
 
 /**
  * Splits given string at whitespace (greedy). Empty elements are filtered out.
@@ -48,7 +48,7 @@ G_BEGIN_DECLS
  * @return a %NULL-terminated char ** array, free it using g_strfreev()
  */
 char **
-cportage_strings_pysplit(
+cp_strings_pysplit(
     const char *str
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
@@ -57,13 +57,13 @@ cportage_strings_pysplit(
  * @param str_array array to sort.
  */
 void
-cportage_strings_sort(char **str_array) /*@modifies *str_array@*/;
+cp_strings_sort(char **str_array) /*@modifies *str_array@*/;
 
 /**
  * @return %true if @str is one of "true", "t", "yes", "y", "1", %false otherwise
  */
 bool
-cportage_string_is_true(/*@null@*/ const char *str) /*@*/;
+cp_string_is_true(/*@null@*/ const char *str) /*@*/;
 
 #pragma GCC visibility pop
 

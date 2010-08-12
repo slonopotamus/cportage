@@ -17,8 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_ATOM_H
-#define CPORTAGE_ATOM_H
+#ifndef CP_ATOM_H
+#define CP_ATOM_H
 
 #include <glib.h>
 
@@ -28,10 +28,10 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef /*@refcounted@*/ struct CPortageAtom *CPortageAtom;
+typedef /*@refcounted@*/ struct CPAtom *CPAtom;
 
-/*@newref@*/ /*@null@*/ CPortageAtom
-cportage_atom_new(
+/*@newref@*/ /*@null@*/ CPAtom
+cp_atom_new(
     const char *str,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
@@ -40,21 +40,21 @@ cportage_atom_new(
 /**
  * Increases reference count of @self by 1.
  *
- * @param self a #CPortageAtom
+ * @param self a #CPAtom
  * @return @self
  */
-/*@newref@*/ CPortageAtom
-cportage_atom_ref(CPortageAtom self) /*@modifies *self@*/;
+/*@newref@*/ CPAtom
+cp_atom_ref(CPAtom self) /*@modifies *self@*/;
 
 /**
  * Decreases reference count of @self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * @param self a #CPortageAtom
+ * @param self a #CPAtom
  */
 void
-cportage_atom_unref(
-    /*@killref@*/ /*@null@*/ CPortageAtom self
+cp_atom_unref(
+    /*@killref@*/ /*@null@*/ CPAtom self
 ) /*@modifies self@*/;
 
 #pragma GCC visibility pop

@@ -19,8 +19,8 @@
 
 /** I/O utility functions. */
 
-#ifndef CPORTAGE_IO_H
-#define CPORTAGE_IO_H
+#ifndef CP_IO_H
+#define CP_IO_H
 
 #include <stdbool.h>
 #include <glib.h>
@@ -41,7 +41,7 @@ G_BEGIN_DECLS
  * @return              %true on success, %false if an error occurred
  */
 bool
-cportage_read_shellconfig(
+cp_read_shellconfig(
     GHashTable *into,
     const char *path,
     bool allow_source,
@@ -57,7 +57,7 @@ cportage_read_shellconfig(
  *              free it using g_free()
  */
 /*@null@*/ char *
-cportage_canonical_path(
+cp_canonical_path(
     const char *path,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
@@ -73,7 +73,7 @@ cportage_canonical_path(
  * @return      %true on success, %false if an error occurred
  */
 bool
-cportage_read_file(
+cp_read_file(
     const char *path,
     /*@out@*/ char **data,
     /*@out@*/ size_t *len,
@@ -92,7 +92,7 @@ cportage_read_file(
  *                        occurred, free it using g_strfreev()
  */
 /*@null@*/ char **
-cportage_read_lines(
+cp_read_lines(
     const char *path,
     const bool ignore_comments,
     /*@null@*/ GError **error

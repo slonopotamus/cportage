@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-%option prefix="cportage_shellconfig_"
+%option prefix="cp_shellconfig_"
 %option batch bison-bridge bison-locations reentrant yylineno warn debug
 %option nodefault noinput nounistd nounput noyywrap
 
@@ -40,10 +40,10 @@
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng-1; \
     yycolumn += yyleng;
-#define YY_EXTRA_TYPE cportage_shellconfig_ctx *
+#define YY_EXTRA_TYPE cp_shellconfig_ctx *
 #define DUPVAL(idx) yylval->str = g_strdup(&yytext[idx])
 
-typedef struct cportage_shellconfig_ctx_t cportage_shellconfig_ctx;
+typedef struct cp_shellconfig_ctx_t cp_shellconfig_ctx;
 
 %}
 

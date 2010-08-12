@@ -17,8 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_PORTTREE_H
-#define CPORTAGE_PORTTREE_H
+#ifndef CP_PORTTREE_H
+#define CP_PORTTREE_H
 
 #include <glib.h>
 
@@ -30,33 +30,33 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-typedef /*@refcounted@*/ struct CPortagePorttree *CPortagePorttree;
+typedef /*@refcounted@*/ struct CPPorttree *CPPorttree;
 
-/*@newref@*/ CPortagePorttree
-cportage_porttree_new(
-    CPortageSettings settings
+/*@newref@*/ CPPorttree
+cp_porttree_new(
+    CPSettings settings
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *settings@*/;
 
 /**
  * Increases reference count of @self by 1.
  *
- * @param self a #CPortagePorttree
+ * @param self a #CPPorttree
  * @return @self
  */
-/*@newref@*/ CPortagePorttree
-cportage_porttree_ref(
-    CPortagePorttree self
+/*@newref@*/ CPPorttree
+cp_porttree_ref(
+    CPPorttree self
 ) /*@modifies *self@*/;
 
 /**
  * Decreases reference count of @self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * @param self a #CPortagePorttree
+ * @param self a #CPPorttree
  */
 void
-cportage_porttree_unref(
-    /*@killref@*/ /*@null@*/ CPortagePorttree self
+cp_porttree_unref(
+    /*@killref@*/ /*@null@*/ CPPorttree self
 ) /*@modifies self@*/;
 
 #pragma GCC visibility pop

@@ -23,7 +23,7 @@
 
 /* This could work much faster with handcoded loop, but i'm lazy */
 char **
-cportage_strings_pysplit(const char *str) {
+cp_strings_pysplit(const char *str) {
     /*@only@*/ static GRegex *regex;
 
     char *trimmed;
@@ -49,14 +49,14 @@ cmpstrp(const void *p1, const void *p2) /*@*/ {
 }
 
 void
-cportage_strings_sort(char **str_array) {
+cp_strings_sort(char **str_array) {
     const size_t len = g_strv_length(str_array);
     qsort(str_array, len, sizeof(*str_array), cmpstrp);
 }
 
 static const char * const trues[] = {"true", "t", "yes", "y", "1"};
 
-bool cportage_string_is_true(const char *str) {
+bool cp_string_is_true(const char *str) {
     size_t i;
 
     if (str == NULL) {

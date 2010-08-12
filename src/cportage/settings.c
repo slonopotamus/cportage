@@ -21,7 +21,7 @@
 #include "cportage/settings.h"
 #include "cportage/strings.h"
 
-struct CPortageSettings {
+struct CPSettings {
     /*@refs@*/ int refs;
 
     /*@only@*/ char *config_root;
@@ -29,11 +29,11 @@ struct CPortageSettings {
 
     /* Stuff below comes from profiles and /etc/portage */
 
-    /*@only@*/ GSList/*<CPortageAtom>*/ *packages;
-    /*@only@*/ GSList/*<CPortageAtom>*/ *package_mask;
+    /*@only@*/ GSList/*<CPAtom>*/ *packages;
+    /*@only@*/ GSList/*<CPAtom>*/ *package_mask;
     /*@only@*/ GSList/*<UseItem>*/ *use_force;
     /*@only@*/ GSList/*<UseItem>*/ *use_mask;
-    /*@only@*/ GHashTable/*<CPortageAtom,UseItem>*/ *package_use_mask;
+    /*@only@*/ GHashTable/*<CPAtom,UseItem>*/ *package_use_mask;
 
     /*
       Stuff below comes from (in order)
@@ -47,15 +47,15 @@ struct CPortageSettings {
     /*@only@*/ char **features;
 };
 
-CPortageSettings
-cportage_settings_new(const char *config_root, GError **error) {
-    CPortageSettings self = g_new0(struct CPortageSettings, 1);
+CPSettings
+cp_settings_new(const char *config_root, GError **error) {
+    CPSettings self = g_new0(struct CPSettings, 1);
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(config_root, -1, NULL));
 
     self->refs = 1;
-    self->config_root = cportage_canonical_path(config_root, error);
+    self->config_root = cp_canonical_path(config_root, error);
     if (self->config_root == NULL) {
         goto ERR;
     }
@@ -65,35 +65,35 @@ cportage_settings_new(const char *config_root, GError **error) {
 
     {
         char *make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
-        if (!cportage_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
+        if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
             goto ERR;
         }
-        if (!cportage_read_shellconfig(self->config, make_conf, true, error)) {
+        if (!cp_read_shellconfig(self->config, make_conf, true, error)) {
             goto ERR;
         }
         g_free(make_conf);
     }
-    self->features = cportage_strings_pysplit(
-        cportage_settings_get_default(self, "FEATURES", "")
+    self->features = cp_strings_pysplit(
+        cp_settings_get_default(self, "FEATURES", "")
     );
      /*@=mustfreeonly@*/
-    cportage_strings_sort(self->features);
+    cp_strings_sort(self->features);
 
     return self;
 
 ERR:
-    cportage_settings_unref(self);
+    cp_settings_unref(self);
     return NULL;
 }
 
-CPortageSettings
-cportage_settings_ref(CPortageSettings self) {
+CPSettings
+cp_settings_ref(CPSettings self) {
     ++self->refs;
     return self;
 }
 
 void
-cportage_settings_unref(CPortageSettings self) {
+cp_settings_unref(CPSettings self) {
     if (self == NULL) {
         /*@-mustfreeonly@*/
         return;
@@ -120,41 +120,41 @@ cportage_settings_unref(CPortageSettings self) {
 }
 
 G_CONST_RETURN char *
-cportage_settings_get_default(
-    const CPortageSettings self,
+cp_settings_get_default(
+    const CPSettings self,
     const char *key,
     const char *fallback
 ) {
-    const char *result = cportage_settings_get(self, key);
+    const char *result = cp_settings_get(self, key);
     return result == NULL ? fallback : result;
 }
 
 G_CONST_RETURN char *
-cportage_settings_get(const CPortageSettings self, const char *key) {
+cp_settings_get(const CPSettings self, const char *key) {
     return g_hash_table_lookup(self->config, key);
 }
 
 G_CONST_RETURN char *
-cportage_settings_get_portdir(const CPortageSettings self) {
-    return cportage_settings_get_default(self, "PORTDIR", "/usr/portage");
+cp_settings_get_portdir(const CPSettings self) {
+    return cp_settings_get_default(self, "PORTDIR", "/usr/portage");
 }
 
 G_CONST_RETURN char *
-cportage_settings_get_profile(const CPortageSettings self) {
+cp_settings_get_profile(const CPSettings self) {
     return self->profile;
 }
 
-bool cportage_settings_has_feature(
-    const CPortageSettings self,
+bool cp_settings_has_feature(
+    const CPSettings self,
     const char *feature
 ) {
     g_assert(g_utf8_validate(feature, -1, NULL));
 
-    CPORTAGE_STRV_ITER(self->features, f) {
+    CP_STRV_ITER(self->features, f) {
         if (g_strcmp0(f, feature) == 0) {
             return true;
         }
-    } end_CPORTAGE_STRV_ITER
+    } end_CP_STRV_ITER
 
     return false;
 }

@@ -121,11 +121,11 @@ int main(void) {
     while (i < G_N_ELEMENTS(data)) {
         const char *s = data[i].str;
         const char *msg = data[i].valid ? "valid" : "invalid";
-        void *atom = cportage_atom_new(s, NULL);
+        void *atom = cp_atom_new(s, NULL);
         if (data[i].valid == (atom == NULL)) {
             g_error("'%s' must be %s, but it isn't\n", s, msg);
         }
-        cportage_atom_unref(atom);
+        cp_atom_unref(atom);
         ++i;
     }
 

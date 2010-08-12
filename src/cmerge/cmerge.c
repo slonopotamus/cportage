@@ -47,7 +47,7 @@ print_version(void)
     /*@globals stdout@*/
     /*@modifies fileSystem,errno,*stdout@*/
 {
-    g_print("cportage " CPORTAGE_VERSION "\n\n");
+    g_print("cportage " CP_VERSION "\n\n");
     g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
          "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
          "This is free software: you are free to change and redistribute it.\n"

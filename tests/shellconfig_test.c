@@ -30,7 +30,7 @@ assert_valid(const char *path) {
     bool success;
 
     g_assert(access(path, R_OK) == 0);
-    success = cportage_read_shellconfig(entries, path, false, &error);
+    success = cp_read_shellconfig(entries, path, false, &error);
     g_assert_no_error(error);
     g_assert(success);
 
@@ -52,7 +52,7 @@ assert_invalid(const char *path) {
     GError *error = NULL;
 
     g_assert(access(path, R_OK) == 0);
-    g_assert(!cportage_read_shellconfig(entries, path, false, &error));
+    g_assert(!cp_read_shellconfig(entries, path, false, &error));
     g_assert(error != NULL);
 
     g_hash_table_destroy(entries);

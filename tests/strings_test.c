@@ -48,17 +48,17 @@ strv_check(char **strv, ...) {
 
 static void
 pysplit_test(void) {
-    strv_check(cportage_strings_pysplit(""), NULL);
-    strv_check(cportage_strings_pysplit(" "), NULL);
-    strv_check(cportage_strings_pysplit("  "), NULL);
-    strv_check(cportage_strings_pysplit("a"), "a", NULL);
-    strv_check(cportage_strings_pysplit("ab"), "ab", NULL);
-    strv_check(cportage_strings_pysplit("a b"), "a", "b", NULL);
-    strv_check(cportage_strings_pysplit("a "), "a", NULL);
-    strv_check(cportage_strings_pysplit(" a"), "a", NULL);
-    strv_check(cportage_strings_pysplit(" a "), "a", NULL);
-    strv_check(cportage_strings_pysplit("a  b"), "a", "b", NULL);
-    strv_check(cportage_strings_pysplit(" a\tb\nc\r\nd   e\n"),
+    strv_check(cp_strings_pysplit(""), NULL);
+    strv_check(cp_strings_pysplit(" "), NULL);
+    strv_check(cp_strings_pysplit("  "), NULL);
+    strv_check(cp_strings_pysplit("a"), "a", NULL);
+    strv_check(cp_strings_pysplit("ab"), "ab", NULL);
+    strv_check(cp_strings_pysplit("a b"), "a", "b", NULL);
+    strv_check(cp_strings_pysplit("a "), "a", NULL);
+    strv_check(cp_strings_pysplit(" a"), "a", NULL);
+    strv_check(cp_strings_pysplit(" a "), "a", NULL);
+    strv_check(cp_strings_pysplit("a  b"), "a", "b", NULL);
+    strv_check(cp_strings_pysplit(" a\tb\nc\r\nd   e\n"),
         "a", "b", "c", "d", "e", NULL);
 }
 

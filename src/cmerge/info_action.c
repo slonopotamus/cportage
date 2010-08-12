@@ -39,9 +39,9 @@ relative_path(const char *base, const char *path)
     g_assert(g_utf8_validate(base, -1, NULL));
     g_assert(g_utf8_validate(path, -1, NULL));
 
-    if ((path_abs = cportage_canonical_path(path, NULL)) == NULL) {
+    if ((path_abs = cp_canonical_path(path, NULL)) == NULL) {
         result = g_strdup(path);
-    } else if ((base_abs = cportage_canonical_path(base, NULL)) == NULL) {
+    } else if ((base_abs = cp_canonical_path(base, NULL)) == NULL) {
         result = g_strdup(path_abs);
     } else if (g_strstr_len(path_abs, -1, base_abs) == path_abs) {
         result = g_strdup(&path_abs[strlen(base_abs) + 1]);
@@ -55,13 +55,13 @@ relative_path(const char *base, const char *path)
 }
 
 static void
-print_version(const CPortageSettings settings, const struct utsname *utsname)
+print_version(const CPSettings settings, const struct utsname *utsname)
     /*@globals stdout@*/
     /*@modifies fileSystem,errno,*stdout@*/
 {
-    const char *portdir = cportage_settings_get_portdir(settings);
+    const char *portdir = cp_settings_get_portdir(settings);
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
-    const char *profile = cportage_settings_get_profile(settings);
+    const char *profile = cp_settings_get_profile(settings);
     char *profile_str = relative_path(profiles_dir, profile);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
@@ -69,21 +69,21 @@ print_version(const CPortageSettings settings, const struct utsname *utsname)
     const char *libc_ver = "glibc-2.8_p20080602-r1";
 
     g_print("cportage %s (%s, %s, %s, %s %s)\n",
-           CPORTAGE_VERSION, profile_str, gcc_ver, libc_ver,
+           CP_VERSION, profile_str, gcc_ver, libc_ver,
            utsname->release, utsname->machine);
     g_free(profiles_dir);
     g_free(profile_str);
 }
 
 static void
-print_porttree_timestamp(const CPortageSettings settings)
+print_porttree_timestamp(const CPSettings settings)
     /*@globals stdout@*/
     /*@modifies fileSystem,errno,*stdout@*/
 {
-    const char *portdir = cportage_settings_get_portdir(settings);
+    const char *portdir = cp_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     GError *error = NULL;
-    char **data = cportage_read_lines(path, false, &error);
+    char **data = cp_read_lines(path, false, &error);
     g_print("Timestamp of tree: %s\n",
         data != NULL && data[0] != NULL ? data[0] : "Unknown");
     if (error != NULL) {
@@ -95,21 +95,21 @@ print_porttree_timestamp(const CPortageSettings settings)
 }
 
 static void
-print_packages(const CPortageSettings settings)
+print_packages(const CPSettings settings)
     /*@globals stdout@*/
     /*@modifies fileSystem,errno,*stdout@*/
 {
     char *path = g_build_filename(
-        cportage_settings_get_portdir(settings),
+        cp_settings_get_portdir(settings),
         "profiles", "info_pkgs", NULL
     );
-    char **data = cportage_read_lines(path, true, NULL);
+    char **data = cp_read_lines(path, true, NULL);
 
     if (data != NULL) {
-        cportage_strings_sort(data);
+        cp_strings_sort(data);
 
-        CPORTAGE_STRV_ITER(data, s) {
-            CPortageAtom atom = cportage_atom_new(s, NULL);
+        CP_STRV_ITER(data, s) {
+            CPAtom atom = cp_atom_new(s, NULL);
             char *atom_label = g_strconcat(s, ":", NULL);
             if (atom == NULL) {
                 g_print("%-20s [NOT VALID]\n", atom_label);
@@ -118,30 +118,30 @@ print_packages(const CPortageSettings settings)
                 g_print("%-20s %s\n", atom_label, "3.2_p39");
             }
             g_free(atom_label);
-            cportage_atom_unref(atom);
-        } end_CPORTAGE_STRV_ITER
+            cp_atom_unref(atom);
+        } end_CP_STRV_ITER
     }
     g_free(path);
     g_strfreev(data);
 }
 
 static void
-print_settings(const CPortageSettings settings)
+print_settings(const CPSettings settings)
     /*@globals stdout@*/
     /*@modifies fileSystem,errno,*stdout@*/
 {
     char *path = g_build_filename(
-        cportage_settings_get_portdir(settings),
+        cp_settings_get_portdir(settings),
         "profiles", "info_vars", NULL
     );
-    char **data = cportage_read_lines(path, true, NULL);
+    char **data = cp_read_lines(path, true, NULL);
 
     if (data != NULL) {
         GString *unset = NULL;
-        cportage_strings_sort(data);
+        cp_strings_sort(data);
 
-        CPORTAGE_STRV_ITER(data, s) {
-            const char *value = cportage_settings_get(settings, s);
+        CP_STRV_ITER(data, s) {
+            const char *value = cp_settings_get(settings, s);
             if (value == NULL) {
                 if (unset == NULL) {
                     unset = g_string_append(g_string_new("Unset: "), s);
@@ -151,7 +151,7 @@ print_settings(const CPortageSettings settings)
             } else {
                 g_print("%s=\"%s\"\n", s, value);
             }
-        } end_CPORTAGE_STRV_ITER
+        } end_CP_STRV_ITER
 
         if (unset != NULL) {
             g_print("%s\n", unset->str);
@@ -164,7 +164,7 @@ print_settings(const CPortageSettings settings)
 
 void
 cmerge_info_action(const GlobalOptions options, GError **error) {
-    CPortageSettings settings;
+    CPSettings settings;
     struct utsname utsname;
     /* TODO: read cpu name from /proc/cpuinfo */
     const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
@@ -173,7 +173,7 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    settings = cportage_settings_new(options->config_root, error);
+    settings = cp_settings_new(options->config_root, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -193,5 +193,5 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
     print_settings(settings);
 
 ERR:
-    cportage_settings_unref(settings);
+    cp_settings_unref(settings);
 }

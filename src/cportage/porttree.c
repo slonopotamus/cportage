@@ -19,27 +19,27 @@
 
 #include "cportage/porttree.h"
 
-struct CPortagePorttree {
+struct CPPorttree {
     /*@refs@*/ int refs;
-    CPortageSettings settings;
+    CPSettings settings;
 };
 
-CPortagePorttree
-cportage_porttree_new(CPortageSettings settings) {
-    CPortagePorttree self = g_new(struct CPortagePorttree, 1);
+CPPorttree
+cp_porttree_new(CPSettings settings) {
+    CPPorttree self = g_new(struct CPPorttree, 1);
     self->refs = 1;
-    self->settings = cportage_settings_ref(settings);
+    self->settings = cp_settings_ref(settings);
     return self;
 }
 
-CPortagePorttree
-cportage_porttree_ref(CPortagePorttree self) {
+CPPorttree
+cp_porttree_ref(CPPorttree self) {
     ++self->refs;
     return self;
 }
 
 void
-cportage_porttree_unref(CPortagePorttree self) {
+cp_porttree_unref(CPPorttree self) {
     if (self == NULL) {
         /*@-mustfreeonly@*/
         return;
@@ -47,7 +47,7 @@ cportage_porttree_unref(CPortagePorttree self) {
     }
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
-        cportage_settings_unref(self->settings);
+        cp_settings_unref(self->settings);
         /*@-refcounttrans@*/
         g_free(self);
         /*@=refcounttrans@*/
