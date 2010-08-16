@@ -55,13 +55,13 @@ Whitespace [ \t]+
 
 %%
 
-<INITIAL>{Whitespace} /* skip whitespace */
+<INITIAL,SOURCE_STATE>{Whitespace} /* skip whitespace */
 <INITIAL>#[^\r\n]*  /* skip comments */
 <INITIAL>source { BEGIN SOURCE_STATE; return SOURCE; }
 <INITIAL>{VarName} { DUPVAL(0); return VAR; }
 <INITIAL>= { BEGIN VALUE_STATE; return yytext[0]; }
 
-<INITIAL,VALUE_STATE>{NewLine} { BEGIN INITIAL; return '\n'; }
+<INITIAL,VALUE_STATE,SOURCE_STATE>{NewLine} { BEGIN INITIAL; return '\n'; }
 <INITIAL,VALUE_STATE>\\{NewLine} /* line continuation */
 
 <VALUE_STATE>\\[$"] { DUPVAL(1); return STRING; }
@@ -71,6 +71,8 @@ Whitespace [ \t]+
 <DOLLAR_STATE>{VarName}/[^\}] { BEGIN VALUE_STATE; DUPVAL(0); return VAR; }
 <DOLLAR_STATE>{VarName}/\} { DUPVAL(0); return VAR; }
 
-<INITIAL,VALUE_STATE,DOLLAR_STATE>.|\n|\r { return yytext[0]; }
+<SOURCE_STATE>[^ \t\r\n$]+ { DUPVAL(0); BEGIN INITIAL; return PATH; }
+
+<INITIAL,VALUE_STATE,DOLLAR_STATE,SOURCE_STATE>.|\n { return yytext[0]; }
 
 %%

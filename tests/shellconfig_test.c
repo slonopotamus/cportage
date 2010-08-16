@@ -17,60 +17,53 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <unistd.h>
-
 #include "cportage/io.h"
 
-static void
-assert_valid(const char *path) {
+static char *dir;
+
+static GHashTable *
+assert_parse(const char *path) {
     GHashTable *entries = g_hash_table_new_full(
         g_str_hash, g_str_equal, g_free, g_free
     );
     GError *error = NULL;
-    bool success;
+    char *full_path = g_build_filename(dir, path, NULL);
 
-    g_assert(access(path, R_OK) == 0);
-    success = cp_read_shellconfig(entries, path, false, &error);
+    g_assert(cp_read_shellconfig(entries, full_path, true, &error));
     g_assert_no_error(error);
-    g_assert(success);
 
+    g_free(full_path);
+    return entries;
+}
+
+static void
+simple(void) {
+    GHashTable *entries = assert_parse("shellconfig_test_simple.conf");
+    g_assert(g_hash_table_size(entries) == 2);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "B") == 0);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C"), "B") == 0);
     g_hash_table_destroy(entries);
 }
 
 static void
-valid_test(void) {
-    assert_valid("../../tests/shellconfig/valid01.conf");
-    assert_valid("../../tests/shellconfig/valid02.conf");
-    assert_valid("../../tests/shellconfig/valid03.conf");
-}
-
-/*static void
-assert_invalid(const char *path) {
-    GHashTable *entries = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, g_free
-    );
-    GError *error = NULL;
-
-    g_assert(access(path, R_OK) == 0);
-    g_assert(!cp_read_shellconfig(entries, path, false, &error));
-    g_assert(error != NULL);
-
+source(void) {
+    GHashTable *entries = assert_parse("shellconfig_test_source.conf");
+    g_assert(g_hash_table_size(entries) == 3);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "VAR"), "VAL") == 0);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "B") == 0);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C"), "B") == 0);
     g_hash_table_destroy(entries);
 }
-
-static void
-invalid_test(void) {
-    assert_invalid("../../tests/shellconfig/invalid01.conf");
-    assert_invalid("../../tests/shellconfig/invalid02.conf");
-    assert_invalid("../../tests/shellconfig/invalid03.conf");
-}*/
 
 int
 main(int argc, char *argv[]) {
     g_test_init(&argc, &argv, NULL);
 
-    g_test_add_func("/io/shellconfig/valid", valid_test);
-    /*g_test_add_func("/io/shellconfig/invalid", invalid_test);*/
+    g_assert(argc == 2);
+    dir = argv[1];
+
+    g_test_add_func("/io/shellconfig/simple", simple);
+    g_test_add_func("/io/shellconfig/source", source);
 
     return g_test_run();
 }
