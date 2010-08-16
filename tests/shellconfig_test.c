@@ -37,6 +37,14 @@ assert_parse(const char *path) {
 }
 
 static void
+line_cont(void) {
+    GHashTable *entries = assert_parse("shellconfig_test_line_cont.conf");
+    g_assert(g_hash_table_size(entries) == 1);
+    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "BCD") == 0);
+    g_hash_table_destroy(entries);
+}
+
+static void
 simple(void) {
     GHashTable *entries = assert_parse("shellconfig_test_simple.conf");
     g_assert(g_hash_table_size(entries) == 2);
@@ -64,6 +72,7 @@ main(int argc, char *argv[]) {
 
     g_test_add_func("/io/shellconfig/simple", simple);
     g_test_add_func("/io/shellconfig/source", source);
+    g_test_add_func("/io/shellconfig/line_cont", line_cont);
 
     return g_test_run();
 }
