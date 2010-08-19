@@ -55,20 +55,25 @@ cp_settings_load(
     char *make_conf;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(self->config_root != NULL && self->config == NULL);
+    g_assert(self->config_root != NULL && self->profile != NULL);
+    g_assert(self->config == NULL);
 
     make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
     self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
-        return false;
+        goto ERR;
     }
     if (!cp_read_shellconfig(self->config, make_conf, true, error)) {
-        return false;
+        goto ERR;
     }
 
     g_free(make_conf);
     return true;
+
+ERR:
+    g_free(make_conf);
+    return false;
 }
 
 static void
