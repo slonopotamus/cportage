@@ -47,6 +47,41 @@ struct CPSettings {
     /*@only@*/ char **features;
 };
 
+static bool
+cp_settings_load(
+    CPSettings self,
+    /*@null*/GError **error
+) /*@modifies *self, *error@*/ {
+    char *make_conf;
+
+    g_assert(error == NULL || *error == NULL);
+    g_assert(self->config_root != NULL && self->config == NULL);
+
+    make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
+    self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+    if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
+        return false;
+    }
+    if (!cp_read_shellconfig(self->config, make_conf, true, error)) {
+        return false;
+    }
+
+    g_free(make_conf);
+    return true;
+}
+
+static void
+cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
+    char *key = g_strdup("FEATURES");
+
+    g_assert(self->config != NULL && self->features == NULL);
+
+    self->features = cp_strings_pysplit(cp_settings_get_default(self, key, ""));
+    cp_strings_sort(self->features);
+    g_hash_table_insert(self->config, key, g_strjoinv(" ", self->features));
+}
+
 CPSettings
 cp_settings_new(const char *config_root, GError **error) {
     CPSettings self = g_new0(struct CPSettings, 1);
@@ -61,23 +96,11 @@ cp_settings_new(const char *config_root, GError **error) {
     }
 
     self->profile = g_build_filename(self->config_root, "etc", "make.profile", NULL);
-    self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
-    {
-        char *make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
-        if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
-            goto ERR;
-        }
-        if (!cp_read_shellconfig(self->config, make_conf, true, error)) {
-            goto ERR;
-        }
-        g_free(make_conf);
+    if (!cp_settings_load(self, error)) {
+        goto ERR;
     }
-    self->features = cp_strings_pysplit(
-        cp_settings_get_default(self, "FEATURES", "")
-    );
-     /*@=mustfreeonly@*/
-    cp_strings_sort(self->features);
+    cp_settings_init_features(self);
 
     return self;
 
