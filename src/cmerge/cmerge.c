@@ -19,6 +19,7 @@
 
 #include <locale.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "config.h"
 #include "actions.h"
@@ -29,16 +30,19 @@
     /*@=type@*/ /*@=nullassign@*/
 #define DEFAULT_CONFIG_ROOT "/"
 
-/*@unchecked@*/ static struct {
+/*@unchecked@*/ static struct actions {
     int clean;
     int depclean;
     int info;
     int install;
     int search;
     int version;
+    int help;
 } actions;
 
-/*@unchecked@*/ static struct GlobalOptions gopts = { VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL };
+/*@unchecked@*/ static struct GlobalOptions gopts = {
+    VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL
+};
 
 /*@unchecked@*/ static struct MergeOptions mopts = { &gopts, false, false };
 
@@ -49,7 +53,8 @@ print_version(void)
 {
     g_print("cportage " CP_VERSION "\n\n");
     g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
-         "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+         "License GPLv3+: GNU GPL version 3 or later"
+             " <http://gnu.org/licenses/gpl.html>\n"
          "This is free software: you are free to change and redistribute it.\n"
          "There is NO WARRANTY, to the extent permitted by law.\n");
 }
@@ -78,69 +83,31 @@ static bool quiet_cb(
     return true;
 }
 
-/*@unchecked@*/ static const GOptionEntry actions_options[] = {
-    {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean,
-        "Clean the system by removing packages that are not associated"
-        " with explicitly merged packages", NULL},
-    {"info", '\0', 0, G_OPTION_ARG_NONE, &actions.info,
-        "Produce a list of information to include in bug reports", NULL},
-    {"install", '\0', 0, G_OPTION_ARG_NONE, &actions.install,
-        "Install packages (default action)", NULL},
-    {"search", 's', 0, G_OPTION_ARG_NONE, &actions.search,
-        "Search for matches of the supplied string in the portage tree", NULL},
-    {"unmerge", 'C', 0, G_OPTION_ARG_NONE, &actions.clean,
-        "Remove all matching packages", NULL},
-    {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version,
-        "Output version", NULL},
-    OPTIONS_TABLEEND
-};
+/* Know how to compile this without G_GNUC_EXTENSION? Tell me */
+/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry options[] = {
 
-/* Know how to compile this without extension? Tell me */
-/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry gopts_options[] = {
-    {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args,
-        "Leftover args", NULL},
-    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root,
-        "Set location for configuration files", "DIR"},
+    /* Actions */
+    {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean, NULL, NULL},
+    {"help", 'h', 0, G_OPTION_ARG_NONE, &actions.help, NULL, NULL},
+    {"info", '\0', 0, G_OPTION_ARG_NONE, &actions.info, NULL, NULL},
+    {"install", '\0', 0, G_OPTION_ARG_NONE, &actions.install, NULL, NULL},
+    {"search", 's', 0, G_OPTION_ARG_NONE, &actions.search, NULL, NULL},
+    {"unmerge", 'C', 0, G_OPTION_ARG_NONE, &actions.clean, NULL, NULL},
+    {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version, NULL, NULL},
+
+    /* Global options */
+    {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args, NULL, NULL},
+    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root, NULL, NULL},
     /*@-type@*/
-    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb,
-        "Enable quiet output mode", NULL},
-    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb,
-        "Enable verbose output mode", NULL},
-    /*@=type@*/
+    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb, NULL, NULL},
+    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb, NULL, NULL},
+
+    /* Merge options */
+    {"pretend", 'p', 0, G_OPTION_ARG_NONE, &mopts.pretend, NULL, NULL},
+    {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update, NULL, NULL},
+
     OPTIONS_TABLEEND
 };
-
-/*@unchecked@*/ static const GOptionEntry mopts_options[] = {
-    {"pretend", 'p', 0, G_OPTION_ARG_NONE, &mopts.pretend,
-        "Instead of actually performing any action, only display what would be done", NULL},
-    {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update,
-        "Update packages to the best version available", NULL},
-    OPTIONS_TABLEEND
-};
-
-static GOptionContext *
-create_option_ctx(void) /*@*/ {
-    GOptionContext *ctx = g_option_context_new("[ACTION] [ARGS...]");
-
-    GOptionGroup *actions_group = g_option_group_new("actions",
-        "Actions (only one can be specified):",
-        "Show available actions to perform", NULL, NULL);
-    GOptionGroup *gopts_group = g_option_group_new("global",
-        "Global options (applicable to all actions):",
-        "Show global options", NULL, NULL);
-    GOptionGroup *mopts_group = g_option_group_new("merge",
-        "Merge/unmerge options:",
-        "Show merge/unmerge options", NULL, NULL);
-
-    g_option_group_add_entries(actions_group, actions_options);
-    g_option_context_add_group(ctx, actions_group);
-    g_option_group_add_entries(gopts_group, gopts_options);
-    g_option_context_add_group(ctx, gopts_group);
-    g_option_group_add_entries(mopts_group, mopts_options);
-    g_option_context_add_group(ctx, mopts_group);
-
-    return ctx;
-}
 
 int
 main(int argc, char *argv[])
@@ -151,11 +118,18 @@ main(int argc, char *argv[])
 
     (void)setlocale(LC_ALL, "");
 
-    ctx = create_option_ctx();
+    ctx = g_option_context_new(NULL);
+    g_option_context_add_main_entries(ctx, options, NULL);
+    g_option_context_set_help_enabled(ctx, false);
 
     if (g_option_context_parse(ctx, &argc, &argv, &error)) {
-        int actions_sum = actions.clean + actions.depclean + actions.info
-            + actions.install + actions.search + actions.version;
+        int actions_sum = actions.clean
+            + actions.depclean
+            + actions.help
+            + actions.info
+            + actions.install
+            + actions.search
+            + actions.version;
 
         /*
             Special case for `cmerge foo/bar`.
@@ -176,6 +150,8 @@ main(int argc, char *argv[])
             cmerge_clean_action(&mopts, false, &error);
         } else if (actions.depclean > 0) {
             cmerge_clean_action(&mopts, true, &error);
+        } else if (actions.help > 0){
+            execlp("man", "man", "cmerge", NULL);
         } else if (actions.info > 0) {
             cmerge_info_action(&gopts, &error);
         } else if (actions.install > 0) {

@@ -73,13 +73,18 @@ if(NOT HAVE_QSORT)
     message(FATAL_ERROR "Your system doesn't have qsort(3) function")
 endif()
 
+check_symbol_exists(execlp unistd.h HAVE_EXECLP)
+if(NOT HAVE_EXECLP)
+    message(FATAL_ERROR "Your system doesn't have execlp(3) function")
+endif()
+
 # Subdirs
-add_subdirectory(doc)
+add_subdirectory(man)
 add_subdirectory(include)
 add_subdirectory(src)
 
-option(WITH_TESTS "Enable unit tests" ON)
-if(WITH_TESTS)
+option(ENABLE_TESTS "Enable unit tests" ON)
+if(ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()

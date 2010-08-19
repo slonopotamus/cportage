@@ -1,0 +1,24 @@
+.TH cportage 3 "" "CPortage @cportage_VERSION@" CPortage
+.SH "NAME"
+CPortage \- \fBportage\fR(5)-compatible C library
+.SH "SYNOPSIS"
+.nf
+.B #include <cportage/atom.h>
+.B #include <cportage/io.h>
+.B #include <cportage/porttree.h>
+.B #include <cportage/settings.h>
+.B #include <cportage/strings.h>
+.fi
+.SH "ENVIRONMENT OPTIONS"
+.TP
+\fBCPORTAGE_SHELLCONFIG_DEBUG\fR = \fI[bool]\fR
+Enables debug output during shell-like config files parsing
+.SH "AUTHORS"
+.nf
+Marat Radchenko <marat@slonopotamus.org>
+.fi
+.SH "SEE ALSO"
+.BR cmerge (1),
+.BR ebuild (5),
+.BR make.conf (5),
+.BR portage (5)

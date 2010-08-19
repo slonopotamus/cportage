@@ -1,4 +1,0 @@
-This file documents "magic" env variables that influence cportage behaviour.
-
-CPORTAGE_SHELLCONFIG_DEBUG (boolean) - if enabled, tells cportage to produce
-debug (lots) output to stderr during shell-like config parsing.

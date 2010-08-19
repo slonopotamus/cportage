@@ -1,0 +1,47 @@
+.TH cmerge 1 "" "CPortage @cportage_VERSION@" CPortage
+.SH "NAME"
+cmerge - \fBemerge\fR(1) compatible commandline package manager
+.SH "SYNOPSIS"
+.TP
+.BR cmerge
+[\fIglobal options...\fR] \fIaction\fR ...
+.TP
+.BR cmerge
+\fB--help\fR | \fB--info\fR | \fB--version\fR
+.TP
+.BR cmerge
+[\fB--install\fR] [merge options] [--] <atom>
+.TP
+.BR cmerge
+\fB--depclean\fR | \fB-c\fR [merge options] [--] <atom>
+.TP
+.BR cmerge
+\fB--unmerge\fR | \fB\-C\fR [merge options] [--] <atom>
+.TP
+.BR cmerge
+\fB--search\fR | \fB-s\fR [--] <something>
+.SH "DESCRIPTION"
+TODO
+.SH "ACTIONS"
+.TP
+.BR "No action"
+No action is treated as \fB--install\fR.
+.SH "GLOBAL OPTIONS"
+.TP
+.BR "\fB--verbose\fR | \fB-v\fR | \fB--quiet\fR | \fB-q\fR"
+Controls output verbosity
+.SH "MERGE OPTIONS"
+.TP
+.BR "\fB--pretend\fR | \fB-p\fR"
+Instead of actually performing any action, only display what would be done
+.SH "ENVIRONMENT OPTIONS"
+See \fBcportage\fR(3)
+.SH "AUTHORS"
+.nf
+Marat Radchenko <marat@slonopotamus.org>
+.fi
+.SH "SEE ALSO"
+.BR cportage (3),
+.BR ebuild (5),
+.BR make.conf (5),
+.BR portage (5)
