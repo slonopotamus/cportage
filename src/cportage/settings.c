@@ -178,6 +178,7 @@ bool cp_settings_has_feature(
 ) {
     g_assert(g_utf8_validate(feature, -1, NULL));
 
+    /* Could be replaced with bsearch since features are sorted */
     CP_STRV_ITER(self->features, f) {
         if (g_strcmp0(f, feature) == 0) {
             return true;
