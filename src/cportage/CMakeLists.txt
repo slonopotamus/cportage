@@ -12,13 +12,11 @@ add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
 configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
 
+file(GLOB cportage_sources *.c)
+
 # Executables
 add_library(cportage SHARED
-    atom.c
-    io.c
-    porttree.c
-    settings.c
-    strings.c
+    ${cportage_sources}
     ${BISON_ShellParser_OUTPUTS}
     ${FLEX_ShellScanner_OUTPUTS})
 target_link_libraries(cportage ${GLIB2_LIBRARIES})
