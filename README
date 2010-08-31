@@ -1,4 +1,5 @@
-cportage - damn fast Gentoo Linux Package Manager.
+cportage - damn fast Gentoo Linux package manager
+
 http://git.slonopotamus.org/?p=cportage
 
 Dependencies
@@ -10,7 +11,7 @@ Build time only:
  - flex(tested with 2.5.35)
 
 Both build and runtime:
- - GLib >= 2.14
+ - GLib >= 2.14 (tested with 2.22)
 
 Compiling
 ---------
