@@ -1,6 +1,6 @@
-.TH cportage 3 "" "CPortage @cportage_VERSION@" CPortage
+.TH cportage 3 "" "cportage @cportage_VERSION@" cportage
 .SH "NAME"
-CPortage \- \fBportage\fR(5)-compatible C library
+cportage \- \fBportage\fR(5)-compatible C library
 .SH "SYNOPSIS"
 .nf
 .B #include <cportage/atom.h>
