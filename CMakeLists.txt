@@ -19,12 +19,13 @@ set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -Wbad-function-cast -Wcast-qual -Wcast-align
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
-    -Wpadded -Wredundant-decls -Wnested-externs -Winline
+    -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs -Winline
     -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization
     -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing
-    -Wimport -Wdisabled-optimization -Wpacked-bitfield-compat)
+    -Wimport -Wdisabled-optimization -Wpacked-bitfield-compat
+    -Wunreachable-code -Wno-error=unreachable-code)
 add_definitions(${CMAKE_REQUIRED_DEFINITIONS}
-    -Wunreachable-code -Wold-style-definition -Wmissing-prototypes
+    -Wold-style-definition -Wmissing-prototypes
     -Wmissing-declarations -Wstrict-prototypes)
 
 # Dependencies
