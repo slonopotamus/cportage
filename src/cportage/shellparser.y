@@ -35,6 +35,7 @@
 #pragma GCC diagnostic ignored "-Wunreachable-code"
 
 #include "cportage/io.h"
+#include "cportage/shellconfig.h"
 #include "cportage/strings.h"
 
 #include "shellparser.h"
@@ -49,7 +50,7 @@ typedef struct cp_shellconfig_ctx_t {
     const char *filename;
     GHashTable *entries;
     GError **error;
-    int allow_source;
+    bool allow_source;
 } cp_shellconfig_ctx;
 
 %}
@@ -65,17 +66,33 @@ typedef struct cp_shellconfig_ctx_t {
 
 static void
 cp_shellconfig_error(
-    const YYLTYPE *locp G_GNUC_UNUSED,
-    cp_shellconfig_ctx *ctx G_GNUC_UNUSED,
-    const char *err G_GNUC_UNUSED
+    const YYLTYPE *locp,
+    cp_shellconfig_ctx *ctx,
+    const char *err
 ) {
-    /* TODO: set *(ctx->error) */
-    if (locp->first_line) {
-        g_print("%s: %d.%d-%d.%d: ", ctx->filename,
-            locp->first_line, locp->first_column,
-            locp->last_line, locp->last_column);
+    if (ctx->error == NULL || *ctx->error != NULL) {
+        return;
     }
-    g_print("%s\n", err);
+
+    if (locp->first_line) {
+        g_set_error(ctx->error,
+            CP_SHELLCONFIG_ERROR,
+            CP_SHELLCONFIG_ERROR_SYNTAX,
+            _("Could not parse '%s' at %d.%d-%d.%d: %s"),
+            ctx->filename,
+            locp->first_line, locp->first_column,
+            locp->last_line, locp->last_column,
+            err
+        );
+    } else {
+        g_set_error(ctx->error,
+            CP_SHELLCONFIG_ERROR,
+            CP_SHELLCONFIG_ERROR_SYNTAX,
+            _("Could not parse %s: %s"),
+            ctx->filename,
+            err
+        );
+    }
 }
 
 static bool
@@ -104,41 +121,103 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token  <str> PATH STRING VAR
-%token        SOURCE
-%type   <str> value value_item
+%token <str> ALPHA
+%token <str> NUMBER
+%token SOURCE
+%token EXPORT
+%token SPACE "whitespace"
+%token EOL "newline"
+%type  <str> quot_val value value_item fname fname_part name name_end
 
 %%
 
 start:
-  /* empty */
-  | config
+    /* empty */
+  | stmt_list
 
 /*
   Any number of config items separated by one or more newlines.
   Credits to Timofey Basanov a.k.a. ripos for this.
  */
-config:
-    config_elem
-    | '\n'
-    | '\n' config_elem
-    | config '\n'
-    | config '\n' config_elem;
+stmt_list:
+    stmt
+  | EOL
+  | EOL stmt
+  | stmt_list EOL
+  | stmt_list EOL stmt
 
-config_elem:
-    VAR '=' '"' value '"' { g_hash_table_replace(ctx->entries, $1, $4); }
-    | SOURCE PATH { if (!dosource(ctx, $2)) { YYERROR; } g_free($2); }
+stmt:
+    source_stmt
+  | decl_stmt
+
+source_stmt:
+    source_op SPACE fname { if (!dosource(ctx, $3)) { YYERROR; } g_free($3); }
+
+source_op:
+    '.'
+  | SOURCE
+
+decl_stmt:
+    export_op name '=' quot_val { g_hash_table_replace(ctx->entries, $2, $4); }
+
+export_op:
+    /* empty */
+  | EXPORT SPACE
+
+quot_val:
+          value
+  | '"'  value '"'  { $$ = $2; }
+  | '\'' value '\'' { $$ = $2; }
 
 value:
-    /* empty */         { $$ = g_strdup(""); }
-    | value value_item  { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); } ;
+    /* empty */      { $$ = g_strdup(""); }
+  | value value_item { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
 
 value_item:
-    STRING
-    | '$' VAR         { $$ = dolookup(ctx, $2); g_free($2); }
-    | '$' '{' VAR '}' { $$ = dolookup(ctx, $3); g_free($3); }
+    fname
+  | SPACE                     { $$ = g_strdup(" "); }
+  | '$' name               { $$ = dolookup(ctx, $2); g_free($2); }
+  | '$' '{' name '}' { $$ = dolookup(ctx, $3); g_free($3); }
+
+fname:
+    fname_part
+  | fname fname_part { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+
+fname_part:
+    ALPHA
+  | NUMBER
+  | SOURCE { $$ = g_strdup("source"); }
+  | '_' { $$ = g_strdup("_"); }
+  | '-' { $$ = g_strdup("-"); }
+  | '.' { $$ = g_strdup("."); }
+  | '/' { $$ = g_strdup("/"); }
+  | '|' { $$ = g_strdup("|"); }
+  | '%' { $$ = g_strdup("%"); }
+  | '=' { $$ = g_strdup("="); }
+  | '*' { $$ = g_strdup("*"); }
+  | ':' { $$ = g_strdup(":"); }
+  | '@' { $$ = g_strdup("@"); }
+  | '{' { $$ = g_strdup("{"); }
+  | '}' { $$ = g_strdup("}"); }
+  | '\\' '$' { $$ = g_strdup("$"); }
+  | '\\' '"' { $$ = g_strdup("\""); }
+
+name:
+    ALPHA name_end { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+  | '_' name_end   { $$ = g_strconcat("_", $2, NULL); g_free($2); }
+
+name_end:
+    /* empty */       { $$ = g_strdup(""); }
+  | name_end '_'      { $$ = g_strconcat($1, "_", NULL); g_free($1); }
+  | name_end ALPHA    { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+  | name_end NUMBER   { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
 
 %%
+
+GQuark
+cp_shellconfig_error_quark(void) {
+  return g_quark_from_static_string("cp-shellconfig-error-quark");
+}
 
 bool
 cp_read_shellconfig(
@@ -147,9 +226,6 @@ cp_read_shellconfig(
     bool allow_source,
     GError **error
 ) {
-    /* Documented in MagicEnvVars.txt */
-    bool debug = cp_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"));
-
     cp_shellconfig_ctx ctx;
     bool retval;
     FILE *f;
@@ -164,29 +240,24 @@ cp_read_shellconfig(
             _("Error reading file '%s': %s"),
             path,
             g_strerror(errno));
-        return FALSE;
+        return false;
     }
 
     ctx.filename = path;
-    ctx.allow_source = allow_source;
     ctx.entries = into;
     ctx.error = error;
+    ctx.allow_source = allow_source;
 
     cp_shellconfig_lex_init(&ctx.yyscanner);
     cp_shellconfig_set_extra(&ctx, ctx.yyscanner);
     cp_shellconfig_set_in(f, ctx.yyscanner);
 
-    if (debug) {
+    if (cp_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"))) {
         cp_shellconfig_debug = 1;
-        cp_shellconfig_set_debug(debug, ctx.yyscanner);
-        g_debug("begin shellparser on %s", path);
+        cp_shellconfig_set_debug(1, ctx.yyscanner);
     }
 
     retval = cp_shellconfig_parse(&ctx) == 0;
-
-    if (debug) {
-        g_debug("end shellparser on %s: %s", path, retval ? "success" : "fail");
-    }
 
     cp_shellconfig_lex_destroy(ctx.yyscanner);
     fclose(f);

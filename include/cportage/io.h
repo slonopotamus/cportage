@@ -32,23 +32,6 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * Reads shell-like config file into given #GHashTable.
- *
- * @param path          UTF8-encoded filename
- * @param into          #GHashTable to collect config entries into
- * @param allow_source  if #true, 'source' statements are handled
- * @param error         return location for a #GError, or %NULL
- * @return              %true on success, %false if an error occurred
- */
-bool
-cp_read_shellconfig(
-    GHashTable *into,
-    const char *path,
-    bool allow_source,
-    /*@null@*/ GError **error
-) /*@modifies *into,*error,errno@*/;
-
-/**
  * GLib-style realpath(3) wrapper.
  *
  * @param path  UTF8-encoded filename

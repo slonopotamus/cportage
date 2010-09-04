@@ -26,7 +26,6 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wmissing-prototypes"
-#pragma GCC diagnostic ignored "-Wpadded"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wswitch-default"
@@ -38,41 +37,28 @@
 #include "shellparser.h"
 
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
-    yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng-1; \
+    yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng; \
     yycolumn += yyleng;
 #define YY_EXTRA_TYPE cp_shellconfig_ctx *
-#define DUPVAL(idx) yylval->str = g_strdup(&yytext[idx])
+#define DUPVAL yylval->str = g_strdup(yytext)
 
 typedef struct cp_shellconfig_ctx_t cp_shellconfig_ctx;
 
 %}
 
-%x VALUE_STATE DOLLAR_STATE SOURCE_STATE
-
-NewLine \r\n|\n|\r
-VarName [a-zA-Z][a-zA-Z0-9_]*
-Whitespace [ \t]+
+Whitespace [ \t]
+NewLine    \r?\n
 
 %%
 
-<INITIAL,SOURCE_STATE>{Whitespace} /* skip whitespace */
-<INITIAL>#[^\r\n]*  /* skip comments */
-<INITIAL>source { BEGIN SOURCE_STATE; return SOURCE; }
-<INITIAL>{VarName} { DUPVAL(0); return VAR; }
-<INITIAL>= { BEGIN VALUE_STATE; return yytext[0]; }
-
-<INITIAL,VALUE_STATE,SOURCE_STATE>{NewLine} { BEGIN INITIAL; return '\n'; }
-<INITIAL,VALUE_STATE>\\{NewLine} /* line continuation */
-
-<VALUE_STATE>\\[$"] { DUPVAL(1); return STRING; }
-<VALUE_STATE>[^\\\r\n$"]+ { DUPVAL(0); return STRING; }
-<VALUE_STATE>\$ { BEGIN DOLLAR_STATE; return yytext[0]; }
-<DOLLAR_STATE>\} { BEGIN VALUE_STATE; return yytext[0]; }
-<DOLLAR_STATE>{VarName}/[^\}] { BEGIN VALUE_STATE; DUPVAL(0); return VAR; }
-<DOLLAR_STATE>{VarName}/\} { DUPVAL(0); return VAR; }
-
-<SOURCE_STATE>[^ \t\r\n$]+ { DUPVAL(0); BEGIN INITIAL; return PATH; }
-
-<INITIAL,VALUE_STATE,DOLLAR_STATE,SOURCE_STATE>.|\n { return yytext[0]; }
+{Whitespace}*#.* { /* comments          */ }
+\\{NewLine}      { /* line continuation */ }
+export           { return EXPORT;          }
+source           { return SOURCE;          }
+{NewLine}+       { return EOL;             }
+{Whitespace}+    { return SPACE;           }
+[a-zA-Z]+        { DUPVAL; return ALPHA;   }
+[0-9]+           { DUPVAL; return NUMBER;  }
+.                { return yytext[0];       }
 
 %%

@@ -17,9 +17,6 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Disabled because of realpath(3) */
-#pragma GCC diagnostic ignored "-Wunreachable-code"
-
 #include <errno.h>
 #include <stdlib.h>
 
@@ -121,7 +118,7 @@ cp_read_lines(const char *path, const bool ignore_comments, GError **error) {
         g_strfreev(lines);
     } else {
         g_set_error(error, G_CONVERT_ERROR,
-            (int)G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+            G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
             _("Invalid byte sequence in %s"), path);
         result = NULL;
     }

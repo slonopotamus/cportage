@@ -19,6 +19,7 @@
 
 #include "cportage/io.h"
 #include "cportage/settings.h"
+#include "cportage/shellconfig.h"
 #include "cportage/strings.h"
 
 struct CPSettings {
@@ -61,6 +62,9 @@ cp_settings_load(
     make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
     self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
+    if (!cp_read_shellconfig(self->config, "/etc/profile.env", false, error)) {
+        goto ERR;
+    }
     if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
         goto ERR;
     }
@@ -89,10 +93,12 @@ cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
 
 CPSettings
 cp_settings_new(const char *config_root, GError **error) {
-    CPSettings self = g_new0(struct CPSettings, 1);
+    CPSettings self;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(config_root, -1, NULL));
+
+    self = g_new0(struct CPSettings, 1);
 
     self->refs = 1;
     self->config_root = cp_canonical_path(config_root, error);
