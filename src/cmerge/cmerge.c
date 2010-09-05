@@ -41,7 +41,7 @@
 } actions;
 
 /*@unchecked@*/ static struct GlobalOptions gopts = {
-    VERBOSITY_NORMAL, DEFAULT_CONFIG_ROOT, NULL
+    DEFAULT_CONFIG_ROOT, NULL, VERBOSITY_NORMAL
 };
 
 /*@unchecked@*/ static struct MergeOptions mopts = { &gopts, false, false };

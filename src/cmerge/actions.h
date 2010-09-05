@@ -33,10 +33,10 @@ typedef enum {
 
 /* Global options */
 typedef struct GlobalOptions {
-    VerbosityLevel verbosity;
     /*@observer@*/ const char *config_root;
     /* Leftover args */
     /*@null@*/ char * const *args;
+    VerbosityLevel verbosity;
 } *GlobalOptions;
 
 /* Merge/unmerge options */

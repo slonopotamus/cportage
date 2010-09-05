@@ -23,8 +23,6 @@
 #include "cportage/strings.h"
 
 struct CPSettings {
-    /*@refs@*/ int refs;
-
     /*@only@*/ char *config_root;
     /*@only@*/ char *profile;
 
@@ -46,6 +44,8 @@ struct CPSettings {
 
     /*@only@*/ GHashTable/*<char *,char *>*/ *config;
     /*@only@*/ char **features;
+
+    /*@refs@*/ int refs;
 };
 
 static bool
