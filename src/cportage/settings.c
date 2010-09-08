@@ -51,7 +51,7 @@ struct CPSettings {
 static bool
 cp_settings_load(
     CPSettings self,
-    /*@null*/GError **error
+    /*@null@*/ GError **error
 ) /*@modifies *self, *error@*/ {
     char *make_conf;
 
