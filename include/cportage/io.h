@@ -22,7 +22,6 @@
 #ifndef CP_IO_H
 #define CP_IO_H
 
-#include <stdbool.h>
 #include <glib.h>
 
 /*@-exportany@*/
@@ -53,9 +52,9 @@ cp_canonical_path(
  * @param data  location to store an allocated string, free it using g_free()
  * @param len   location to store length in bytes of the contents, or %NULL
  * @param error return location for a #GError, or %NULL
- * @return      %true on success, %false if an error occurred
+ * @return      %TRUE on success, %FALSE if an error occurred
  */
-bool
+gboolean
 cp_read_file(
     const char *path,
     /*@out@*/ char **data,
@@ -69,7 +68,7 @@ cp_read_file(
  * File is checked to be valid UTF8.
  *
  * @param path            UTF8-encoded filename
- * @param ignore_comments if %true, comments starting with '#' will be excluded
+ * @param ignore_comments if %TRUE, comments starting with '#' will be excluded
  * @param error           return location for a #GError, or %NULL
  * @return                a %NULL-terminated char ** array or %NULL if an error
  *                        occurred, free it using g_strfreev()
@@ -77,7 +76,7 @@ cp_read_file(
 /*@null@*/ char **
 cp_read_lines(
     const char *path,
-    const bool ignore_comments,
+    const gboolean ignore_comments,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
     /*@modifies *error,errno@*/;

@@ -21,7 +21,6 @@
 #define CMERGE_ACTIONS_H
 
 #include <glib.h>
-#include <stdbool.h>
 
 /*@-exportany@*/
 
@@ -42,14 +41,14 @@ typedef struct GlobalOptions {
 /* Merge/unmerge options */
 typedef struct MergeOptions {
     /*@observer@*/ GlobalOptions global;
-    int pretend;
-    int update;
+    gboolean pretend;
+    gboolean update;
 } *MergeOptions;
 
 void
 cmerge_clean_action(
     const MergeOptions options,
-    bool with_deps,
+    gboolean with_deps,
     /*@null@*/ GError **error
 )
     /*@modifies *error@*/;

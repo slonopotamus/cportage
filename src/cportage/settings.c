@@ -48,7 +48,7 @@ struct CPSettings {
     /*@refs@*/ int refs;
 };
 
-static bool
+static gboolean
 cp_settings_load(
     CPSettings self,
     /*@null@*/ GError **error
@@ -62,22 +62,22 @@ cp_settings_load(
     make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
     self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
-    if (!cp_read_shellconfig(self->config, "/etc/profile.env", false, error)) {
+    if (!cp_read_shellconfig(self->config, "/etc/profile.env", FALSE, error)) {
         goto ERR;
     }
-    if (!cp_read_shellconfig(self->config, "/etc/make.globals", false, error)) {
+    if (!cp_read_shellconfig(self->config, "/etc/make.globals", FALSE, error)) {
         goto ERR;
     }
-    if (!cp_read_shellconfig(self->config, make_conf, true, error)) {
+    if (!cp_read_shellconfig(self->config, make_conf, TRUE, error)) {
         goto ERR;
     }
 
     g_free(make_conf);
-    return true;
+    return TRUE;
 
 ERR:
     g_free(make_conf);
-    return false;
+    return FALSE;
 }
 
 static void
@@ -178,7 +178,7 @@ cp_settings_get_profile(const CPSettings self) {
     return self->profile;
 }
 
-bool cp_settings_has_feature(
+gboolean cp_settings_has_feature(
     const CPSettings self,
     const char *feature
 ) {
@@ -187,9 +187,9 @@ bool cp_settings_has_feature(
     /* Could be replaced with bsearch since features are sorted */
     CP_STRV_ITER(self->features, f) {
         if (g_strcmp0(f, feature) == 0) {
-            return true;
+            return TRUE;
         }
     } end_CP_STRV_ITER
 
-    return false;
+    return FALSE;
 }

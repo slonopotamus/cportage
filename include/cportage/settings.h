@@ -21,7 +21,6 @@
 #define CP_SETTINGS_H
 
 #include <glib.h>
-#include <stdbool.h>
 
 /*@-exportany@*/
 
@@ -95,9 +94,9 @@ G_CONST_RETURN /*@observer@*/ char *
 cp_settings_get_profile(const CPSettings self) /*@*/;
 
 /**
- * @return %true if @feature is enabled in FEATURES variable, %false otherwise
+ * @return %TRUE if @feature is enabled in FEATURES variable, %FALSE otherwise
  */
-bool cp_settings_has_feature(
+gboolean cp_settings_has_feature(
     const CPSettings self,
     const char *feature
 ) /*@*/;

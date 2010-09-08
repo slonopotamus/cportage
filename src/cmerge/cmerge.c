@@ -44,7 +44,7 @@
     DEFAULT_CONFIG_ROOT, NULL, VERBOSITY_NORMAL
 };
 
-/*@unchecked@*/ static struct MergeOptions mopts = { &gopts, false, false };
+/*@unchecked@*/ static struct MergeOptions mopts = { &gopts, FALSE, FALSE };
 
 static void
 print_version(void)
@@ -59,7 +59,7 @@ print_version(void)
          "There is NO WARRANTY, to the extent permitted by law.\n");
 }
 
-static bool verbose_cb(
+static gboolean verbose_cb(
     /*@unused@*/ const char *option_name G_GNUC_UNUSED,
     /*@unused@*/ const char *value G_GNUC_UNUSED,
     /*@unused@*/ void *data G_GNUC_UNUSED,
@@ -68,10 +68,10 @@ static bool verbose_cb(
     /*@modifies gopts@*/
 {
     gopts.verbosity = VERBOSITY_VERBOSE;
-    return true;
+    return TRUE;
 }
 
-static bool quiet_cb(
+static gboolean quiet_cb(
         /*@unused@*/ const char *option_name G_GNUC_UNUSED,
         /*@unused@*/ const char *value G_GNUC_UNUSED,
         /*@unused@*/ void *data G_GNUC_UNUSED,
@@ -80,7 +80,7 @@ static bool quiet_cb(
     /*@modifies gopts@*/
 {
     gopts.verbosity = VERBOSITY_QUIET;
-    return true;
+    return TRUE;
 }
 
 /* Know how to compile this without G_GNUC_EXTENSION? Tell me */
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 
     ctx = g_option_context_new(NULL);
     g_option_context_add_main_entries(ctx, options, NULL);
-    g_option_context_set_help_enabled(ctx, false);
+    g_option_context_set_help_enabled(ctx, FALSE);
 
     if (g_option_context_parse(ctx, &argc, &argv, &error)) {
         int actions_sum = actions.clean
@@ -140,16 +140,16 @@ main(int argc, char *argv[])
         }
 
         if (actions_sum == 0) {
-            char *help = g_option_context_get_help(ctx, false, NULL);
+            char *help = g_option_context_get_help(ctx, FALSE, NULL);
             g_print("%s", help);
             g_free(help);
         } else if (actions_sum > 1) {
             /* TODO: set error */
             g_error("Only one action can be given\n");
         } else if (actions.clean > 0) {
-            cmerge_clean_action(&mopts, false, &error);
+            cmerge_clean_action(&mopts, FALSE, &error);
         } else if (actions.depclean > 0) {
-            cmerge_clean_action(&mopts, true, &error);
+            cmerge_clean_action(&mopts, TRUE, &error);
         } else if (actions.help > 0){
             execlp("man", "man", "cmerge", NULL);
         } else if (actions.info > 0) {

@@ -62,10 +62,10 @@ cp_canonical_path(const char *path, GError **error) {
     return result;
 }
 
-bool
+gboolean
 cp_read_file(const char *path, char **data, size_t *len, GError **error) {
     char *path_enc;
-    bool result;
+    gboolean result;
 
     g_assert(error == NULL || *error == NULL);
     g_assert(g_utf8_validate(path, -1, NULL));
@@ -78,7 +78,7 @@ cp_read_file(const char *path, char **data, size_t *len, GError **error) {
 }
 
 char **
-cp_read_lines(const char *path, const bool ignore_comments, GError **error) {
+cp_read_lines(const char *path, const gboolean ignore_comments, GError **error) {
     char *data = NULL;
     char **result;
 

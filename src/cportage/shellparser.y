@@ -55,7 +55,7 @@ typedef struct cp_shellconfig_ctx_t {
     const char *filename;
     GHashTable *entries;
     GError **error;
-    bool allow_source;
+    gboolean allow_source;
 } cp_shellconfig_ctx;
 
 %}
@@ -100,11 +100,11 @@ cp_shellconfig_error(
     }
 }
 
-static bool
+static gboolean
 dosource(cp_shellconfig_ctx *ctx, const char *path) {
     /* TODO: protect against include loop? */
     char *full;
-    bool result;
+    gboolean result;
 
     if (g_path_is_absolute(path)) {
         full = g_strdup(path);
@@ -113,7 +113,8 @@ dosource(cp_shellconfig_ctx *ctx, const char *path) {
         full = g_build_filename(dirname, path, NULL);
         g_free(dirname);
     }
-    result = cp_read_shellconfig(ctx->entries, full, true, ctx->error);
+    result = cp_read_shellconfig(ctx->entries, full, TRUE, ctx->error);
+
     g_free(full);
     return result;
 }
@@ -158,7 +159,7 @@ stmt:
 
 source_stmt:
     source_op SPACE fname
-        { if (!dosource(ctx, $3)) { YYABORT; } g_free($2); g_free($3); }
+        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak? */ } g_free($2); g_free($3); }
 
 source_op:
     '.'
@@ -235,15 +236,15 @@ cp_shellconfig_error_quark(void) {
   return g_quark_from_static_string("cp-shellconfig-error-quark");
 }
 
-bool
+gboolean
 cp_read_shellconfig(
     GHashTable *into,
     const char *path,
-    bool allow_source,
+    gboolean allow_source,
     GError **error
 ) {
     cp_shellconfig_ctx ctx;
-    bool retval;
+    gboolean retval;
     FILE *f;
 
     g_assert(error == NULL || *error == NULL);
@@ -256,7 +257,7 @@ cp_read_shellconfig(
             _("Error reading file '%s': %s"),
             path,
             g_strerror(errno));
-        return false;
+        return FALSE;
     }
 
     ctx.filename = path;

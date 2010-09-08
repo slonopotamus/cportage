@@ -56,18 +56,18 @@ cp_strings_sort(char **str_array) {
 
 static const char * const trues[] = {"true", "t", "yes", "y", "1", "on"};
 
-bool cp_string_is_true(const char *str) {
+gboolean cp_string_is_true(const char *str) {
     size_t i;
 
     if (str == NULL) {
-        return false;
+        return FALSE;
     }
 
     for (i = 0; i < G_N_ELEMENTS(trues); ++i) {
         if (g_ascii_strcasecmp(trues[i], str) == 0) {
-            return true;
+            return TRUE;
         }
     }
 
-    return false;
+    return FALSE;
 }

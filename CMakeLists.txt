@@ -59,11 +59,6 @@ if(NOT HAVE_UNAME)
     message(FATAL_ERROR "Your system doesn't have uname(2) function")
 endif()
 
-check_include_file(stdbool.h HAVE_STDBOOL_H)
-if(NOT HAVE_STDBOOL_H)
-    message(FATAL_ERROR "Your system doesn't have stdbool.h")
-endif()
-
 check_symbol_exists(setlocale locale.h HAVE_SETLOCALE)
 if(NOT HAVE_SETLOCALE)
     message(FATAL_ERROR "Your system doesn't have setlocale(3) function")

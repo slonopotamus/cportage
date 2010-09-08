@@ -17,8 +17,6 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdbool.h>
-
 #include "cportage/atom.h"
 
 typedef enum OP_TYPE {

@@ -83,7 +83,7 @@ print_porttree_timestamp(const CPSettings settings)
     const char *portdir = cp_settings_get_portdir(settings);
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     GError *error = NULL;
-    char **data = cp_read_lines(path, false, &error);
+    char **data = cp_read_lines(path, FALSE, &error);
     g_print("Timestamp of tree: %s\n",
         data != NULL && data[0] != NULL ? data[0] : "Unknown");
     if (error != NULL) {
@@ -103,7 +103,7 @@ print_packages(const CPSettings settings)
         cp_settings_get_portdir(settings),
         "profiles", "info_pkgs", NULL
     );
-    char **data = cp_read_lines(path, true, NULL);
+    char **data = cp_read_lines(path, TRUE, NULL);
 
     if (data != NULL) {
         cp_strings_sort(data);
@@ -134,7 +134,7 @@ print_settings(const CPSettings settings)
         cp_settings_get_portdir(settings),
         "profiles", "info_vars", NULL
     );
-    char **data = cp_read_lines(path, true, NULL);
+    char **data = cp_read_lines(path, TRUE, NULL);
 
     if (data != NULL) {
         GString *unset = NULL;
@@ -156,7 +156,7 @@ print_settings(const CPSettings settings)
         if (unset != NULL) {
             g_print("%s\n", unset->str);
         }
-        (void)g_string_free(unset, true);
+        (void)g_string_free(unset, TRUE);
     }
     g_free(path);
     g_strfreev(data);

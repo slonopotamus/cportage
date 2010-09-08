@@ -28,7 +28,7 @@ assert_parse(const char *path) {
     );
     GError *error = NULL;
     char *full_path = g_build_filename(dir, path, NULL);
-    bool retval = cp_read_shellconfig(entries, full_path, true, &error);
+    gboolean retval = cp_read_shellconfig(entries, full_path, TRUE, &error);
 
     g_assert_no_error(error);
     g_assert(retval);

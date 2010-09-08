@@ -22,7 +22,6 @@
 #ifndef CP_SHELLCONFIG_H
 #define CP_SHELLCONFIG_H
 
-#include <stdbool.h>
 #include <glib.h>
 
 /*@-exportany@*/
@@ -46,15 +45,15 @@ typedef enum {
  *
  * @param path          UTF8-encoded filename
  * @param into          #GHashTable to collect config entries into
- * @param allow_source  if #true, 'source' statements are handled
+ * @param allow_source  if %TRUE, 'source' statements are handled
  * @param error         return location for a #GError, or %NULL
- * @return              %true on success, %false if an error occurred
+ * @return              %TRUE on success, %FALSE if an error occurred
  */
-bool
+gboolean
 cp_read_shellconfig(
     GHashTable *into,
     const char *path,
-    bool allow_source,
+    gboolean allow_source,
     /*@null@*/ GError **error
 ) /*@modifies *into,*error,errno@*/;
 

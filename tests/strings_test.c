@@ -17,8 +17,6 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdbool.h>
-
 #include "cportage/strings.h"
 
 static void
@@ -29,7 +27,7 @@ strv_check(char **strv, ...) {
     g_assert(strv != NULL);
 
     va_start(list, strv);
-    while (true) {
+    while (TRUE) {
         const char *str = va_arg(list, const char *);
         if (strv[i] == NULL) {
             g_assert(str == NULL);
