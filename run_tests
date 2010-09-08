@@ -1,5 +1,8 @@
 #!/bin/sh
+
+set -e
+
 [[ ! -e build ]] && mkdir build
-cd build \
- && cmake -Wdev -DWITH_TESTS=1 -DCMAKE_BUILD_TYPE=Debug .. \
- && make CMAKE_COLOR_MAKEFILE=1 CTEST_OUTPUT_ON_FAILURE=1 all test
+cd build
+cmake -Wdev -DWITH_TESTS=1 -DCMAKE_BUILD_TYPE=Debug ..
+make CMAKE_COLOR_MAKEFILE=1 CTEST_OUTPUT_ON_FAILURE=1 all test
