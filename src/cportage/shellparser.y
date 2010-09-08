@@ -198,6 +198,7 @@ fname_part:
     ALPHA
   | NUMBER
   | UNDERLINE
+  | EXPORT   { $$ = g_strdup("export"); }
   | SOURCE   { $$ = g_strdup("source"); }
   | '-'      { $$ = g_strdup("-"); }
   | '.'      { $$ = g_strdup("."); }
