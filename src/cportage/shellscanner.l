@@ -40,7 +40,7 @@
     yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng; \
     yycolumn += yyleng;
 #define YY_EXTRA_TYPE cp_shellconfig_ctx *
-#define DUPVAL yylval->str = g_strdup(yytext)
+#define DUPSTR yylval->str = g_strdup(yytext)
 
 typedef struct cp_shellconfig_ctx_t cp_shellconfig_ctx;
 
@@ -51,14 +51,15 @@ NewLine    \r?\n
 
 %%
 
-{Whitespace}*#.* { /* comments          */ }
-\\{NewLine}      { /* line continuation */ }
-export           { return EXPORT;          }
-source           { return SOURCE;          }
-{NewLine}+       { return EOL;             }
-{Whitespace}+    { return SPACE;           }
-[a-zA-Z]+        { DUPVAL; return ALPHA;   }
-[0-9]+           { DUPVAL; return NUMBER;  }
-.                { return yytext[0];       }
+{Whitespace}*#.* { /* comments          */   }
+\\{NewLine}      { /* line continuation */   }
+export/[^=]      {         return EXPORT;    }
+source/[^=]      {         return SOURCE;    }
+{NewLine}        {         return EOL;       }
+{Whitespace}+    { DUPSTR; return SPACE;     }
+[a-zA-Z]+        { DUPSTR; return ALPHA;     }
+[0-9]+           { DUPSTR; return NUMBER;    }
+_                { DUPSTR; return UNDERLINE; }
+.                {         return yytext[0]; }
 
 %%

@@ -45,6 +45,11 @@
 #define YYDEBUG 1
 #define YY_ _
 
+#define DOCONCAT2(str1, str2) g_strconcat(str1, str2, NULL); \
+    g_free(str1); g_free(str2);
+#define DOCONCAT3(str1, str2, str3) g_strconcat(str1, str2, str3, NULL); \
+    g_free(str1); g_free(str2); g_free(str3);
+
 typedef struct cp_shellconfig_ctx_t {
     yyscan_t yyscanner;
     const char *filename;
@@ -121,13 +126,14 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token <str> ALPHA
-%token <str> NUMBER
+%token <str> ALPHA NUMBER UNDERLINE
+%token <str> SPACE "whitespace"
 %token SOURCE
 %token EXPORT
-%token SPACE "whitespace"
 %token EOL "newline"
-%type  <str> quot_val value value_item fname fname_part name name_end
+%type <str> quot_val value value_item
+%type <str> fname fname_part vname vname_end vname_end_part
+%type <str> empty_str
 
 %%
 
@@ -151,66 +157,76 @@ stmt:
   | decl_stmt
 
 source_stmt:
-    source_op SPACE fname { if (!dosource(ctx, $3)) { YYERROR; } g_free($3); }
+    source_op SPACE fname
+        { if (!dosource(ctx, $3)) { YYABORT; } g_free($2); g_free($3); }
 
 source_op:
     '.'
   | SOURCE
 
 decl_stmt:
-    export_op name '=' quot_val { g_hash_table_replace(ctx->entries, $2, $4); }
+    export_op vname '=' quot_val { g_hash_table_replace(ctx->entries, $2, $4); }
 
 export_op:
     /* empty */
-  | EXPORT SPACE
+  | SPACE { g_free($1); }
+  | EXPORT SPACE { g_free($2); }
+  | SPACE EXPORT SPACE { g_free($1); g_free($3); }
 
 quot_val:
-          value
+         value
   | '"'  value '"'  { $$ = $2; }
   | '\'' value '\'' { $$ = $2; }
 
 value:
-    /* empty */      { $$ = g_strdup(""); }
-  | value value_item { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+    empty_str
+  | value value_item { $$ = DOCONCAT2($1, $2); }
 
 value_item:
-    fname
-  | SPACE                     { $$ = g_strdup(" "); }
-  | '$' name               { $$ = dolookup(ctx, $2); g_free($2); }
-  | '$' '{' name '}' { $$ = dolookup(ctx, $3); g_free($3); }
+    SPACE
+  | fname
+  | '$'     vname     { $$ = dolookup(ctx, $2); g_free($2); }
+  | '$' '{' vname '}' { $$ = dolookup(ctx, $3); g_free($3); }
 
+/* Filename */
 fname:
     fname_part
-  | fname fname_part { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+  | fname fname_part { $$ = DOCONCAT2($1, $2); }
 
 fname_part:
     ALPHA
   | NUMBER
-  | SOURCE { $$ = g_strdup("source"); }
-  | '_' { $$ = g_strdup("_"); }
-  | '-' { $$ = g_strdup("-"); }
-  | '.' { $$ = g_strdup("."); }
-  | '/' { $$ = g_strdup("/"); }
-  | '|' { $$ = g_strdup("|"); }
-  | '%' { $$ = g_strdup("%"); }
-  | '=' { $$ = g_strdup("="); }
-  | '*' { $$ = g_strdup("*"); }
-  | ':' { $$ = g_strdup(":"); }
-  | '@' { $$ = g_strdup("@"); }
-  | '{' { $$ = g_strdup("{"); }
-  | '}' { $$ = g_strdup("}"); }
+  | UNDERLINE
+  | SOURCE   { $$ = g_strdup("source"); }
+  | '-'      { $$ = g_strdup("-"); }
+  | '.'      { $$ = g_strdup("."); }
+  | '/'      { $$ = g_strdup("/"); }
+  | '|'      { $$ = g_strdup("|"); }
+  | '%'      { $$ = g_strdup("%"); }
+  | '='      { $$ = g_strdup("="); }
+  | '*'      { $$ = g_strdup("*"); }
+  | ':'      { $$ = g_strdup(":"); }
+  | '@'      { $$ = g_strdup("@"); }
+  | '{'      { $$ = g_strdup("{"); }
+  | '}'      { $$ = g_strdup("}"); }
   | '\\' '$' { $$ = g_strdup("$"); }
   | '\\' '"' { $$ = g_strdup("\""); }
 
-name:
-    ALPHA name_end { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
-  | '_' name_end   { $$ = g_strconcat("_", $2, NULL); g_free($2); }
+/* Variable name */
+vname:
+    ALPHA vname_end { $$ = DOCONCAT2($1, $2); }
 
-name_end:
-    /* empty */       { $$ = g_strdup(""); }
-  | name_end '_'      { $$ = g_strconcat($1, "_", NULL); g_free($1); }
-  | name_end ALPHA    { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
-  | name_end NUMBER   { $$ = g_strconcat($1, $2, NULL); g_free($1); g_free($2); }
+vname_end:
+    empty_str
+  | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
+
+vname_end_part:
+    UNDERLINE
+  | ALPHA
+  | NUMBER
+
+empty_str:
+    /* empty */ { $$ = g_strdup(""); }
 
 %%
 
