@@ -21,11 +21,20 @@ cmerge - \fBemerge\fR(1) compatible commandline package manager
 .BR cmerge
 \fB--search\fR | \fB-s\fR [--] <something>
 .SH "DESCRIPTION"
-TODO
+Command-line frontend to \fBcportage\fR(3)
 .SH "ACTIONS"
 .TP
 .BR "No action"
-No action is treated as \fB--install\fR.
+No action is treated as \fB--install\fR
+.TP
+.BR "--help"
+Show this manpage
+.TP
+.BR "--info"
+Produce a list of information to include in bug reports
+.TP
+.BR "--version"
+Output cportage version
 .SH "GLOBAL OPTIONS"
 .TP
 .BR "\fB--verbose\fR | \fB-v\fR | \fB--quiet\fR | \fB-q\fR"
