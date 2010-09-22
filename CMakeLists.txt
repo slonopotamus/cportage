@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(cportage C)
-set(cportage_VERSION 0.1-git)
+
+# Increase when incompatible API change happens, reset MINOR and PATCH.
+set(CP_VERSION_MAJOR 0)
+# Increase when compatible API change happens, reset PATCH
+set(CP_VERSION_MINOR 0)
+# Increase when implementation changes
+set(CP_VERSION_PATCH 1)
+
+set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 

@@ -1,1 +1,1 @@
-#define CP_VERSION "${cportage_VERSION}"
+#cmakedefine CP_VERSION "${CP_VERSION}"

@@ -22,8 +22,8 @@ add_library(cportage SHARED
 target_link_libraries(cportage ${GLIB2_LIBRARIES})
 
 set_target_properties(cportage PROPERTIES
-  SOVERSION 0
-  VERSION 0)
+  SOVERSION "${CP_VERSION_MAJOR}"
+  VERSION "${CP_VERSION}")
 
 # Installation
 install(TARGETS cportage LIBRARY DESTINATION lib)
