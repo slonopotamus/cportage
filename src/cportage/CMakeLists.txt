@@ -12,18 +12,17 @@ add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
 configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
 
-file(GLOB cportage_sources *.c)
-
 # Executables
+file(GLOB cportage_sources *.c)
 add_library(cportage SHARED
     ${cportage_sources}
     ${BISON_ShellParser_OUTPUTS}
     ${FLEX_ShellScanner_OUTPUTS})
 target_link_libraries(cportage ${GLIB2_LIBRARIES})
-
 set_target_properties(cportage PROPERTIES
   SOVERSION "${CP_VERSION_MAJOR}"
   VERSION "${CP_VERSION}")
+set_link_flags(cportage)
 
 # Installation
 install(TARGETS cportage LIBRARY DESTINATION lib)

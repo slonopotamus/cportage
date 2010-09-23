@@ -82,6 +82,12 @@ if(NOT HAVE_EXECLP)
     message(FATAL_ERROR "Your system doesn't have execlp(3) function")
 endif()
 
+# Macros
+macro(set_link_flags _target)
+  set_target_properties(${_target} PROPERTIES
+      LINK_FLAGS "-Wl,--as-needed,--no-add-needed,--fatal-warnings,--no-undefined,--warn-shared-textrel,-z=now,-z=noexecstack,--no-undefined-version")
+endmacro()
+
 # Subdirs
 add_subdirectory(man)
 add_subdirectory(include)
