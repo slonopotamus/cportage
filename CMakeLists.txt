@@ -37,7 +37,8 @@ add_definitions(${CMAKE_REQUIRED_DEFINITIONS}
     -Wmissing-declarations -Wstrict-prototypes)
 
 # Dependencies
-find_package(GLIB2 REQUIRED)
+set(GLIB_MINIMAL_REQUIRED 2.20)
+find_package(GLIB2 ${GLIB_MINIMAL_REQUIRED} REQUIRED)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 

@@ -1,7 +1,7 @@
 Name: cportage
 Description: portage(5)-compatible C library
 URL: http://git.slonopotamus.org/?p=cportage
-Version: ${cportage_VERSION}
-Requires: glib-2.0 >= 2.20
+Version: ${CP_VERSION}
+Requires: glib-2.0 >= ${GLIB_MINIMAL_REQUIRED}
 Libs: -L${CMAKE_INSTALL_PREFIX}/lib -lcportage
 Cflags: -I${CMAKE_INSTALL_PREFIX}/include
