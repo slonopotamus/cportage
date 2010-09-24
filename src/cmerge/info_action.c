@@ -32,6 +32,11 @@ static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 relative_path(const char *base, const char *path)
     /*@modifies errno@*/
 {
+    /*
+      TODO: try using g_file_get_relative_path instead of all this stuff.
+      Otherwise, check if it works correctly (preferrably with a testcase) for
+      base="/foo" path="/foobar"
+     */
     char *path_abs = NULL;
     char *base_abs = NULL;
     char *result;
