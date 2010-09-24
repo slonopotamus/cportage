@@ -46,7 +46,7 @@ cp_canonical_path(
     /*@modifies *error,errno@*/;
 
 /**
- * Same as g_file_get_contents_utf8 but expects UTF8-encoded filename.
+ * Same as g_file_get_contents but expects UTF8-encoded filename.
  *
  * @param path  UTF8-encoded filename.
  * @param data  location to store an allocated string, free it using g_free()
