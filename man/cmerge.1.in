@@ -1,4 +1,4 @@
-.TH cmerge 1 "" "cportage @cportage_VERSION@" cportage
+.TH cmerge 1 "" "cportage @CP_VERSION@" cportage
 .SH "NAME"
 cmerge - \fBemerge\fR(1) compatible commandline package manager
 .SH "SYNOPSIS"

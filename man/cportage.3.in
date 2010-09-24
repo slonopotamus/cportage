@@ -1,4 +1,4 @@
-.TH cportage 3 "" "cportage @cportage_VERSION@" cportage
+.TH cportage 3 "" "cportage @CP_VERSION@" cportage
 .SH "NAME"
 cportage \- \fBportage\fR(5)-compatible C library
 .SH "SYNOPSIS"
