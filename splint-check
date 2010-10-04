@@ -3,6 +3,6 @@ find src -name \*.c -exec \
 	splint +strict +posixstrictlib \
 	-sys-dir-errors -proto-param-name -warn-missing-globs \
 	-sizeof-type -bounds-read -bounds-write \
-	-DGETTEXT_PACKAGE=\"cportage\" -Iinclude -Ibuild -Ibuild/src/cportage \
+	-DGETTEXT_PACKAGE=\"cportage\" -Iinclude -Ibuild/src/cmerge -Ibuild/src/cportage \
 	-I../glib -I../glib/glib -sys-dirs /usr/include:../glib:../glib/glib \
 	{} +
