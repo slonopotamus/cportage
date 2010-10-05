@@ -127,14 +127,13 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token <str> ALPHA NUMBER UNDERLINE
+%token <str> ALPHA NUMBER
 %token <str> SPACE "whitespace"
 %token SOURCE
 %token EXPORT
 %token EOL "newline"
-%type <str> quot_val value value_item
-%type <str> fname fname_part vname vname_end vname_end_part
-%type <str> empty_str
+%type <str> quot_val value value_item space
+%type <str> fname fname_part vname vname_start vname_end vname_end_part
 
 %%
 
@@ -143,36 +142,46 @@ start:
   | stmt_list
 
 /*
-  Any number of config items separated by one or more newlines.
+  Any number of statements separated by one or more newlines.
   Credits to Timofey Basanov a.k.a. ripos for this.
  */
 stmt_list:
     stmt
   | EOL
-  | EOL stmt
+  | EOL stmt_with_space
   | stmt_list EOL
-  | stmt_list EOL stmt
+  | stmt_list EOL stmt_with_space
 
+/* Statement, optionally surrounded with space */
+stmt_with_space:
+    stmt
+  | space stmt { g_free($1); }
+  | stmt space { g_free($2); }
+  | space stmt space { g_free($1); g_free($3); }
+
+/* Possible statements */
 stmt:
     source_stmt
-  | decl_stmt
+  | var_def_stmt
+
+/* --- Sourcing --- */
 
 source_stmt:
-    source_op SPACE fname
-        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak? */ } g_free($2); g_free($3); }
+    source_op space fname
+        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $2 and $3? */ } g_free($2); g_free($3); }
 
 source_op:
     '.'
   | SOURCE
 
-decl_stmt:
-    export_op vname '=' quot_val { g_hash_table_replace(ctx->entries, $2, $4); }
+/* --- Variable definition --- */
 
-export_op:
-    /* empty */
-  | SPACE { g_free($1); }
-  | EXPORT SPACE { g_free($2); }
-  | SPACE EXPORT SPACE { g_free($1); g_free($3); }
+var_def_stmt:
+    var_def
+  | EXPORT space var_def { g_free($2); }
+
+var_def:
+    vname '=' quot_val { g_hash_table_replace(ctx->entries, $1, $3); }
 
 quot_val:
          value
@@ -180,7 +189,7 @@ quot_val:
   | '\'' value '\'' { $$ = $2; }
 
 value:
-    empty_str
+    /* empty */      { $$ = g_strdup(""); }
   | value value_item { $$ = DOCONCAT2($1, $2); }
 
 value_item:
@@ -189,17 +198,14 @@ value_item:
   | '$'     vname     { $$ = dolookup(ctx, $2); g_free($2); }
   | '$' '{' vname '}' { $$ = dolookup(ctx, $3); g_free($3); }
 
-/* Filename */
+/* --- Filename --- */
+
 fname:
     fname_part
   | fname fname_part { $$ = DOCONCAT2($1, $2); }
 
 fname_part:
-    ALPHA
-  | NUMBER
-  | UNDERLINE
-  | EXPORT   { $$ = g_strdup("export"); }
-  | SOURCE   { $$ = g_strdup("source"); }
+    vname_end_part
   | '-'      { $$ = g_strdup("-"); }
   | '.'      { $$ = g_strdup("."); }
   | '/'      { $$ = g_strdup("/"); }
@@ -214,21 +220,31 @@ fname_part:
   | '\\' '$' { $$ = g_strdup("$"); }
   | '\\' '"' { $$ = g_strdup("\""); }
 
-/* Variable name */
+/* --- Variable name --- */
+
 vname:
-    ALPHA vname_end { $$ = DOCONCAT2($1, $2); }
+    vname_start vname_end { $$ = DOCONCAT2($1, $2); }
 
 vname_end:
-    empty_str
+    /* empty */              { $$ = g_strdup(""); }
   | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
 
-vname_end_part:
-    UNDERLINE
+vname_start:
+    '_'    { $$ = g_strdup("_"); }
+  | SOURCE { $$ = g_strdup("source"); }
+  | EXPORT { $$ = g_strdup("export"); }
   | ALPHA
+
+vname_end_part:
+    vname_start
   | NUMBER
 
-empty_str:
-    /* empty */ { $$ = g_strdup(""); }
+/* --- Misc helper rules --- */
+
+space:
+    SPACE
+  | space SPACE { $$ = DOCONCAT2($1, $2); }
+
 
 %%
 

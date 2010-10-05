@@ -54,16 +54,18 @@ eol(void) {
 static void
 simple(void) {
     GHashTable *entries = assert_parse("shellconfig_test_simple.conf");
-    g_assert(g_hash_table_size(entries) == 9);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "B") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C"), "B") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C1_A1"), "B") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "D_2B"), "A=B C=B") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "E"), "") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "F"), "0 1 2") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "G"), "BG") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "NONREF"), "") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "SHELL"), "/bin/bash") == 0);
+    g_assert(g_hash_table_size(entries) == 11);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "B");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "B");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "C1_A1"), ==, "B");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "D_2B"), ==, "A=B C=B");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "E"), ==, "");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "F"), ==, "0 1 2");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "G"), ==, "BG");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "H"), ==, "$G");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "I"), ==, "${G}");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "NONREF"), ==, "");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "SHELL"), ==, "/bin/bash");
     g_hash_table_destroy(entries);
 }
 
@@ -71,8 +73,8 @@ static void
 comments(void) {
     GHashTable *entries = assert_parse("shellconfig_test_comments.conf");
     g_assert(g_hash_table_size(entries) == 2);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "B") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C"), "B") == 0);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "B");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "B");
     g_hash_table_destroy(entries);
 }
 
@@ -80,7 +82,7 @@ static void
 line_cont(void) {
     GHashTable *entries = assert_parse("shellconfig_test_line_cont.conf");
     g_assert(g_hash_table_size(entries) == 1);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "BCD") == 0);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "BCD");
     g_hash_table_destroy(entries);
 }
 
@@ -88,8 +90,8 @@ static void
 source(void) {
     GHashTable *entries = assert_parse("shellconfig_test_source.conf");
     g_assert(g_hash_table_size(entries) == 2);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "VAR1"), "VAL1") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "VAR2"), "VAL2") == 0);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "VAR1"), ==, "VAL1");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "VAR2"), ==, "VAL2");
     g_hash_table_destroy(entries);
 }
 
@@ -97,22 +99,23 @@ static void
 escapes(void) {
     GHashTable *entries = assert_parse("shellconfig_test_escapes.conf");
     g_assert(g_hash_table_size(entries) == 4);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "A"), "$A") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "B"), "${B}") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "C"), "$C") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "D"), "${D}") == 0);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "$A");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "B"), ==, "${B}");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "$C");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "D"), ==, "${D}");
     g_hash_table_destroy(entries);
 }
 
 static void
 exotic(void) {
     GHashTable *entries = assert_parse("shellconfig_test_exotic.conf");
-    g_assert(g_hash_table_size(entries) == 5);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "F"), "#") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "G"), "##") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "source"), "source") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "export"), "export") == 0);
-    g_assert(g_strcmp0(g_hash_table_lookup(entries, "E"), "a b") == 0);
+    g_assert(g_hash_table_size(entries) == 6);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "F"     ), ==, "#");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "G"     ), ==, "##");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "source"), ==, "source");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "export"), ==, "export");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "E"     ), ==, "a b");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "E1"    ), ==, "a b");
     g_hash_table_destroy(entries);
 }
 

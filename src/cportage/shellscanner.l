@@ -46,20 +46,18 @@ typedef struct cp_shellconfig_ctx_t cp_shellconfig_ctx;
 
 %}
 
-Whitespace [ \t]
 NewLine    \r?\n
 
 %%
 
-{Whitespace}*#.* { /* comments          */   }
+[[:blank:]]*#.*  { /* comments          */   }
 \\{NewLine}      { /* line continuation */   }
-export/[^=]      {         return EXPORT;    }
-source/[^=]      {         return SOURCE;    }
+export           {         return EXPORT;    }
+source           {         return SOURCE;    }
 {NewLine}        {         return EOL;       }
-{Whitespace}+    { DUPSTR; return SPACE;     }
+[[:blank:]]+     { DUPSTR; return SPACE;     }
 [a-zA-Z]+        { DUPSTR; return ALPHA;     }
-[0-9]+           { DUPSTR; return NUMBER;    }
-_                { DUPSTR; return UNDERLINE; }
+[[:digit:]]+     { DUPSTR; return NUMBER;    }
 .                {         return yytext[0]; }
 
 %%
