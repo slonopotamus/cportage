@@ -17,6 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* Parts of this grammar were borrowed from libbash project */
+
 %define api.pure
 %defines
 %error-verbose
@@ -127,13 +129,17 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token <str> ALPHA NUMBER
-%token <str> SPACE "whitespace"
+%token <str> ALPHA NUMBER NQSTR ESC_CHAR
+%token <str> BLANK "whitespace"
 %token SOURCE
 %token EXPORT
 %token EOL "newline"
-%type <str> quot_val value value_item space
+%type <str> blank value var_ref
 %type <str> fname fname_part vname vname_start vname_end vname_end_part
+%type <str> sqstr sqstr_loop sq_str_part
+%type <str> dqstr dqstr_loop dq_str_part dqstr_part
+%type <str> ns_str_part ns_str_part_no_res str_part str_part_with_pound str_part_with_pound_loop
+%type <str> pattern_match_trigger
 
 %%
 
@@ -148,16 +154,16 @@ start:
 stmt_list:
     stmt
   | EOL
-  | EOL stmt_with_space
+  | EOL stmt_with_blank
   | stmt_list EOL
-  | stmt_list EOL stmt_with_space
+  | stmt_list EOL stmt_with_blank
 
-/* Statement, optionally surrounded with space */
-stmt_with_space:
+/* Statement, optionally surrounded with blanks */
+stmt_with_blank:
     stmt
-  | space stmt { g_free($1); }
-  | stmt space { g_free($2); }
-  | space stmt space { g_free($1); g_free($3); }
+  | blank stmt { g_free($1); }
+  | stmt blank { g_free($2); }
+  | blank stmt blank { g_free($1); g_free($3); }
 
 /* Possible statements */
 stmt:
@@ -167,7 +173,7 @@ stmt:
 /* --- Sourcing --- */
 
 source_stmt:
-    source_op space fname
+    source_op blank fname
         { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $2 and $3? */ } g_free($2); g_free($3); }
 
 source_op:
@@ -178,24 +184,17 @@ source_op:
 
 var_def_stmt:
     var_def
-  | EXPORT space var_def { g_free($2); }
+  | EXPORT blank var_def { g_free($2); }
 
 var_def:
-    vname '=' quot_val { g_hash_table_replace(ctx->entries, $1, $3); }
-
-quot_val:
-         value
-  | '"'  value '"'  { $$ = $2; }
-  | '\'' value '\'' { $$ = $2; }
+    vname '=' value { g_hash_table_replace(ctx->entries, $1, $3); }
 
 value:
-    /* empty */      { $$ = g_strdup(""); }
-  | value value_item { $$ = DOCONCAT2($1, $2); }
-
-value_item:
-    SPACE
+    /* empty */ { $$ = g_strdup(""); }
   | fname
-  | '$'     vname     { $$ = dolookup(ctx, $2); g_free($2); }
+
+var_ref:
+    '$'     vname     { $$ = dolookup(ctx, $2); g_free($2); }
   | '$' '{' vname '}' { $$ = dolookup(ctx, $3); g_free($3); }
 
 /* --- Filename --- */
@@ -205,29 +204,16 @@ fname:
   | fname fname_part { $$ = DOCONCAT2($1, $2); }
 
 fname_part:
-    vname_end_part
-  | '-'      { $$ = g_strdup("-"); }
-  | '.'      { $$ = g_strdup("."); }
-  | '/'      { $$ = g_strdup("/"); }
-  | '|'      { $$ = g_strdup("|"); }
-  | '%'      { $$ = g_strdup("%"); }
-  | '='      { $$ = g_strdup("="); }
-  | '*'      { $$ = g_strdup("*"); }
-  | ':'      { $$ = g_strdup(":"); }
-  | '@'      { $$ = g_strdup("@"); }
-  | '{'      { $$ = g_strdup("{"); }
-  | '}'      { $$ = g_strdup("}"); }
-  | '\\' '$' { $$ = g_strdup("$"); }
-  | '\\' '"' { $$ = g_strdup("\""); }
+    var_ref
+  | sqstr
+  | dqstr
+  /* TODO: causes shift/reduce conflict because we have loop of loops of str_part */
+  | str_part str_part_with_pound_loop { $$ = DOCONCAT2($1, $2); }
 
 /* --- Variable name --- */
 
 vname:
     vname_start vname_end { $$ = DOCONCAT2($1, $2); }
-
-vname_end:
-    /* empty */              { $$ = g_strdup(""); }
-  | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
 
 vname_start:
     '_'    { $$ = g_strdup("_"); }
@@ -235,16 +221,104 @@ vname_start:
   | EXPORT { $$ = g_strdup("export"); }
   | ALPHA
 
+vname_end:
+    /* empty */ { $$ = g_strdup(""); }
+  | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
+
 vname_end_part:
     vname_start
   | NUMBER
 
-/* --- Misc helper rules --- */
+/* -- Double-quoted string -- */
+dqstr:
+    '"' dqstr_loop '"' { $$ = $2; }
 
-space:
-    SPACE
-  | space SPACE { $$ = DOCONCAT2($1, $2); }
+dqstr_loop:
+    /* empty */           { $$ = g_strdup(""); }
+  | dqstr_loop dqstr_part { $$ = DOCONCAT2($1, $2); }
 
+dqstr_part:
+  /*  bracket_pattern_match
+  |	extended_pattern_match
+  |	*/var_ref
+  /*|	command_sub
+  |	arithmetic_expansion*/
+  |	dq_str_part
+  |	pattern_match_trigger
+  |	'!' { $$ = g_strdup("!"); }
+
+dq_str_part:
+    str_part_with_pound
+  | BLANK
+  | EOL { $$ = g_strdup(" "); }
+  | '{' { $$ = g_strdup("{"); }
+  | '}' { $$ = g_strdup("}"); }
+  | '|' { $$ = g_strdup("|"); }
+  /* |BLANK|EOL|AMP|LOGICAND|LOGICOR|LESS_THAN|GREATER_THAN|PIPE|SQUOTE|SEMIC|COMMA|LPAREN|RPAREN|LLPAREN|RRPAREN|DOUBLE_SEMIC|LBRACE|RBRACE|TICK|LEQ|GEQ */
+
+/* -- Single-quoted string -- */
+sqstr:
+    '\'' sqstr_loop '\'' { $$ = $2; }
+
+sqstr_loop:
+    /* empty */            { $$ = g_strdup(""); }
+  | sqstr_loop sq_str_part { $$ = DOCONCAT2($1, $2); }
+
+sq_str_part:
+    str_part_with_pound
+  | BLANK
+  | '$' { $$ = g_strdup("$"); }
+  | '{' { $$ = g_strdup("{"); }
+  | '}' { $$ = g_strdup("}"); }
+  | '|' { $$ = g_strdup("|"); }
+  /* |BLANK|EOL|AMP|LOGICAND|LOGICOR|LESS_THAN|GREATER_THAN|PIPE|QUOTE|SEMIC|COMMA|LPAREN|RPAREN|LLPAREN|RRPAREN|DOUBLE_SEMIC|LBRACE|RBRACE|DOLLAR|TICK|BOP|UOP */
+
+/* --Misc string parts -- */
+
+str_part:
+    ns_str_part
+  |	'/' { $$ = g_strdup("/"); }
+
+str_part_with_pound:
+    str_part
+  |	'#' { $$ = g_strdup("#"); }
+  /* |	POUNDPOUND */
+
+str_part_with_pound_loop:
+    /* empty */ { $$ = g_strdup(""); }
+  | str_part_with_pound_loop str_part_with_pound { $$ = DOCONCAT2($1, $2); }
+
+ns_str_part:
+    ns_str_part_no_res
+/*  |	res_word_str
+
+res_word_str:
+  CASE|DO|DONE|ELIF|ELSE|ESAC|FI|FOR|FUNCTION|IF|IN|SELECT|THEN|UNTIL|WHILE|TIME
+*/
+
+ns_str_part_no_res:
+    NUMBER
+	|	vname
+	| NQSTR
+	| '=' { $$ = g_strdup("="); }
+	| '.' { $$ = g_strdup("."); }
+	| '-' { $$ = g_strdup("-"); }
+	| ':' { $$ = g_strdup(":"); }
+	| '%' { $$ = g_strdup("%"); }
+	| ESC_CHAR
+	/*|PCT|PCTPCT|MINUS|DOT|DOTDOT|COLON|BOP|UOP|TEST|'_'|TILDE|INC|DEC|ARITH_ASSIGN|ESC_CHAR|CARET*/
+
+pattern_match_trigger:
+    '[' { $$ = g_strdup("["); }
+  |	']' { $$ = g_strdup("]"); }
+  |	'?' { $$ = g_strdup("?"); }
+  |	'+' { $$ = g_strdup("+"); }
+  |	'*' { $$ = g_strdup("*"); }
+  |	'@' { $$ = g_strdup("@"); }
+
+blank:
+    BLANK
+  | blank BLANK { $$ = DOCONCAT2($1, $2); }
 
 %%
 

@@ -55,9 +55,10 @@ NewLine    \r?\n
 export           {         return EXPORT;    }
 source           {         return SOURCE;    }
 {NewLine}        {         return EOL;       }
-[[:blank:]]+     { DUPSTR; return SPACE;     }
+[[:blank:]]+     { DUPSTR; return BLANK;     }
 [a-zA-Z]+        { DUPSTR; return ALPHA;     }
 [[:digit:]]+     { DUPSTR; return NUMBER;    }
+\\([0-7]{2,3}|x[0-9a-fA-F]{1,2}|c.|.) { DUPSTR; return ESC_CHAR; }
 .                {         return yytext[0]; }
 
 %%
