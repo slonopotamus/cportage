@@ -129,11 +129,15 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token <str> ALPHA NUMBER NQSTR ESC_CHAR
-%token <str> BLANK "whitespace"
-%token SOURCE
-%token EXPORT
-%token EOL "newline"
+%token <str> ALPHA AMP AT BANG BLANK CARET COLON COMMA DEC DOLLAR DOT DOTDOT
+%token <str> DOUBLE_SEMIC EOL EQUALS ESC_CHAR GEQ GREATER_THAN INC LBRACE LEQ
+%token <str> LESS_THAN LLPAREN LOGICAND LOGICOR LPAREN LSQUARE MINUS NQSTR
+%token <str> NUMBER PCT PCTPCT PIPE PLUS POUND POUNDPOUND QMARK QUOTE RBRACE
+%token <str> RPAREN RRPAREN RSQUARE SEMIC SLASH SQUOTE TICK TILDE TIMES
+%token <str> UNDERLINE
+
+%token EXPORT SOURCE
+
 %type <str> blank value var_ref
 %type <str> fname fname_part vname vname_start vname_end vname_end_part
 %type <str> sqstr sqstr_loop sq_str_part
@@ -153,10 +157,10 @@ start:
  */
 stmt_list:
     stmt
-  | EOL
-  | EOL stmt_with_blank
-  | stmt_list EOL
-  | stmt_list EOL stmt_with_blank
+  | EOL { g_free($1); }
+  | EOL stmt_with_blank { g_free($1); }
+  | stmt_list EOL { g_free($2); }
+  | stmt_list EOL stmt_with_blank { g_free($2); }
 
 /* Statement, optionally surrounded with blanks */
 stmt_with_blank:
@@ -177,7 +181,7 @@ source_stmt:
         { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $2 and $3? */ } g_free($2); g_free($3); }
 
 source_op:
-    '.'
+    DOT { g_free($1); }
   | SOURCE
 
 /* --- Variable definition --- */
@@ -187,15 +191,15 @@ var_def_stmt:
   | EXPORT blank var_def { g_free($2); }
 
 var_def:
-    vname '=' value { g_hash_table_replace(ctx->entries, $1, $3); }
+    vname EQUALS value { g_hash_table_replace(ctx->entries, $1, $3); g_free($2); }
 
 value:
     /* empty */ { $$ = g_strdup(""); }
   | fname
 
 var_ref:
-    '$'     vname     { $$ = dolookup(ctx, $2); g_free($2); }
-  | '$' '{' vname '}' { $$ = dolookup(ctx, $3); g_free($3); }
+    DOLLAR        vname        { $$ = dolookup(ctx, $2); g_free($1); g_free($2); }
+  | DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($1); g_free($2); g_free($3); g_free($4); }
 
 /* --- Filename --- */
 
@@ -216,13 +220,13 @@ vname:
     vname_start vname_end { $$ = DOCONCAT2($1, $2); }
 
 vname_start:
-    '_'    { $$ = g_strdup("_"); }
-  | SOURCE { $$ = g_strdup("source"); }
-  | EXPORT { $$ = g_strdup("export"); }
+    UNDERLINE
+  | SOURCE    { $$ = g_strdup("source"); }
+  | EXPORT    { $$ = g_strdup("export"); }
   | ALPHA
 
 vname_end:
-    /* empty */ { $$ = g_strdup(""); }
+    /* empty */              { $$ = g_strdup(""); }
   | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
 
 vname_end_part:
@@ -231,34 +235,52 @@ vname_end_part:
 
 /* -- Double-quoted string -- */
 dqstr:
-    '"' dqstr_loop '"' { $$ = $2; }
+    QUOTE dqstr_loop QUOTE { $$ = $2; g_free($1); g_free($3); }
 
 dqstr_loop:
     /* empty */           { $$ = g_strdup(""); }
   | dqstr_loop dqstr_part { $$ = DOCONCAT2($1, $2); }
 
 dqstr_part:
-  /*  bracket_pattern_match
+  /* TODO: uncomment this
+  bracket_pattern_match
   |	extended_pattern_match
-  |	*/var_ref
-  /*|	command_sub
-  |	arithmetic_expansion*/
+  |	*/
+  var_ref
+  /* TODO: uncomment this
+  | command_sub
+  |	arithmetic_expansion */
   |	dq_str_part
   |	pattern_match_trigger
-  |	'!' { $$ = g_strdup("!"); }
+  |	BANG
 
 dq_str_part:
     str_part_with_pound
   | BLANK
-  | EOL { $$ = g_strdup(" "); }
-  | '{' { $$ = g_strdup("{"); }
-  | '}' { $$ = g_strdup("}"); }
-  | '|' { $$ = g_strdup("|"); }
-  /* |BLANK|EOL|AMP|LOGICAND|LOGICOR|LESS_THAN|GREATER_THAN|PIPE|SQUOTE|SEMIC|COMMA|LPAREN|RPAREN|LLPAREN|RRPAREN|DOUBLE_SEMIC|LBRACE|RBRACE|TICK|LEQ|GEQ */
+  | EOL
+  | AMP
+  | LOGICAND
+  | LOGICOR
+  | LESS_THAN
+  | GREATER_THAN
+  | PIPE
+  | SQUOTE
+  | SEMIC
+  | COMMA
+  | LPAREN
+  | RPAREN
+  | LLPAREN
+  | RRPAREN
+  | DOUBLE_SEMIC
+  | LBRACE
+  | RBRACE
+  | TICK
+  | LEQ
+  | GEQ
 
 /* -- Single-quoted string -- */
 sqstr:
-    '\'' sqstr_loop '\'' { $$ = $2; }
+    SQUOTE sqstr_loop SQUOTE { $$ = $2; g_free($1); g_free($3); }
 
 sqstr_loop:
     /* empty */            { $$ = g_strdup(""); }
@@ -267,22 +289,37 @@ sqstr_loop:
 sq_str_part:
     str_part_with_pound
   | BLANK
-  | '$' { $$ = g_strdup("$"); }
-  | '{' { $$ = g_strdup("{"); }
-  | '}' { $$ = g_strdup("}"); }
-  | '|' { $$ = g_strdup("|"); }
-  /* |BLANK|EOL|AMP|LOGICAND|LOGICOR|LESS_THAN|GREATER_THAN|PIPE|QUOTE|SEMIC|COMMA|LPAREN|RPAREN|LLPAREN|RRPAREN|DOUBLE_SEMIC|LBRACE|RBRACE|DOLLAR|TICK|BOP|UOP */
+  | EOL
+  | AMP
+  | LOGICAND
+  | LOGICOR
+  | LESS_THAN
+  | GREATER_THAN
+  | PIPE
+  | QUOTE
+  | SEMIC
+  | COMMA
+  | LPAREN
+  | RPAREN
+  | LLPAREN
+  | RRPAREN
+  | DOUBLE_SEMIC
+  | LBRACE
+  | RBRACE
+  | DOLLAR
+  | TICK
+  /*|BOP|UOP*/
 
-/* --Misc string parts -- */
+/* -- Misc string parts -- */
 
 str_part:
     ns_str_part
-  |	'/' { $$ = g_strdup("/"); }
+  |	SLASH
 
 str_part_with_pound:
     str_part
-  |	'#' { $$ = g_strdup("#"); }
-  /* |	POUNDPOUND */
+  |	POUND
+  |	POUNDPOUND
 
 str_part_with_pound_loop:
     /* empty */ { $$ = g_strdup(""); }
@@ -300,21 +337,30 @@ ns_str_part_no_res:
     NUMBER
 	|	vname
 	| NQSTR
-	| '=' { $$ = g_strdup("="); }
-	| '.' { $$ = g_strdup("."); }
-	| '-' { $$ = g_strdup("-"); }
-	| ':' { $$ = g_strdup(":"); }
-	| '%' { $$ = g_strdup("%"); }
+	| EQUALS
+	| PCT
+	| PCTPCT
+	| MINUS
+	| DOT
+	| DOTDOT
+	| COLON
+	/*|BOP|UOP|TEST*/
+	/* TODO: causes reduce/reduce conflict
+	|UNDERLINE */
+	| TILDE
+	| INC
+	| DEC
+	/*|ARITH_ASSIGN*/
 	| ESC_CHAR
-	/*|PCT|PCTPCT|MINUS|DOT|DOTDOT|COLON|BOP|UOP|TEST|'_'|TILDE|INC|DEC|ARITH_ASSIGN|ESC_CHAR|CARET*/
+	| CARET
 
 pattern_match_trigger:
-    '[' { $$ = g_strdup("["); }
-  |	']' { $$ = g_strdup("]"); }
-  |	'?' { $$ = g_strdup("?"); }
-  |	'+' { $$ = g_strdup("+"); }
-  |	'*' { $$ = g_strdup("*"); }
-  |	'@' { $$ = g_strdup("@"); }
+    LSQUARE
+  |	RSQUARE
+  |	QMARK
+  |	PLUS
+  |	TIMES
+  |	AT
 
 blank:
     BLANK
