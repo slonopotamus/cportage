@@ -244,15 +244,15 @@ dqstr_loop:
 dqstr_part:
   /* TODO: uncomment this
   bracket_pattern_match
-  |	extended_pattern_match
-  |	*/
+  | extended_pattern_match
+  | */
   var_ref
   /* TODO: uncomment this
   | command_sub
-  |	arithmetic_expansion */
-  |	dq_str_part
-  |	pattern_match_trigger
-  |	BANG
+  | arithmetic_expansion */
+  | dq_str_part
+  | pattern_match_trigger
+  | BANG
 
 dq_str_part:
     str_part_with_pound
@@ -314,20 +314,20 @@ sq_str_part:
 
 str_part:
     ns_str_part
-  |	SLASH
+  | SLASH
 
 str_part_with_pound:
     str_part
-  |	POUND
-  |	POUNDPOUND
+  | POUND
+  | POUNDPOUND
 
 str_part_with_pound_loop:
-    /* empty */ { $$ = g_strdup(""); }
+    /* empty */                                  { $$ = g_strdup(""); }
   | str_part_with_pound_loop str_part_with_pound { $$ = DOCONCAT2($1, $2); }
 
 ns_str_part:
     ns_str_part_no_res
-/*  |	res_word_str
+/* | res_word_str
 
 res_word_str:
   CASE|DO|DONE|ELIF|ELSE|ESAC|FI|FOR|FUNCTION|IF|IN|SELECT|THEN|UNTIL|WHILE|TIME
@@ -335,32 +335,33 @@ res_word_str:
 
 ns_str_part_no_res:
     NUMBER
-	|	vname
-	| NQSTR
-	| EQUALS
-	| PCT
-	| PCTPCT
-	| MINUS
-	| DOT
-	| DOTDOT
-	| COLON
-	/*|BOP|UOP|TEST*/
-	/* TODO: causes reduce/reduce conflict
-	|UNDERLINE */
-	| TILDE
-	| INC
-	| DEC
-	/*|ARITH_ASSIGN*/
-	| ESC_CHAR
-	| CARET
+  /* TODO: causes shift/reduce conflict */
+  | vname
+  | NQSTR
+  | EQUALS
+  | PCT
+  | PCTPCT
+  | MINUS
+  | DOT
+  | DOTDOT
+  | COLON
+  /*|BOP|UOP|TEST*/
+  /* TODO: causes reduce/reduce conflict
+  |UNDERLINE */
+  | TILDE
+  | INC
+  | DEC
+  /*|ARITH_ASSIGN*/
+  | ESC_CHAR
+  | CARET
 
 pattern_match_trigger:
     LSQUARE
-  |	RSQUARE
-  |	QMARK
-  |	PLUS
-  |	TIMES
-  |	AT
+  | RSQUARE
+  | QMARK
+  | PLUS
+  | TIMES
+  | AT
 
 blank:
     BLANK

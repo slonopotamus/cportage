@@ -1,7 +1,7 @@
 bison_target(ShellParser
     shellparser.y
     "${CMAKE_CURRENT_BINARY_DIR}/shellparser.c"
-    COMPILE_FLAGS "-Wall -Werror")
+    COMPILE_FLAGS "-Wall -Werror -r all")
 flex_target(ShellScanner
     shellscanner.l
     "${CMAKE_CURRENT_BINARY_DIR}/shellscanner.c"

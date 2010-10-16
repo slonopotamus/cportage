@@ -48,9 +48,8 @@ cp_canonical_path(const char *path, GError **error) {
             g_set_error(error, G_FILE_ERROR,
                 error_code,
                 _("Failed to canonicalize file '%s': realpath() failed: %s"),
-                path, 
-		            g_strerror(save_errno));
-		        result = NULL;
+                path, g_strerror(save_errno));
+            result = NULL;
         } else {
             result = g_filename_to_utf8(result_enc, -1, NULL, NULL, error);
         }
