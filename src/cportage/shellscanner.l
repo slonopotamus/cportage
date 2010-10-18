@@ -102,6 +102,6 @@ source           {         return SOURCE;    }
 \@               { DUPSTR; return AT;        }
 \#{2}            { DUPSTR; return POUNDPOUND; }
 \#               { DUPSTR; return POUND;     }
-.                {         return NQSTR;     }
+.                { DUPSTR; return NQSTR;     }
 
 %%

@@ -54,7 +54,7 @@ eol(void) {
 static void
 simple(void) {
     GHashTable *entries = assert_parse("shellconfig_test_simple.conf");
-    g_assert(g_hash_table_size(entries) == 11);
+    g_assert(g_hash_table_size(entries) == 12);
     g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "B");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "B");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C1_A1"), ==, "B");
@@ -66,7 +66,7 @@ simple(void) {
     g_assert_cmpstr(g_hash_table_lookup(entries, "I"), ==, "${G}");
     g_assert_cmpstr(g_hash_table_lookup(entries, "NONREF"), ==, "");
     g_assert_cmpstr(g_hash_table_lookup(entries, "SHELL"), ==, "/bin/bash");
-    /* g_assert_cmpstr(g_hash_table_lookup(entries, "UNICODE"), ==, "юникод"); */
+    g_assert_cmpstr(g_hash_table_lookup(entries, "UNICODE"), ==, "юникод");
     g_hash_table_destroy(entries);
 }
 
