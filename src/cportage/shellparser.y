@@ -191,7 +191,7 @@ var_def_stmt:
   | EXPORT blank var_def { g_free($2); }
 
 var_def:
-    vname EQUALS value { g_hash_table_replace(ctx->entries, $1, $3); g_free($2); }
+    vname EQUALS value { g_hash_table_insert(ctx->entries, $1, $3); g_free($2); }
 
 value:
     /* empty */ { $$ = g_strdup(""); }

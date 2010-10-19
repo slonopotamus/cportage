@@ -43,11 +43,11 @@ typedef enum {
 /**
  * Reads shell-like config file into given #GHashTable.
  *
- * @param path          UTF8-encoded filename
- * @param into          #GHashTable to collect config entries into
- * @param allow_source  if %TRUE, 'source' statements are handled
- * @param error         return location for a #GError, or %NULL
- * @return              %TRUE on success, %FALSE if an error occurred
+ * @param path         UTF8-encoded filename
+ * @param into         #GHashTable to collect config entries into
+ * @param allow_source if %TRUE, 'source' statements are handled
+ * @param error        return location for a #GError, or %NULL
+ * @return             %TRUE on success, %FALSE if an error occurred
  */
 gboolean
 cp_read_shellconfig(

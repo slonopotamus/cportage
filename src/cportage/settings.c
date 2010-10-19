@@ -24,7 +24,7 @@
 
 struct CPSettings {
     /*@only@*/ char *config_root;
-    /*@only@*/ char *profile;
+    /*@only@*/ char *profile_abs_path;
 
     /* Stuff below comes from profiles and /etc/portage */
 
@@ -48,47 +48,143 @@ struct CPSettings {
     /*@refs@*/ int refs;
 };
 
+/**
+ * Loads profiles (recursively, in a depth-first order) into a CPSettings.
+ *
+ * @param self        settings object
+ * @param profile_dir canonical path to profile directory
+ * @param error       return location for a #GError, or %NULL
+ * @return            %TRUE on success, %FALSE if an error occurred
+ */
 static gboolean
-cp_settings_load(
+cp_settings_add_profile(
     CPSettings self,
+    const char *profile_dir,
     /*@null@*/ GError **error
-) /*@modifies *self, *error@*/ {
-    char *make_conf;
+) /*@modifies *self, *error@*/ G_GNUC_WARN_UNUSED_RESULT;
+
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+cp_settings_add_parent_profiles(
+    CPSettings self,
+    const char *profile_dir,
+    const char *parents_file,
+    /*@null@*/ GError **error
+) {
+    char **parents;
+    gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(self->config_root != NULL && self->profile != NULL);
-    g_assert(self->config == NULL);
 
-    make_conf = g_build_filename(self->config_root, "etc", "make.conf", NULL);
-    self->config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-    if (!cp_read_shellconfig(self->config, "/etc/profile.env", FALSE, error)) {
-        goto ERR;
+    parents = cp_read_lines(parents_file, TRUE, error);
+    if (parents == NULL) {
+        return FALSE;
     }
-    if (!cp_read_shellconfig(self->config, "/etc/make.globals", FALSE, error)) {
-        goto ERR;
-    }
-    if (!cp_read_shellconfig(self->config, make_conf, TRUE, error)) {
-        goto ERR;
+    result = TRUE;
+
+    CP_STRV_ITER(parents, parent)
+        char *parent_path = g_path_is_absolute(parent)
+            ? g_strdup(parent)
+            : g_build_filename(profile_dir, parent, NULL);
+        result = cp_settings_add_profile(self, parent_path, error);
+        g_free(parent_path);
+        if (!result) {
+            break;
+         }
+    end_CP_STRV_ITER
+
+    g_strfreev(parents);
+    return result;
+}
+
+static gboolean
+cp_settings_add_profile(CPSettings self, const char *profile_dir, GError **error) {
+    char *config_file;
+    gboolean result;
+
+    g_assert(error == NULL || *error == NULL);
+
+    /* Load parents first */
+    config_file = g_build_filename(profile_dir, "parent", NULL);
+    result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
+        || cp_settings_add_parent_profiles(self, profile_dir, config_file, error);
+    g_free(config_file);
+    if (!result) {
+        return FALSE;
     }
 
-    g_free(make_conf);
-    return TRUE;
+    /* Parse profile configs */
+    config_file = g_build_filename(profile_dir, "make.defaults", NULL);
+    result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
+        || cp_read_shellconfig(self->config, config_file, FALSE, error);
+    g_free(config_file);
 
-ERR:
-    g_free(make_conf);
-    return FALSE;
+    return result;
+}
+
+/**
+ * Loads file with given name from $CONFIG_ROOT/etc into a CPSettings.
+ *
+ * @param self         settings object
+ * @param name         filename to load
+ * @param allow_source if %TRUE, 'source' statements are handled in config file
+ * @param error        return location for a #GError, or %NULL
+ * @return             %TRUE on success, %FALSE if an error occurred
+ */
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+cp_settings_load_etc_config(
+    CPSettings self,
+    const char *name,
+    gboolean allow_source,
+    /*@null@*/ GError **error
+) {
+    char *path;
+    gboolean result;
+
+    g_assert(error == NULL || *error == NULL);
+    path = g_build_filename(self->config_root, "etc", name, NULL);
+    result = cp_read_shellconfig(self->config, path, allow_source, error);
+    g_free(path);
+    return result;
+}
+
+static char *
+cp_settings_build_profile_path(
+    const char *config_root,
+    /*@null@*/ GError **error
+) /*@modifies *self@*/ {
+    char *profile;
+    char *result;
+
+    g_assert(error == NULL || *error == NULL);
+    profile = g_build_filename(config_root, "etc", "make.profile", NULL);
+    result = cp_canonical_path(profile, error);
+    g_free(profile);
+    return result;
+}
+
+/** TODO: PMS reference? */
+static void
+cp_settings_init_cbuild(CPSettings self) /*@modifies *self@*/ {
+    static const char *key = "CBUILD";
+    const char *chost;
+    if (cp_settings_get(self, key) != NULL) {
+        return;
+    }
+    chost = cp_settings_get(self, "CHOST");
+    if (chost == NULL) {
+        return;
+    }
+    g_hash_table_insert(self->config, g_strdup(key), g_strdup(chost));
 }
 
 static void
 cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
-    char *key = g_strdup("FEATURES");
-
-    g_assert(self->config != NULL && self->features == NULL);
-
+    static const char *key = "FEATURES";
     self->features = cp_strings_pysplit(cp_settings_get_default(self, key, ""));
     cp_strings_sort(self->features);
-    g_hash_table_insert(self->config, key, g_strjoinv(" ", self->features));
+    g_hash_table_insert(self->config,
+        g_strdup(key),
+        g_strjoinv(" ", self->features));
 }
 
 CPSettings
@@ -105,12 +201,33 @@ cp_settings_new(const char *config_root, GError **error) {
     if (self->config_root == NULL) {
         goto ERR;
     }
-
-    self->profile = g_build_filename(self->config_root, "etc", "make.profile", NULL);
-
-    if (!cp_settings_load(self, error)) {
+    self->profile_abs_path = cp_settings_build_profile_path(config_root, error);
+    if (self->profile_abs_path == NULL) {
         goto ERR;
     }
+    self->config = g_hash_table_new_full(g_str_hash, g_str_equal,g_free, g_free);
+    if (!cp_settings_load_etc_config(self, "profile.env", FALSE, error)) {
+        goto ERR;
+    }
+    if (!cp_settings_load_etc_config(self, "make.globals", FALSE, error)) {
+        goto ERR;
+    }
+    if (!cp_settings_add_profile(self, self->profile_abs_path, error)) {
+        goto ERR;
+    }
+    if (!cp_settings_load_etc_config(self, "make.conf", TRUE, error)) {
+        goto ERR;
+    }
+
+    /*
+        We do not support CONFIGROOT overriding. Actually, we do not need this
+        at all, but let's act like portage.
+     */
+    g_hash_table_insert(self->config,
+        g_strdup("PORTAGE_CONFIGROOT"),
+        g_strdup(self->config_root));
+
+    cp_settings_init_cbuild(self);
     cp_settings_init_features(self);
 
     return self;
@@ -136,12 +253,10 @@ cp_settings_unref(CPSettings self) {
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
         g_free(self->config_root);
-        g_free(self->profile);
-
+        g_free(self->profile_abs_path);
         if (self->package_use_mask != NULL) {
             g_hash_table_destroy(self->package_use_mask);
         }
-
         if (self->config != NULL) {
             g_hash_table_destroy(self->config);
         }
@@ -174,11 +289,11 @@ cp_settings_get_portdir(const CPSettings self) {
 }
 
 G_CONST_RETURN char *
-cp_settings_get_profile(const CPSettings self) {
-    return self->profile;
+cp_settings_get_profile_abs_path(const CPSettings self) {
+    return self->profile_abs_path;
 }
 
-gboolean cp_settings_has_feature(
+gboolean cp_settings_has_feature_enabled(
     const CPSettings self,
     const char *feature
 ) {

@@ -91,12 +91,12 @@ cp_settings_get_portdir(const CPSettings self) /*@*/;
  * @return readonly absolute path to make.profile dir
  */
 G_CONST_RETURN /*@observer@*/ char *
-cp_settings_get_profile(const CPSettings self) /*@*/;
+cp_settings_get_profile_abs_path(const CPSettings self) /*@*/;
 
 /**
  * @return %TRUE if @feature is enabled in FEATURES variable, %FALSE otherwise
  */
-gboolean cp_settings_has_feature(
+gboolean cp_settings_has_feature_enabled(
     const CPSettings self,
     const char *feature
 ) /*@*/;
