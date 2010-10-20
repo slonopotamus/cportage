@@ -17,6 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "cportage/eapi.h"
 #include "cportage/io.h"
 #include "cportage/settings.h"
 #include "cportage/shellconfig.h"
@@ -103,7 +104,24 @@ cp_settings_add_profile(CPSettings self, const char *profile_dir, GError **error
 
     g_assert(error == NULL || *error == NULL);
 
-    /* Load parents first */
+    /* Check eapi */
+    config_file = g_build_filename(profile_dir, "eapi", NULL);
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        char *data;
+        result = cp_read_file(config_file, &data, NULL, error);
+        if (result) {
+            result = cp_eapi_check(g_strstrip(data), config_file, error);
+        }
+        g_free(data);
+    } else {
+        result = TRUE;
+    }
+    g_free(config_file);
+    if (!result) {
+        return FALSE;
+    }
+
+    /* Load parents */
     config_file = g_build_filename(profile_dir, "parent", NULL);
     result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
         || cp_settings_add_parent_profiles(self, profile_dir, config_file, error);
