@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 typedef /*@refcounted@*/ struct CPSettings *CPSettings;
 
 /**
- * Reads configuration data and stores it in a #CPSettings structure.
+ * Reads global and profile configuration data
+ * and stores it in a #CPSettings structure.
  *
  * @param config_root path to configuration files root dir (typically "/")
  * @param error       return location for a #GError, or %NULL

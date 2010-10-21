@@ -38,8 +38,8 @@ struct CPSettings {
     /*
       Stuff below comes from (in order)
       - /etc/profile.env
-      - make.defaults across profiles
       - /etc/make.globals
+      - make.defaults across profiles
       - /etc/make.conf
      */
 
@@ -50,9 +50,10 @@ struct CPSettings {
 };
 
 /**
- * Loads profiles (recursively, in a depth-first order) into a CPSettings.
+ * Loads profiles (recursively, in a depth-first order)
+ * into a #CPSettings structure.
  *
- * @param self        settings object
+ * @param self        a #CPSettings structure
  * @param profile_dir canonical path to profile directory
  * @param error       return location for a #GError, or %NULL
  * @return            %TRUE on success, %FALSE if an error occurred
@@ -64,13 +65,22 @@ cp_settings_add_profile(
     /*@null@*/ GError **error
 ) /*@modifies *self, *error@*/ G_GNUC_WARN_UNUSED_RESULT;
 
+
+/**
+ * Calls #cp_settings_add_profile for each prifile in parents file.
+ *
+ * @param self         a #CPSettings structure
+ * @param parents_file file with parent list (must exist)
+ * @param error        return location for a #GError, or %NULL
+ * @return             %TRUE on success, %FALSE if an error occurred
+ */
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 cp_settings_add_parent_profiles(
     CPSettings self,
-    const char *profile_dir,
     const char *parents_file,
     /*@null@*/ GError **error
 ) {
+    char *basedir;
     char **parents;
     gboolean result = TRUE;
 
@@ -80,12 +90,14 @@ cp_settings_add_parent_profiles(
     if (parents == NULL) {
         return FALSE;
     }
+    basedir = g_path_get_dirname(parents_file);
     result = TRUE;
 
     CP_STRV_ITER(parents, parent)
+        /* Canonicalize path? */
         char *parent_path = g_path_is_absolute(parent)
             ? g_strdup(parent)
-            : g_build_filename(profile_dir, parent, NULL);
+            : g_build_filename(basedir, parent, NULL);
         result = cp_settings_add_profile(self, parent_path, error);
         g_free(parent_path);
         if (!result) {
@@ -93,12 +105,18 @@ cp_settings_add_parent_profiles(
          }
     end_CP_STRV_ITER
 
+    g_free(basedir);
     g_strfreev(parents);
     return result;
 }
 
+/** See declaration above. */
 static gboolean
-cp_settings_add_profile(CPSettings self, const char *profile_dir, GError **error) {
+cp_settings_add_profile(
+    CPSettings self,
+    const char *profile_dir,
+    GError **error
+) {
     char *config_file;
     gboolean result;
 
@@ -124,7 +142,7 @@ cp_settings_add_profile(CPSettings self, const char *profile_dir, GError **error
     /* Load parents */
     config_file = g_build_filename(profile_dir, "parent", NULL);
     result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
-        || cp_settings_add_parent_profiles(self, profile_dir, config_file, error);
+        || cp_settings_add_parent_profiles(self, config_file, error);
     g_free(config_file);
     if (!result) {
         return FALSE;
@@ -140,9 +158,9 @@ cp_settings_add_profile(CPSettings self, const char *profile_dir, GError **error
 }
 
 /**
- * Loads file with given name from $CONFIG_ROOT/etc into a CPSettings.
+ * Loads file with given name from $CONFIG_ROOT/etc into a #CPSettings structure.
  *
- * @param self         settings object
+ * @param self         a #CPSettings structure
  * @param name         filename to load
  * @param allow_source if %TRUE, 'source' statements are handled in config file
  * @param error        return location for a #GError, or %NULL
@@ -165,6 +183,14 @@ cp_settings_load_etc_config(
     return result;
 }
 
+/**
+ * Constructs root profile path and checks its existence.
+ *
+ * @param config_root  root dir for config files
+ * @param error        return location for a #GError, or %NULL
+ * @return             canonical profile path on success,
+ *                     %NULL if an error occurred
+ */
 static char *
 cp_settings_build_profile_path(
     const char *config_root,
@@ -195,6 +221,11 @@ cp_settings_init_cbuild(CPSettings self) /*@modifies *self@*/ {
     g_hash_table_insert(self->config, g_strdup(key), g_strdup(chost));
 }
 
+/**
+ * Populates #CPSettings feature list with data from FEATURES config variable.
+ *
+ * @param self a #CPSettings structure
+ */
 static void
 cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
     static const char *key = "FEATURES";
