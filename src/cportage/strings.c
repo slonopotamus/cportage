@@ -55,6 +55,7 @@ cp_strings_sort(char **str_array) {
 }
 
 static const char * const trues[] = {"true", "t", "yes", "y", "1", "on"};
+static const char * const falses[] = {"false", "f", "no", "n", "0", "off"};
 
 gboolean cp_string_is_true(const char *str) {
     size_t i;
@@ -69,5 +70,12 @@ gboolean cp_string_is_true(const char *str) {
         }
     }
 
-    return FALSE;
+    for (i = 0; i < G_N_ELEMENTS(falses); ++i) {
+        if (g_ascii_strcasecmp(falses[i], str) == 0) {
+            return FALSE;
+        }
+    }
+
+    g_warning("Unknown boolean value '%s', assuming true", str);
+    return TRUE;
 }
