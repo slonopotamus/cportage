@@ -91,7 +91,6 @@ cp_settings_add_parent_profiles(
         return FALSE;
     }
     basedir = g_path_get_dirname(parents_file);
-    result = TRUE;
 
     CP_STRV_ITER(parents, parent)
         /* Canonicalize path? */
@@ -118,7 +117,7 @@ cp_settings_add_profile(
     GError **error
 ) {
     char *config_file;
-    gboolean result;
+    gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -131,8 +130,17 @@ cp_settings_add_profile(
             result = cp_eapi_check(g_strstrip(data), config_file, error);
         }
         g_free(data);
-    } else {
-        result = TRUE;
+    }
+    g_free(config_file);
+    if (!result) {
+        return FALSE;
+    }
+
+    /* Check whether profile is deprecated */
+    config_file = g_build_filename(profile_dir, "deprecated", NULL);
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        g_warning("Profile %s is deprecated", profile_dir);
+        /* TODO: read and print file contents */
     }
     g_free(config_file);
     if (!result) {
@@ -141,8 +149,9 @@ cp_settings_add_profile(
 
     /* Load parents */
     config_file = g_build_filename(profile_dir, "parent", NULL);
-    result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
-        || cp_settings_add_parent_profiles(self, config_file, error);
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        result = cp_settings_add_parent_profiles(self, config_file, error);
+    }
     g_free(config_file);
     if (!result) {
         return FALSE;
@@ -150,8 +159,9 @@ cp_settings_add_profile(
 
     /* Parse profile configs */
     config_file = g_build_filename(profile_dir, "make.defaults", NULL);
-    result = !g_file_test(config_file, G_FILE_TEST_EXISTS)
-        || cp_read_shellconfig(self->config, config_file, FALSE, error);
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        result = cp_read_shellconfig(self->config, config_file, FALSE, error);
+    }
     g_free(config_file);
 
     return result;
