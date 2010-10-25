@@ -33,16 +33,22 @@ G_BEGIN_DECLS
 GQuark
 cp_eapi_error_quark(void);
 
+/**
+ * TODO: documentation.
+ */
 typedef enum {
     CP_EAPI_ERROR_UNSUPPORTED
 } CPEAPIError;
 
+/**
+ * TODO: documentation.
+ */
 gboolean
 cp_eapi_check(
     const char *eapi,
     const char *file,
-    GError **error
-) /*@modifies *error@*/ G_GNUC_WARN_UNUSED_RESULT;
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 #pragma GCC visibility pop
 

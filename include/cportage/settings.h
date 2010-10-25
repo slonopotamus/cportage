@@ -28,15 +28,18 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
+/**
+ * Central storage of cportage configuration.
+ */
 typedef /*@refcounted@*/ struct CPSettings *CPSettings;
 
 /**
  * Reads global and profile configuration data
- * and stores it in a #CPSettings structure.
+ * and stores it in a #CPSettings immutable structure.
  *
- * @param config_root path to configuration files root dir (typically "/")
- * @param error       return location for a #GError, or %NULL
- * @return a #CPSettings structure, free it using cp_settings_unref()
+ * \param config_root path to configuration files root dir (typically "/")
+ * \param error       return location for a %GError, or %NULL
+ * \return            a #CPSettings structure, free it using cp_settings_unref()
  */
 /*@newref@*/ /*@null@*/ CPSettings
 cp_settings_new(
@@ -45,21 +48,21 @@ cp_settings_new(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
 /**
- * Increases reference count of @self by 1.
+ * Increases reference count of \a self by 1.
  *
- * @param self a #CPSettings
- * @return @self
+ * \param self a #CPSettings structure
+ * \return \a self
  */
 /*@newref@*/ CPSettings
 cp_settings_ref(
     CPSettings self
-) /*@modifies *self@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 /**
- * Decreases reference count of @self by 1. When reference count drops
+ * Decreases reference count of \a self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * @param self a #CPSettings
+ * \param self a #CPSettings
  */
 void
 cp_settings_unref(
@@ -67,40 +70,47 @@ cp_settings_unref(
 ) /*@modifies self@*/;
 
 /**
- * @return readonly value of @key variable or @fallback if variable is not set
+ * \return readonly value of \a key variable
+ *         or \a fallback if variable is not set
  */
 G_CONST_RETURN /*@observer@*/ char *
 cp_settings_get_default(
     const CPSettings self,
     const char *key,
     const char *fallback
-) /*@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * @return readonly value of @key variable or %NULL if variable is not set
+ * \return readonly value of \a key variable
+ *         or %NULL if variable is not set
  */
 G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
-cp_settings_get(const CPSettings self, const char *key) /*@*/;
+cp_settings_get(
+    const CPSettings self,
+    const char *key
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * @return readonly value of PORTDIR variable
+ * \return readonly value of \c PORTDIR variable
  */
 G_CONST_RETURN /*@observer@*/ char *
-cp_settings_get_portdir(const CPSettings self) /*@*/;
+cp_settings_get_portdir(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * @return readonly absolute path to make.profile dir
+ * \return readonly canonical path to profile directory
  */
 G_CONST_RETURN /*@observer@*/ char *
-cp_settings_get_profile_abs_path(const CPSettings self) /*@*/;
+cp_settings_get_profile(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * @return %TRUE if @feature is enabled in FEATURES variable, %FALSE otherwise
+ * \return %TRUE if \a feature is enabled in \c FEATURES variable,
+ *         %FALSE otherwise
  */
-gboolean cp_settings_has_feature_enabled(
+gboolean
+cp_settings_has_feature_enabled(
     const CPSettings self,
     const char *feature
-) /*@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 #pragma GCC visibility pop
 

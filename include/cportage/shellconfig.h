@@ -35,19 +35,22 @@ G_BEGIN_DECLS
 GQuark
 cp_shellconfig_error_quark(void);
 
+/**
+ * TODO: documentation.
+ */
 typedef enum {
     CP_SHELLCONFIG_ERROR_SOURCE_DISABLED,
     CP_SHELLCONFIG_ERROR_SYNTAX
 } CPShellConfigError;
 
 /**
- * Reads shell-like config file into given #GHashTable.
+ * Reads shell-like config file into a %GHashTable.
  *
- * @param path         UTF8-encoded filename
- * @param into         #GHashTable to collect config entries into
- * @param allow_source if %TRUE, 'source' statements are handled
- * @param error        return location for a #GError, or %NULL
- * @return             %TRUE on success, %FALSE if an error occurred
+ * \param path         UTF8-encoded filename
+ * \param into         a %GHashTable to collect config entries into
+ * \param allow_source if %TRUE, \c source statements are handled
+ * \param error        return location for a %GError, or %NULL
+ * \return             %TRUE on success, %FALSE if an error occurred
  */
 gboolean
 cp_read_shellconfig(
@@ -55,7 +58,7 @@ cp_read_shellconfig(
     const char *path,
     gboolean allow_source,
     /*@null@*/ GError **error
-) /*@modifies *into,*error,errno@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *into,*error,errno@*/;
 
 #pragma GCC visibility pop
 

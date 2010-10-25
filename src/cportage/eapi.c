@@ -20,11 +20,16 @@
 #include "cportage/eapi.h"
 #include "cportage/strings.h"
 
+static gboolean
+cp_eapi_supported(const char *eapi) {
+    return eapi[0] >= '0' && eapi[0] <= '3' && eapi[1] == '\0';
+}
+
 gboolean
 cp_eapi_check(const char *eapi, const char *file, GError **error) {
     g_assert(error == NULL || *error == NULL);
 
-    if (eapi[0] >= '0' && eapi[0] <= '2' && eapi[1] == '\0') {
+    if (cp_eapi_supported(eapi)) {
         return TRUE;
     }
     g_set_error(error,

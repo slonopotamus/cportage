@@ -28,8 +28,14 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
+/**
+ * TODO: documentation.
+ */
 typedef /*@refcounted@*/ struct CPAtom *CPAtom;
 
+/**
+ * TODO: documentation.
+ */
 /*@newref@*/ /*@null@*/ CPAtom
 cp_atom_new(
     const char *str,
@@ -38,19 +44,19 @@ cp_atom_new(
     /*@modifies *error@*/;
 
 /**
- * Increases reference count of @self by 1.
+ * Increases reference count of \a self by 1.
  *
- * @param self a #CPAtom
- * @return @self
+ * \param self a #CPAtom
+ * \return \a self
  */
 /*@newref@*/ CPAtom
-cp_atom_ref(CPAtom self) /*@modifies *self@*/;
+cp_atom_ref(CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 /**
- * Decreases reference count of @self by 1. When reference count drops
+ * Decreases reference count of \a self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * @param self a #CPAtom
+ * \param self a #CPAtom
  */
 void
 cp_atom_unref(

@@ -31,11 +31,11 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * GLib-style realpath(3) wrapper.
+ * GLib-style realpath() wrapper.
  *
- * @param path  UTF8-encoded filename
- * @param error return location for a #GError, or %NULL
- * @return      UTF8-encoded path or %NULL if an error occured,
+ * \param path  UTF8-encoded filename
+ * \param error return location for a %GError, or %NULL
+ * \return      UTF8-encoded path or %NULL if an error occured,
  *              free it using g_free()
  */
 /*@null@*/ char *
@@ -46,13 +46,13 @@ cp_canonical_path(
     /*@modifies *error,errno@*/;
 
 /**
- * Same as g_file_get_contents but expects UTF8-encoded filename.
+ * Same as g_file_get_contents() but expects UTF8-encoded filename.
  *
- * @param path  UTF8-encoded filename.
- * @param data  location to store an allocated string, free it using g_free()
- * @param len   location to store length in bytes of the contents, or %NULL
- * @param error return location for a #GError, or %NULL
- * @return      %TRUE on success, %FALSE if an error occurred
+ * \param path  UTF8-encoded filename.
+ * \param data  location to store an allocated string, free it using g_free()
+ * \param len   location to store length in bytes of the contents, or %NULL
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE on success, %FALSE if an error occurred
  */
 gboolean
 cp_read_file(
@@ -60,26 +60,25 @@ cp_read_file(
     /*@out@*/ char **data,
     /*@out@*/ size_t *len,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT
-    /*@modifies *error,errno@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
 /**
  * Fully reads text file and splits it at line endings.
- * File is checked to be valid UTF8.
+ * File contents is checked to be valid UTF8.
  *
- * @param path            UTF8-encoded filename
- * @param ignore_comments if %TRUE, comments starting with '#' will be excluded
- * @param error           return location for a #GError, or %NULL
- * @return                a %NULL-terminated char ** array or %NULL if an error
- *                        occurred, free it using g_strfreev()
+ * \param path            UTF8-encoded filename
+ * \param ignore_comments if %TRUE, comments starting with \c '#' will be excluded
+ * \param error           return location for a %GError, or %NULL
+ * \return                a %NULL-terminated string array
+ *                        or %NULL if an error occurred,
+ *                        free it using g_strfreev()
  */
 /*@null@*/ char **
 cp_read_lines(
     const char *path,
     const gboolean ignore_comments,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-    /*@modifies *error,errno@*/;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
 #pragma GCC visibility pop
 

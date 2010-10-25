@@ -66,7 +66,7 @@ print_version(const CPSettings settings, const struct utsname *utsname)
 {
     const char *portdir = cp_settings_get_portdir(settings);
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
-    const char *profile = cp_settings_get_profile_abs_path(settings);
+    const char *profile = cp_settings_get_profile(settings);
     char *profile_str = relative_path(profiles_dir, profile);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";

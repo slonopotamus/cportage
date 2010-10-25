@@ -41,10 +41,10 @@ G_BEGIN_DECLS
 #define end_CP_STRV_ITER }}
 
 /**
- * Splits given string at whitespace (greedy). Empty elements are filtered out.
+ * Splits given string at whitespace. Empty elements are filtered out.
  *
- * @param str a string to split
- * @return a %NULL-terminated char ** array, free it using g_strfreev()
+ * \param str a string to split
+ * \return a %NULL-terminated string array, free it using g_strfreev()
  */
 char **
 cp_strings_pysplit(
@@ -53,16 +53,20 @@ cp_strings_pysplit(
 
 /**
  * Sorts %NULL-terminated string array in place.
- * @param str_array array to sort.
+ *
+ * \param str_array array to sort.
  */
 void
 cp_strings_sort(char **str_array) /*@modifies *str_array@*/;
 
 /**
- * @return %TRUE if @str is one of "true", "t", "yes", "y", "1", %FALSE otherwise
+ * Parses string as boolean
+ *
+ * \return %FALSE if \a str is one of "false", "f", "no", "n", "0",
+ *         %TRUE otherwise
  */
 gboolean
-cp_string_is_true(/*@null@*/ const char *str) /*@*/;
+cp_string_is_true(/*@null@*/ const char *str) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 #pragma GCC visibility pop
 
