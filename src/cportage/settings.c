@@ -25,6 +25,7 @@
 
 struct CPSettings {
     /*@only@*/ char *config_root;
+    /*@only@*/ char *target_root;
     /*@only@*/ char *profile;
 
     /*@only@*/ GHashTable/*<char *,char *>*/ *config;
@@ -235,7 +236,11 @@ cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
 }
 
 CPSettings
-cp_settings_new(const char *config_root, GError **error) {
+cp_settings_new(
+    const char *config_root,
+    const char *target_root,
+    GError **error
+) {
     CPSettings self;
 
     g_assert(error == NULL || *error == NULL);
@@ -246,6 +251,10 @@ cp_settings_new(const char *config_root, GError **error) {
     self->refs = 1;
     self->config_root = cp_canonical_path(config_root, error);
     if (self->config_root == NULL) {
+        goto ERR;
+    }
+    self->target_root = cp_canonical_path(target_root, error);
+    if (self->target_root == NULL) {
         goto ERR;
     }
     self->profile = cp_settings_build_profile_path(self->config_root, error);
@@ -270,16 +279,30 @@ cp_settings_new(const char *config_root, GError **error) {
         goto ERR;
     }
     /*
-        We do not support CONFIGROOT overriding. Actually, we do not need this
-        variable at all, but let's act like portage.
+        We do not support CONFIGROOT and ROOT overriding. Actually,
+        we do not need these variables at all, but let's act like portage.
      */
     g_hash_table_insert(self->config,
         g_strdup("PORTAGE_CONFIGROOT"),
-        g_strdup(self->config_root));
+        g_strdup(self->config_root)
+    );
+    g_hash_table_insert(self->config,
+        g_strdup("ROOT"),
+        g_strdup(self->target_root)
+    );
 
-    /* init other misc stuff */
+    /* init misc stuff */
     cp_settings_init_cbuild(self);
     cp_settings_init_features(self);
+
+    /* init self->porttree */
+    /*self->porttree = cp_porttree_new(self, error);
+    if (self->porttree == NULL) {
+        goto ERR;
+    }
+    g_hash_table_insert(self->config,
+        g_strdup("PORTTREE"),
+        g_strdup(self->config_root)); */
 
     return self;
 
@@ -304,6 +327,7 @@ cp_settings_unref(CPSettings self) {
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
         g_free(self->config_root);
+        g_free(self->target_root);
         g_free(self->profile);
         if (self->config != NULL) {
             g_hash_table_destroy(self->config);
@@ -343,8 +367,6 @@ cp_settings_get_profile(const CPSettings self) {
 
 gboolean
 cp_settings_has_feature_enabled(const CPSettings self, const char *feature) {
-    g_assert(g_utf8_validate(feature, -1, NULL));
-
     /* Could be replaced with bsearch since features are sorted */
     CP_STRV_ITER(self->features, f) {
         if (g_strcmp0(f, feature) == 0) {

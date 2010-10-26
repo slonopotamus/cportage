@@ -29,6 +29,7 @@
     {NULL, '\0', 0, 0, NULL, NULL, NULL} \
     /*@=type@*/ /*@=nullassign@*/
 #define DEFAULT_CONFIG_ROOT "/"
+#define DEFAULT_TARGET_ROOT "/"
 
 /*@unchecked@*/ static struct actions {
     int clean;
@@ -40,8 +41,9 @@
     int help;
 } actions;
 
-/*@unchecked@*/ static struct GlobalOptions gopts = {
-    DEFAULT_CONFIG_ROOT, NULL, VERBOSITY_NORMAL
+/*@unchecked@*/ static struct GlobalOptions
+gopts = {
+    DEFAULT_CONFIG_ROOT, DEFAULT_TARGET_ROOT, NULL, VERBOSITY_NORMAL
 };
 
 /*@unchecked@*/ static struct MergeOptions mopts = { &gopts, FALSE, FALSE };
@@ -59,32 +61,31 @@ print_version(void)
          "There is NO WARRANTY, to the extent permitted by law.\n");
 }
 
-static gboolean verbose_cb(
+static gboolean
+verbose_cb(
     /*@unused@*/ const char *option_name G_GNUC_UNUSED,
     /*@unused@*/ const char *value G_GNUC_UNUSED,
     /*@unused@*/ void *data G_GNUC_UNUSED,
     /*@unused@*/ GError **error G_GNUC_UNUSED
-)
-    /*@modifies gopts@*/
-{
+) /*@modifies gopts@*/ {
     gopts.verbosity = VERBOSITY_VERBOSE;
     return TRUE;
 }
 
-static gboolean quiet_cb(
-        /*@unused@*/ const char *option_name G_GNUC_UNUSED,
-        /*@unused@*/ const char *value G_GNUC_UNUSED,
-        /*@unused@*/ void *data G_GNUC_UNUSED,
-        /*@unused@*/ GError **error G_GNUC_UNUSED
-)
-    /*@modifies gopts@*/
-{
+static gboolean
+quiet_cb(
+    /*@unused@*/ const char *option_name G_GNUC_UNUSED,
+    /*@unused@*/ const char *value G_GNUC_UNUSED,
+    /*@unused@*/ void *data G_GNUC_UNUSED,
+    /*@unused@*/ GError **error G_GNUC_UNUSED
+) /*@modifies gopts@*/ {
     gopts.verbosity = VERBOSITY_QUIET;
     return TRUE;
 }
 
 /* Know how to compile this without G_GNUC_EXTENSION? Tell me */
-/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry options[] = {
+/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry
+options[] = {
 
     /* Actions */
     {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean, NULL, NULL},
@@ -110,9 +111,10 @@ static gboolean quiet_cb(
 };
 
 int
-main(int argc, char *argv[])
-    /*@modifies actions,errno,*stdout,internalState,fileSystem,argc,argv@*/
-{
+main(
+    int argc,
+    char *argv[]
+) /*@modifies actions,errno,*stdout,internalState,fileSystem,argc,argv@*/ {
     GOptionContext *ctx;
     GError *error = NULL;
 

@@ -168,7 +168,7 @@ print_settings(const CPSettings settings)
 }
 
 void
-cmerge_info_action(const GlobalOptions options, GError **error) {
+cmerge_info_action(const GlobalOptions opts, GError **error) {
     CPSettings settings;
     struct utsname utsname;
     /* TODO: read cpu name from /proc/cpuinfo */
@@ -178,7 +178,7 @@ cmerge_info_action(const GlobalOptions options, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    settings = cp_settings_new(options->config_root, error);
+    settings = cp_settings_new(opts->config_root, opts->target_root, error);
     if (settings == NULL) {
         goto ERR;
     }

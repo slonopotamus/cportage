@@ -38,12 +38,14 @@ typedef /*@refcounted@*/ struct CPSettings *CPSettings;
  * and stores it in a #CPSettings immutable structure.
  *
  * \param config_root path to configuration files root dir (typically "/")
+ * \param target_root path to installation root dir (typically "/")
  * \param error       return location for a %GError, or %NULL
  * \return            a #CPSettings structure, free it using cp_settings_unref()
  */
 /*@newref@*/ /*@null@*/ CPSettings
 cp_settings_new(
     const char *config_root,
+    const char *target_root,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
 
