@@ -17,6 +17,10 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
+#error "Only <cportage.h> can be included directly."
+#endif
+
 #ifndef CP_SETTINGS_H
 #define CP_SETTINGS_H
 

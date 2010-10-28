@@ -17,45 +17,18 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
+#ifndef CPORTAGE_H
+#define CPORTAGE_H
 
-#ifndef CP_EAPI_H
-#define CP_EAPI_H
+#define CPORTAGE_H_INSIDE
 
-#include <glib.h>
+#include <cportage/atom.h>
+#include <cportage/eapi.h>
+#include <cportage/io.h>
+#include <cportage/settings.h>
+#include <cportage/shellconfig.h>
+#include <cportage/strings.h>
 
-/*@-exportany@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
-
-#define CP_EAPI_ERROR cp_eapi_error_quark()
-
-GQuark
-cp_eapi_error_quark(void);
-
-/**
- * TODO: documentation.
- */
-typedef enum {
-    CP_EAPI_ERROR_UNSUPPORTED
-} CPEAPIError;
-
-/**
- * TODO: documentation.
- */
-gboolean
-cp_eapi_check(
-    const char *eapi,
-    const char *file,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
+#undef CPORTAGE_H_INSIDE
 
 #endif

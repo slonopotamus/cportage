@@ -17,6 +17,10 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
+#error "Only <cportage.h> can be included directly."
+#endif
+
 /** I/O utility functions. */
 
 #ifndef CP_SHELLCONFIG_H

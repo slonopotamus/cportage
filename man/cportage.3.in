@@ -3,12 +3,7 @@
 cportage \- \fBportage\fR(5)-compatible C library
 .SH "SYNOPSIS"
 .nf
-.B #include <cportage/atom.h>
-.B #include <cportage/io.h>
-.B #include <cportage/porttree.h>
-.B #include <cportage/settings.h>
-.B #include <cportage/shellconfig.h>
-.B #include <cportage/strings.h>
+.B #include <cportage.h>
 .fi
 .SH "ENVIRONMENT OPTIONS"
 .TP

@@ -15,7 +15,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 # Compiler flags
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
-    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500
+    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 -DCPORTAGE_COMPILATION
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -pedantic -ansi -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
@@ -53,34 +53,34 @@ include(CheckCSourceRuns)
 
 check_symbol_exists(realpath stdlib.h HAVE_REALPATH)
 if(NOT HAVE_REALPATH)
-    message(FATAL_ERROR "Your system doesn't have realpath(3) function")
+    message(FATAL_ERROR "Your system doesn't have realpath() function")
 endif()
 
 check_c_source_runs(
     "#include <stdlib.h>\n int main(void) {return realpath(\".\", NULL) == NULL;}"
     REALPATH_ACCEPTS_NULL)
 if(NOT REALPATH_ACCEPTS_NULL)
-    message(FATAL_ERROR "Your realpath(3) function doesn't accept NULL")
+    message(FATAL_ERROR "Your realpath() function doesn't accept NULL")
 endif()
 
 check_symbol_exists(uname sys/utsname.h HAVE_UNAME)
 if(NOT HAVE_UNAME)
-    message(FATAL_ERROR "Your system doesn't have uname(2) function")
+    message(FATAL_ERROR "Your system doesn't have uname() function")
 endif()
 
 check_symbol_exists(setlocale locale.h HAVE_SETLOCALE)
 if(NOT HAVE_SETLOCALE)
-    message(FATAL_ERROR "Your system doesn't have setlocale(3) function")
+    message(FATAL_ERROR "Your system doesn't have setlocale() function")
 endif()
 
 check_symbol_exists(qsort stdlib.h HAVE_QSORT)
 if(NOT HAVE_QSORT)
-    message(FATAL_ERROR "Your system doesn't have qsort(3) function")
+    message(FATAL_ERROR "Your system doesn't have qsort() function")
 endif()
 
 check_symbol_exists(execlp unistd.h HAVE_EXECLP)
 if(NOT HAVE_EXECLP)
-    message(FATAL_ERROR "Your system doesn't have execlp(3) function")
+    message(FATAL_ERROR "Your system doesn't have execlp() function")
 endif()
 
 # Macros
