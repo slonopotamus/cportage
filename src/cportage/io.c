@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "cportage/io.h"
-#include "cportage/strings.h"
+#include <cportage/io.h>
+#include <cportage/strings.h>
 
 char *
 cp_canonical_path(const char *path, GError **error) {

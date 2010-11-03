@@ -24,7 +24,7 @@
 #ifndef CP_SETTINGS_H
 #define CP_SETTINGS_H
 
-#include <glib.h>
+#include <cportage/repository.h>
 
 /*@-exportany@*/
 
@@ -32,8 +32,21 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
+#define CP_SETTINGS_ERROR cp_settings_error_quark()
+
+GQuark
+cp_settings_error_quark(void);
+
 /**
- * Central storage of cportage configuration.
+ * Errors raised by #CPSettings.
+ */
+typedef enum {
+    /** Required config entry was not found */
+    CP_SETTINGS_ERROR_REQUIRED
+} CPSettingsError;
+
+/**
+ * Central immutable storage of cportage configuration.
  */
 typedef /*@refcounted@*/ struct CPSettings *CPSettings;
 
@@ -87,6 +100,18 @@ cp_settings_get_default(
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
+ * \param error return location for a %GError, or %NULL
+ * \return readonly value of \a key variable
+ *         or %NULL if variable is not set
+ */
+G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
+cp_settings_get_required(
+    const CPSettings self,
+    const char *key,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+
+/**
  * \return readonly value of \a key variable
  *         or %NULL if variable is not set
  */
@@ -97,10 +122,21 @@ cp_settings_get(
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * \return readonly value of \c PORTDIR variable
+ * \return 'main' repository in \a self
  */
-G_CONST_RETURN /*@observer@*/ char *
-cp_settings_get_portdir(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+CPRepository
+cp_settings_get_main_repository(
+    const CPSettings self
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * \return readonly NULL-terminated list of repositories (including main repo)
+ *         in \a self, ordered by their priority, ascending
+ */
+/*@observer@*/ CPRepository *
+cp_settings_get_repositories(
+    const CPSettings self
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * \return readonly canonical path to profile directory

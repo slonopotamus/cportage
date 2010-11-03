@@ -41,6 +41,7 @@ cp_eapi_error_quark(void);
  * TODO: documentation.
  */
 typedef enum {
+    /* Unsupported EAPI version was encountered. */
     CP_EAPI_ERROR_UNSUPPORTED
 } CPEAPIError;
 

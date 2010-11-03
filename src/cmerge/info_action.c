@@ -20,18 +20,16 @@
 #include <string.h>
 #include <sys/utsname.h>
 
-#include "cportage/atom.h"
-#include "cportage/io.h"
-#include "cportage/settings.h"
-#include "cportage/strings.h"
+#include <cportage/atom.h>
+#include <cportage/io.h>
+#include <cportage/settings.h>
+#include <cportage/strings.h>
 
 #include "config.h"
 #include "actions.h"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-relative_path(const char *base, const char *path)
-    /*@modifies errno@*/
-{
+relative_path(const char *base, const char *path) /*@modifies errno@*/ {
     /*
       TODO: try using g_file_get_relative_path instead of all this stuff.
       Otherwise, check if it works correctly (preferrably with a testcase) for
@@ -60,11 +58,11 @@ relative_path(const char *base, const char *path)
 }
 
 static void
-print_version(const CPSettings settings, const struct utsname *utsname)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    const char *portdir = cp_settings_get_portdir(settings);
+print_version(
+    const CPSettings settings,
+    const struct utsname *utsname,
+    const char *portdir
+) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cp_settings_get_profile(settings);
     char *profile_str = relative_path(profiles_dir, profile);
@@ -81,11 +79,9 @@ print_version(const CPSettings settings, const struct utsname *utsname)
 }
 
 static void
-print_porttree_timestamp(const CPSettings settings)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    const char *portdir = cp_settings_get_portdir(settings);
+print_porttree_timestamp(
+    const char *portdir
+) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     GError *error = NULL;
     char **data = cp_read_lines(path, FALSE, &error);
@@ -100,14 +96,10 @@ print_porttree_timestamp(const CPSettings settings)
 }
 
 static void
-print_packages(const CPSettings settings)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    char *path = g_build_filename(
-        cp_settings_get_portdir(settings),
-        "profiles", "info_pkgs", NULL
-    );
+print_packages(
+    const char *portdir
+) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+    char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
     char **data = cp_read_lines(path, TRUE, NULL);
 
     if (data != NULL) {
@@ -131,14 +123,11 @@ print_packages(const CPSettings settings)
 }
 
 static void
-print_settings(const CPSettings settings)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    char *path = g_build_filename(
-        cp_settings_get_portdir(settings),
-        "profiles", "info_vars", NULL
-    );
+print_settings(
+    const CPSettings settings,
+    const char *portdir
+) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+    char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cp_read_lines(path, TRUE, NULL);
 
     if (data != NULL) {
@@ -175,6 +164,7 @@ cmerge_info_action(const GlobalOptions opts, GError **error) {
     const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
     /* TODO: read system name from /etc/gentoo-release */
     const char *sys_version = "gentoo-1.12.11.1";
+    const char *portdir;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -188,14 +178,16 @@ cmerge_info_action(const GlobalOptions opts, GError **error) {
         g_assert(rc == 0);
     }
 
-    print_version(settings, &utsname);
+    portdir = cp_repository_get_path(cp_settings_get_main_repository(settings));
+
+    print_version(settings, &utsname, portdir);
     g_print("===============================================================\n");
     g_print("System uname: ");
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
-    print_porttree_timestamp(settings);
-    print_packages(settings);
-    print_settings(settings);
+    print_porttree_timestamp(portdir);
+    print_packages(portdir);
+    print_settings(settings, portdir);
 
 ERR:
     cp_settings_unref(settings);

@@ -17,11 +17,11 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cportage/eapi.h"
-#include "cportage/io.h"
-#include "cportage/settings.h"
-#include "cportage/shellconfig.h"
-#include "cportage/strings.h"
+#include <cportage/eapi.h>
+#include <cportage/io.h>
+#include <cportage/settings.h>
+#include <cportage/shellconfig.h>
+#include <cportage/strings.h>
 
 struct CPSettings {
     /*@only@*/ char *config_root;
@@ -30,6 +30,15 @@ struct CPSettings {
 
     /*@only@*/ GHashTable/*<char *,char *>*/ *config;
     /*@only@*/ char **features;
+
+    CPRepository main_repo;
+    CPRepository* repos;
+
+    /*@refs@*/ int refs;
+};
+
+struct CPRepository {
+    /*@only@*/ char *path;
 
     /*@refs@*/ int refs;
 };
@@ -235,6 +244,58 @@ cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
         g_strjoinv(" ", self->features));
 }
 
+/** TODO: documentation */
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+cp_settings_init_main_repo(CPSettings self, GError **error) {
+    const char *portdir;
+    char *canonical;
+
+    g_assert(error == NULL || *error == NULL);
+
+    portdir = cp_settings_get_required(self, "PORTDIR", error);
+    if (portdir == NULL) {
+        return FALSE;
+    }
+
+    canonical = cp_canonical_path(portdir, error);
+    if (canonical == NULL) {
+        return FALSE;
+    }
+
+    self->main_repo = g_new0(struct CPRepository, 1);
+    self->main_repo->refs = 1;
+    self->main_repo->path = canonical;
+
+    g_hash_table_insert(self->config, g_strdup("PORTDIR"), g_strdup(canonical));
+
+    return TRUE;
+}
+
+static void
+cp_settings_init_repos(const CPSettings self, /*@null@*/ GError **error) {
+    int i = 0;
+    GString *overlays;
+
+    g_assert(error == NULL || *error == NULL);
+
+    self->repos = g_new0(CPRepository, 2);
+    self->repos[0] = self->main_repo;
+
+    overlays = g_string_new("");
+    CP_REPOSITORY_ITER(self->repos, repo)
+        if (repo != self->main_repo) {
+            g_string_append_printf(overlays,
+                "%s%s", i++ > 0 ? " " : "", repo->path);
+        }
+    end_CP_REPOSITORY_ITER
+
+    g_hash_table_insert(self->config,
+        g_strdup("PORTDIR_OVERLAY"),
+        overlays->str
+    );
+    g_string_free(overlays, FALSE);
+}
+
 CPSettings
 cp_settings_new(
     const char *config_root,
@@ -244,10 +305,10 @@ cp_settings_new(
     CPSettings self;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(g_utf8_validate(config_root, -1, NULL));
 
     self = g_new0(struct CPSettings, 1);
 
+    /* init basic things */
     self->refs = 1;
     self->config_root = cp_canonical_path(config_root, error);
     if (self->config_root == NULL) {
@@ -291,18 +352,15 @@ cp_settings_new(
         g_strdup(self->target_root)
     );
 
+    /* init repositories */
+    if (!cp_settings_init_main_repo(self, error)) {
+        goto ERR;
+    }
+    cp_settings_init_repos(self, error);
+
     /* init misc stuff */
     cp_settings_init_cbuild(self);
     cp_settings_init_features(self);
-
-    /* init self->porttree */
-    /*self->porttree = cp_porttree_new(self, error);
-    if (self->porttree == NULL) {
-        goto ERR;
-    }
-    g_hash_table_insert(self->config,
-        g_strdup("PORTTREE"),
-        g_strdup(self->config_root)); */
 
     return self;
 
@@ -334,10 +392,54 @@ cp_settings_unref(CPSettings self) {
         }
         g_strfreev(self->features);
 
+        CP_REPOSITORY_ITER(self->repos, repo)
+            g_free(repo->path);
+            g_free(repo);
+        end_CP_REPOSITORY_ITER
+        g_free(self->repos);
+
         /*@-refcounttrans@*/
         g_free(self);
         /*@=refcounttrans@*/
     }
+}
+
+CPRepository
+cp_repository_ref(CPRepository self) {
+    ++self->refs;
+    return self;
+}
+
+void
+cp_repository_unref(CPRepository self) {
+    if (self == NULL) {
+        /*@-mustfreeonly@*/
+        return;
+        /*@=mustfreeonly@*/
+    }
+    g_assert(self->refs > 0);
+    if (--self->refs == 0) {
+        g_free(self->path);
+
+        /*@-refcounttrans@*/
+        g_free(self);
+        /*@=refcounttrans@*/
+    }
+}
+
+CPRepository
+cp_settings_get_main_repository(const CPSettings self) {
+    return self->main_repo;
+}
+
+CPRepository*
+cp_settings_get_repositories(const CPSettings self) {
+    return self->repos;
+}
+
+G_CONST_RETURN char *
+cp_repository_get_path(const CPRepository self) {
+    return self->path;
 }
 
 G_CONST_RETURN char *
@@ -356,8 +458,25 @@ cp_settings_get(const CPSettings self, const char *key) {
 }
 
 G_CONST_RETURN char *
-cp_settings_get_portdir(const CPSettings self) {
-    return cp_settings_get_default(self, "PORTDIR", "/usr/portage");
+cp_settings_get_required(
+    const CPSettings self,
+    const char *key,
+    GError **error
+) {
+    const char *result;
+
+    g_assert(error == NULL || *error == NULL);
+
+    result = cp_settings_get(self, key);
+    if (result == NULL) {
+        g_set_error(error,
+            CP_SETTINGS_ERROR,
+            CP_SETTINGS_ERROR_REQUIRED,
+            _("Required config variable %s not found"),
+            key
+        );
+    }
+    return result;
 }
 
 G_CONST_RETURN char *
@@ -375,4 +494,9 @@ cp_settings_has_feature_enabled(const CPSettings self, const char *feature) {
     } end_CP_STRV_ITER
 
     return FALSE;
+}
+
+GQuark
+cp_settings_error_quark(void) {
+  return g_quark_from_static_string("cp-settings-error-quark");
 }

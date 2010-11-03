@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cportage/atom.h"
+#include <cportage/atom.h>
 
 typedef enum OP_TYPE {
     OP_NONE,

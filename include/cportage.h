@@ -25,6 +25,7 @@
 #include <cportage/atom.h>
 #include <cportage/eapi.h>
 #include <cportage/io.h>
+#include <cportage/repository.h>
 #include <cportage/settings.h>
 #include <cportage/shellconfig.h>
 #include <cportage/strings.h>
