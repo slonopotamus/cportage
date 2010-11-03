@@ -70,7 +70,7 @@ cp_repository_unref(
 /**
  * \return readonly canonical path to \a self directory
  */
-G_CONST_RETURN /*@observer@*/ char *
+/*@observer@*/ const char *
 cp_repository_get_path(
     const CPRepository self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;

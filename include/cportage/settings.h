@@ -92,7 +92,7 @@ cp_settings_unref(
  * \return readonly value of \a key variable
  *         or \a fallback if variable is not set
  */
-G_CONST_RETURN /*@observer@*/ char *
+/*@observer@*/ const char *
 cp_settings_get_default(
     const CPSettings self,
     const char *key,
@@ -104,7 +104,7 @@ cp_settings_get_default(
  * \return readonly value of \a key variable
  *         or %NULL if variable is not set
  */
-G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
+/*@null@*/ /*@observer@*/ const char *
 cp_settings_get_required(
     const CPSettings self,
     const char *key,
@@ -115,7 +115,7 @@ cp_settings_get_required(
  * \return readonly value of \a key variable
  *         or %NULL if variable is not set
  */
-G_CONST_RETURN /*@null@*/ /*@observer@*/ char *
+/*@null@*/ /*@observer@*/ const char *
 cp_settings_get(
     const CPSettings self,
     const char *key
@@ -141,7 +141,7 @@ cp_settings_get_repositories(
 /**
  * \return readonly canonical path to profile directory
  */
-G_CONST_RETURN /*@observer@*/ char *
+/*@observer@*/ const char *
 cp_settings_get_profile(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**

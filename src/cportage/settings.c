@@ -437,12 +437,12 @@ cp_settings_get_repositories(const CPSettings self) {
     return self->repos;
 }
 
-G_CONST_RETURN char *
+const char *
 cp_repository_get_path(const CPRepository self) {
     return self->path;
 }
 
-G_CONST_RETURN char *
+const char *
 cp_settings_get_default(
     const CPSettings self,
     const char *key,
@@ -452,12 +452,12 @@ cp_settings_get_default(
     return result == NULL ? fallback : result;
 }
 
-G_CONST_RETURN char *
+const char *
 cp_settings_get(const CPSettings self, const char *key) {
     return g_hash_table_lookup(self->config, key);
 }
 
-G_CONST_RETURN char *
+const char *
 cp_settings_get_required(
     const CPSettings self,
     const char *key,
@@ -479,7 +479,7 @@ cp_settings_get_required(
     return result;
 }
 
-G_CONST_RETURN char *
+const char *
 cp_settings_get_profile(const CPSettings self) {
     return self->profile;
 }
