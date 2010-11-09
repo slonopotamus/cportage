@@ -24,7 +24,7 @@
 #ifndef CP_REPOSITORY_H
 #define CP_REPOSITORY_H
 
-#include <glib.h>
+#include <cportage/macros.h>
 
 /*@-exportany@*/
 
@@ -34,11 +34,8 @@ G_BEGIN_DECLS
 
 /*@iter CP_REPOSITORY_ITER(sef CPRepository *arr, yield CPRepository elem)@*/
 
-#define CP_REPOSITORY_ITER(arr, m_elem) { \
-    CPRepository *m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        CPRepository m_elem = *m_iter;
-#define end_CP_REPOSITORY_ITER }}
+#define CP_REPOSITORY_ITER(arr, m_elem) CP_ITER(CPRepository, arr, m_elem)
+#define end_CP_REPOSITORY_ITER end_CP_ITER
 
 /**
  * A structure describing single repository.

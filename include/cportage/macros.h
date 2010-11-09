@@ -17,20 +17,30 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CPORTAGE_H
-#define CPORTAGE_H
+#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
+#error "Only <cportage.h> can be included directly."
+#endif
 
-#define CPORTAGE_H_INSIDE
+/** Utility macros. */
 
-#include <cportage/atom.h>
-#include <cportage/eapi.h>
-#include <cportage/io.h>
-#include <cportage/macros.h>
-#include <cportage/repository.h>
-#include <cportage/settings.h>
-#include <cportage/shellconfig.h>
-#include <cportage/strings.h>
+#ifndef CP_MACROS_H
+#define CP_MACROS_H
 
-#undef CPORTAGE_H_INSIDE
+#include <glib.h>
+
+/*@-exportany@*/
+
+G_BEGIN_DECLS
+
+#define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+
+#define CP_ITER(type, arr, m_elem) { \
+    type *m_iter = (arr); \
+    g_assert(m_iter != NULL); \
+    while (*m_iter != NULL) { \
+        type m_elem = *m_iter++;
+#define end_CP_ITER }}
+
+G_END_DECLS
 
 #endif

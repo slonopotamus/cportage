@@ -26,7 +26,7 @@
 #ifndef CP_STRINGS_H
 #define CP_STRINGS_H
 
-#include <glib.h>
+#include <cportage/macros.h>
 
 /*@-exportany@*/
 
@@ -34,15 +34,10 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-#define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
-
 /*@iter CP_STRV_ITER(sef char **arr, yield char *elem)@*/
 
-#define CP_STRV_ITER(arr, m_elem) { \
-    char **m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        char *m_elem = *m_iter;
-#define end_CP_STRV_ITER }}
+#define CP_STRV_ITER(arr, m_elem) CP_ITER(char *, arr, m_elem)
+#define end_CP_STRV_ITER end_CP_ITER
 
 /**
  * Splits given string at whitespace. Empty elements are filtered out.
