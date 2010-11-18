@@ -32,13 +32,14 @@
 #define DEFAULT_TARGET_ROOT "/"
 
 /*@unchecked@*/ static struct actions {
-    int clean;
-    int depclean;
-    int info;
-    int install;
-    int search;
-    int version;
-    int help;
+    gboolean clean;
+    gboolean depclean;
+    gboolean info;
+    gboolean install;
+    gboolean search;
+    gboolean sync;
+    gboolean version;
+    gboolean help;
 } actions;
 
 /*@unchecked@*/ static struct GlobalOptions
@@ -93,6 +94,7 @@ options[] = {
     {"info", '\0', 0, G_OPTION_ARG_NONE, &actions.info, NULL, NULL},
     {"install", '\0', 0, G_OPTION_ARG_NONE, &actions.install, NULL, NULL},
     {"search", 's', 0, G_OPTION_ARG_NONE, &actions.search, NULL, NULL},
+    {"sync", '\0', 0, G_OPTION_ARG_NONE, &actions.sync, NULL, NULL},
     {"unmerge", 'C', 0, G_OPTION_ARG_NONE, &actions.clean, NULL, NULL},
     {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version, NULL, NULL},
 
@@ -131,6 +133,7 @@ main(
             + actions.info
             + actions.install
             + actions.search
+            + actions.sync
             + actions.version;
 
         /*
@@ -148,19 +151,22 @@ main(
         } else if (actions_sum > 1) {
             /* TODO: set error */
             g_error("Only one action can be given\n");
-        } else if (actions.clean > 0) {
+        } else if (actions.clean) {
             cmerge_clean_action(&mopts, FALSE, &error);
-        } else if (actions.depclean > 0) {
+        } else if (actions.depclean) {
             cmerge_clean_action(&mopts, TRUE, &error);
-        } else if (actions.help > 0){
+        } else if (actions.help){
+            /* TODO: set error */
             execlp("man", "man", "cmerge", NULL);
-        } else if (actions.info > 0) {
+        } else if (actions.info) {
             cmerge_info_action(&gopts, &error);
-        } else if (actions.install > 0) {
+        } else if (actions.install) {
            cmerge_install_action(&mopts, &error);
-        } else if (actions.search > 0) {
+        } else if (actions.search) {
             cmerge_search_action(&gopts, &error);
-        } else if (actions.version > 0) {
+        } else if (actions.sync) {
+            cmerge_sync_action(&gopts, &error);
+        } else if (actions.version) {
             print_version();
         } else {
             /* TODO: set error */
@@ -172,7 +178,7 @@ main(
     if (error == NULL) {
         return EXIT_SUCCESS;
     } else {
-      g_print("%s\n", error->message);
+      g_print("%s: %s\n", argv[0], error->message);
       g_error_free(error);
       return EXIT_FAILURE;
     }

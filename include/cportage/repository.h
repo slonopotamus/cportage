@@ -42,6 +42,12 @@ G_BEGIN_DECLS
  */
 typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 
+/** TODO: documentation */
+/*@newref@*/ CPRepository
+cp_repository_new(
+    const char *path
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+
 /**
  * Increases reference count of \a self by 1.
  *
@@ -71,6 +77,13 @@ cp_repository_unref(
 cp_repository_get_path(
     const CPRepository self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/** TODO: documentation */
+gboolean
+cp_repository_sync(
+    const CPRepository self,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 #pragma GCC visibility pop
 

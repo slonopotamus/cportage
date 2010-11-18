@@ -262,11 +262,9 @@ cp_settings_init_main_repo(CPSettings self, GError **error) {
         return FALSE;
     }
 
-    self->main_repo = g_new0(struct CPRepository, 1);
-    self->main_repo->refs = 1;
-    self->main_repo->path = canonical;
+    self->main_repo = cp_repository_new(canonical);
 
-    g_hash_table_insert(self->config, g_strdup("PORTDIR"), g_strdup(canonical));
+    g_hash_table_insert(self->config, g_strdup("PORTDIR"), canonical);
 
     return TRUE;
 }
@@ -279,7 +277,7 @@ cp_settings_init_repos(const CPSettings self, /*@null@*/ GError **error) {
     g_assert(error == NULL || *error == NULL);
 
     self->repos = g_new0(CPRepository, 2);
-    self->repos[0] = self->main_repo;
+    self->repos[0] = cp_repository_ref(self->main_repo);
 
     overlays = g_string_new("");
     CP_REPOSITORY_ITER(self->repos, repo)
@@ -391,35 +389,13 @@ cp_settings_unref(CPSettings self) {
             g_hash_table_destroy(self->config);
         }
         g_strfreev(self->features);
-
-        CP_REPOSITORY_ITER(self->repos, repo)
-            g_free(repo->path);
-            g_free(repo);
-        end_CP_REPOSITORY_ITER
+        cp_repository_unref(self->main_repo);
+        if (self->repos != NULL) {
+            CP_REPOSITORY_ITER(self->repos, repo)
+                cp_repository_unref(repo);
+            end_CP_REPOSITORY_ITER
+        }
         g_free(self->repos);
-
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
-    }
-}
-
-CPRepository
-cp_repository_ref(CPRepository self) {
-    ++self->refs;
-    return self;
-}
-
-void
-cp_repository_unref(CPRepository self) {
-    if (self == NULL) {
-        /*@-mustfreeonly@*/
-        return;
-        /*@=mustfreeonly@*/
-    }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->path);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -435,11 +411,6 @@ cp_settings_get_main_repository(const CPSettings self) {
 CPRepository*
 cp_settings_get_repositories(const CPSettings self) {
     return self->repos;
-}
-
-const char *
-cp_repository_get_path(const CPRepository self) {
-    return self->path;
 }
 
 const char *

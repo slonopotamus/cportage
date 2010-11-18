@@ -19,7 +19,7 @@ set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -pedantic -ansi -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
-    -fdiagnostics-show-option -ffast-math -O -Wabi -Wfatal-errors
+    -fdiagnostics-show-option -ffast-math -O -Wabi
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
     -fstrict-overflow -Wstrict-overflow=5 -Wfloat-equal -Wsync-nand

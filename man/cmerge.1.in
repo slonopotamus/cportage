@@ -1,25 +1,25 @@
 .TH cmerge 1 "" "cportage @CP_VERSION@" cportage
 .SH "NAME"
-cmerge - \fBemerge\fR(1) compatible commandline package manager
+cmerge - \fBemerge\fR(1) compatible command-line package manager
 .SH "SYNOPSIS"
 .TP
 .BR cmerge
-[\fIglobal options...\fR] \fIaction\fR ...
+[\fIglobal options\fR...] \fIaction\fR ...
 .TP
 .BR cmerge
-\fB--help\fR | \fB--info\fR | \fB--version\fR
+\fB--help\fR | \fB--info\fR | \fB--sync\fR | \fB--version\fR
 .TP
 .BR cmerge
-[\fB--install\fR] [merge options] [--] <atom>
+\fB--depclean\fR | \fB-c\fR [\fImerge options\fR...] [--] \fIatom\fR
 .TP
 .BR cmerge
-\fB--depclean\fR | \fB-c\fR [merge options] [--] <atom>
+[\fB--install\fR] [\fImerge options\fR...] [--] \fIatom\fR
 .TP
 .BR cmerge
-\fB--unmerge\fR | \fB\-C\fR [merge options] [--] <atom>
+\fB--search\fR | \fB-s\fR [--] \fItext\fR
 .TP
 .BR cmerge
-\fB--search\fR | \fB-s\fR [--] <something>
+\fB--unmerge\fR | \fB\-C\fR [\fImerge options\fR...] [--] \fIatom\fR
 .SH "DESCRIPTION"
 Command-line frontend to \fBcportage\fR(3)
 .SH "ACTIONS"
@@ -27,22 +27,31 @@ Command-line frontend to \fBcportage\fR(3)
 .BR "No action"
 No action is treated as \fB--install\fR
 .TP
-.BR "--help"
+.BR "\fB--help\fR | \fB-h\fR"
 Show this manpage
 .TP
 .BR "--info"
 Produce a list of information to include in bug reports
 .TP
+.BR "--sync"
+Update repositories from remote locations
+.TP
 .BR "--version"
 Output cportage version
 .SH "GLOBAL OPTIONS"
+.TP
+.BR "\fB--config-root\fR=\fIpath\fR"
+Set configuration files rot directory. "/" by default.
+.TP
+.BR "\fB--target-root\fR=\fIpath\fR"
+TODO: documentation. "/" by default.
 .TP
 .BR "\fB--verbose\fR | \fB-v\fR | \fB--quiet\fR | \fB-q\fR"
 Controls output verbosity
 .SH "MERGE OPTIONS"
 .TP
 .BR "\fB--pretend\fR | \fB-p\fR"
-Instead of actually performing any action, only display what would be done
+Instead of actually performing merge action, only display what would be done
 .SH "ENVIRONMENT OPTIONS"
 See \fBcportage\fR(3)
 .SH "AUTHORS"
