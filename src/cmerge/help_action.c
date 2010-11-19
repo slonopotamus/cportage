@@ -17,9 +17,17 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <unistd.h>
+
 #include "actions.h"
 
 void
-cmerge_search_action(/*@unused@*/ const GlobalOptions options G_GNUC_UNUSED, GError **error) {
+cmerge_help_action(
+    CPSettings settings G_GNUC_UNUSED,
+    const CMergeOptions options G_GNUC_UNUSED,
+    GError **error
+) {
     g_assert(error == NULL || *error == NULL);
+    /* TODO: handle errors */
+    execlp("man", "man", "cmerge", NULL);
 }

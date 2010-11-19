@@ -17,27 +17,19 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/settings.h>
-
 #include "actions.h"
 
 void
-cmerge_sync_action(const GlobalOptions opts, GError **error) {
-    CPSettings settings;
-
+cmerge_sync_action(
+    CPSettings settings,
+    const CMergeOptions options G_GNUC_UNUSED,
+    GError **error
+) {
     g_assert(error == NULL || *error == NULL);
-
-    settings = cp_settings_new(opts->config_root, opts->target_root, error);
-    if (settings == NULL) {
-        goto ERR;
-    }
 
     CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo)
         if (!cp_repository_sync(repo, error)) {
-            goto ERR;
+            return;
         }
     end_CP_REPOSITORY_ITER
-
-ERR:
-    cp_settings_unref(settings);
 }

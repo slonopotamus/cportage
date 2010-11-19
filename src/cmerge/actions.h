@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include <cportage/settings.h>
+
 /*@-exportany@*/
 
 typedef enum {
@@ -31,50 +33,53 @@ typedef enum {
 } VerbosityLevel;
 
 /* Global options */
-typedef struct GlobalOptions {
-    /*@observer@*/ const char *config_root;
-    /*@observer@*/ const char *target_root;
+typedef struct CMergeOptions {
     /* Leftover args */
     /*@null@*/ char * const *args;
     VerbosityLevel verbosity;
-} *GlobalOptions;
-
-/* Merge/unmerge options */
-typedef struct MergeOptions {
-    /*@observer@*/ GlobalOptions global;
     gboolean pretend;
     gboolean update;
-} *MergeOptions;
+} *CMergeOptions;
+
+typedef void (*CMergeAction) (
+    CPSettings settings,
+    const CMergeOptions options,
+    /*@null@*/ GError **error
+);
 
 void
-cmerge_clean_action(
-    const MergeOptions options,
-    gboolean with_deps,
+cmerge_help_action(
+    CPSettings settings,
+    const CMergeOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error@*/;
+);
 
 void
 cmerge_info_action(
-    const GlobalOptions options,
+    CPSettings settings,
+    const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout,*error@*/;
 
 void
 cmerge_install_action(
-    const MergeOptions options,
+    CPSettings settings,
+    const CMergeOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error@*/;
-
-void
-cmerge_search_action(
-    const GlobalOptions options,
-    /*@null@*/ GError **error
-) /*@modifies *error@*/;
+);
 
 void
 cmerge_sync_action(
-    const GlobalOptions options,
+    CPSettings settings,
+    const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies *error@*/;
+
+void
+cmerge_version_action(
+    CPSettings settings,
+    const CMergeOptions options,
+    /*@null@*/ GError **error
+);
 
 #endif

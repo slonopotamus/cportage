@@ -20,6 +20,10 @@
 #include "actions.h"
 
 void
-cmerge_install_action(/*@unused@*/ const MergeOptions options G_GNUC_UNUSED, GError **error) {
+cmerge_install_action(
+    CPSettings settings G_GNUC_UNUSED,
+    const CMergeOptions options G_GNUC_UNUSED,
+    GError **error
+) {
     g_assert(error == NULL || *error == NULL);
 }

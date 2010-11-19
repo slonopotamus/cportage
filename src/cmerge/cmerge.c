@@ -19,68 +19,41 @@
 
 #include <locale.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#include "config.h"
 #include "actions.h"
 
-#define OPTIONS_TABLEEND \
-    /*@-nullassign@*/ /*@-type@*/ \
-    {NULL, '\0', 0, 0, NULL, NULL, NULL} \
-    /*@=type@*/ /*@=nullassign@*/
-#define DEFAULT_CONFIG_ROOT "/"
-#define DEFAULT_TARGET_ROOT "/"
+static gboolean
+action_cb(const char *option_name, const char *value, void *data, GError **error);
 
-/*@unchecked@*/ static struct actions {
-    gboolean clean;
-    gboolean depclean;
-    gboolean info;
-    gboolean install;
-    gboolean search;
-    gboolean sync;
-    gboolean version;
-    gboolean help;
-} actions;
+typedef struct ActionDesc {
+    CMergeAction func;
+} ActionDesc;
 
-/*@unchecked@*/ static struct GlobalOptions
-gopts = {
-    DEFAULT_CONFIG_ROOT, DEFAULT_TARGET_ROOT, NULL, VERBOSITY_NORMAL
+static ActionDesc actions[] = {
+    { cmerge_help_action },
+    { cmerge_info_action },
+    { cmerge_install_action },
+    { cmerge_sync_action },
+    { cmerge_version_action },
 };
 
-/*@unchecked@*/ static struct MergeOptions mopts = { &gopts, FALSE, FALSE };
+static ActionDesc *action = NULL;
+static const char *config_root = "/";
+static const char *target_root = "/";
 
-static void
-print_version(void)
-    /*@globals stdout@*/
-    /*@modifies fileSystem,errno,*stdout@*/
-{
-    g_print("cportage " CP_VERSION "\n\n");
-    g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
-         "License GPLv3+: GNU GPL version 3 or later"
-             " <http://gnu.org/licenses/gpl.html>\n"
-         "This is free software: you are free to change and redistribute it.\n"
-         "There is NO WARRANTY, to the extent permitted by law.\n");
-}
+/*@unchecked@*/ static struct CMergeOptions
+opts = { NULL, VERBOSITY_NORMAL, FALSE, FALSE };
 
 static gboolean
-verbose_cb(
-    /*@unused@*/ const char *option_name G_GNUC_UNUSED,
+verbosity_cb(
+    const char *option_name,
     /*@unused@*/ const char *value G_GNUC_UNUSED,
     /*@unused@*/ void *data G_GNUC_UNUSED,
     /*@unused@*/ GError **error G_GNUC_UNUSED
-) /*@modifies gopts@*/ {
-    gopts.verbosity = VERBOSITY_VERBOSE;
-    return TRUE;
-}
-
-static gboolean
-quiet_cb(
-    /*@unused@*/ const char *option_name G_GNUC_UNUSED,
-    /*@unused@*/ const char *value G_GNUC_UNUSED,
-    /*@unused@*/ void *data G_GNUC_UNUSED,
-    /*@unused@*/ GError **error G_GNUC_UNUSED
-) /*@modifies gopts@*/ {
-    gopts.verbosity = VERBOSITY_QUIET;
+) /*@modifies opts@*/ {
+    const gboolean verbose = g_strcmp0(option_name, "--verbose") == 0
+        || g_strcmp0(option_name, "-v");
+    opts.verbosity= verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
     return TRUE;
 }
 
@@ -89,36 +62,69 @@ quiet_cb(
 options[] = {
 
     /* Actions */
-    {"depclean", 'c', 0, G_OPTION_ARG_NONE, &actions.depclean, NULL, NULL},
-    {"help", 'h', 0, G_OPTION_ARG_NONE, &actions.help, NULL, NULL},
-    {"info", '\0', 0, G_OPTION_ARG_NONE, &actions.info, NULL, NULL},
-    {"install", '\0', 0, G_OPTION_ARG_NONE, &actions.install, NULL, NULL},
-    {"search", 's', 0, G_OPTION_ARG_NONE, &actions.search, NULL, NULL},
-    {"sync", '\0', 0, G_OPTION_ARG_NONE, &actions.sync, NULL, NULL},
-    {"unmerge", 'C', 0, G_OPTION_ARG_NONE, &actions.clean, NULL, NULL},
-    {"version", 'V', 0, G_OPTION_ARG_NONE, &actions.version, NULL, NULL},
+    {"help", 'h', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
+    {"info", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
+    {"install", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
+    {"sync", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
+    {"version", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
 
     /* Global options */
-    {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &gopts.args, NULL, NULL},
-    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &gopts.config_root, NULL, NULL},
+    {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &opts.args, NULL, NULL},
+    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &config_root, NULL, NULL},
+    {"target-root", '\0', 0, G_OPTION_ARG_STRING, &target_root, NULL, NULL},
     /*@-type@*/
-    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbose_cb, NULL, NULL},
-    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, quiet_cb, NULL, NULL},
+    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbosity_cb, NULL, NULL},
+    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbosity_cb, NULL, NULL},
 
     /* Merge options */
-    {"pretend", 'p', 0, G_OPTION_ARG_NONE, &mopts.pretend, NULL, NULL},
-    {"update", 'u', 0, G_OPTION_ARG_NONE, &mopts.update, NULL, NULL},
+    {"pretend", 'p', 0, G_OPTION_ARG_NONE, &opts.pretend, NULL, NULL},
+    {"update", 'u', 0, G_OPTION_ARG_NONE, &opts.update, NULL, NULL},
 
-    OPTIONS_TABLEEND
+    /*@-nullassign@*/ /*@-type@*/
+    {NULL, '\0', 0, 0, NULL, NULL, NULL}
+    /*@=type@*/ /*@=nullassign@*/
 };
 
+static gboolean
+action_cb(
+    const char *option_name,
+    /*@unused@*/ const char *value G_GNUC_UNUSED,
+    /*@unused@*/ void *data G_GNUC_UNUSED,
+    /*@unused@*/ GError **error G_GNUC_UNUSED
+) {
+    size_t i;
+
+    if (action != NULL) {
+        /* TODO: set error. More than one action given. */
+        return FALSE;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(actions); ++i) {
+        const GOptionEntry entry = options[i];
+        char *long_name = g_strdup_printf("--%s", entry.long_name);
+        char *short_name = entry.short_name == '\0'
+            ? NULL
+            : g_strdup_printf("-%c", entry.short_name);
+        if (g_strcmp0(option_name, long_name) == 0
+                || g_strcmp0(option_name, short_name) == 0) {
+            action = &actions[i];
+        }
+        g_free(long_name);
+        g_free(short_name);
+        if (action != NULL) {
+            return TRUE;
+        }
+    }
+
+    /* TODO: set error */
+    return FALSE;
+}
+
 int
-main(
-    int argc,
-    char *argv[]
-) /*@modifies actions,errno,*stdout,internalState,fileSystem,argc,argv@*/ {
+main(int argc, char *argv[]) {
     GOptionContext *ctx;
     GError *error = NULL;
+    CPSettings settings = NULL;
 
     (void)setlocale(LC_ALL, "");
 
@@ -126,60 +132,34 @@ main(
     g_option_context_add_main_entries(ctx, options, NULL);
     g_option_context_set_help_enabled(ctx, FALSE);
 
-    if (g_option_context_parse(ctx, &argc, &argv, &error)) {
-        int actions_sum = actions.clean
-            + actions.depclean
-            + actions.help
-            + actions.info
-            + actions.install
-            + actions.search
-            + actions.sync
-            + actions.version;
-
-        /*
-            Special case for `cmerge foo/bar`.
-            We treat it as if --install was specified.
-         */
-        if (actions_sum == 0 && gopts.args != NULL) {
-            actions_sum = actions.install = 1;
-        }
-
-        if (actions_sum == 0) {
-            char *help = g_option_context_get_help(ctx, FALSE, NULL);
-            g_print("%s", help);
-            g_free(help);
-        } else if (actions_sum > 1) {
-            /* TODO: set error */
-            g_error("Only one action can be given\n");
-        } else if (actions.clean) {
-            cmerge_clean_action(&mopts, FALSE, &error);
-        } else if (actions.depclean) {
-            cmerge_clean_action(&mopts, TRUE, &error);
-        } else if (actions.help){
-            /* TODO: set error */
-            execlp("man", "man", "cmerge", NULL);
-        } else if (actions.info) {
-            cmerge_info_action(&gopts, &error);
-        } else if (actions.install) {
-           cmerge_install_action(&mopts, &error);
-        } else if (actions.search) {
-            cmerge_search_action(&gopts, &error);
-        } else if (actions.sync) {
-            cmerge_sync_action(&gopts, &error);
-        } else if (actions.version) {
-            print_version();
-        } else {
-            /* TODO: set error */
-            g_error("Unknown action");
-        }
+    if (!g_option_context_parse(ctx, &argc, &argv, &error)) {
+        goto ERR;
     }
+
+    /*
+        Special case for `cmerge foo/bar`.
+        We treat it as if --install was specified.
+    */
+    if (action == NULL) {
+        action = &actions[2];
+    }
+
+    settings = cp_settings_new(config_root, target_root, &error);
+    if (settings == NULL) {
+        goto ERR;
+    }
+
+    action->func(settings, &opts, &error);
+
+ERR:
+    cp_settings_unref(settings);
     g_option_context_free(ctx);
 
     if (error == NULL) {
         return EXIT_SUCCESS;
     } else {
-      g_print("%s: %s\n", argv[0], error->message);
-      g_error_free(error);
-      return EXIT_FAILURE;
+        g_print("%s: %s\n", argv[0], error->message);
+        g_error_free(error);
+        return EXIT_FAILURE;
     }
 }

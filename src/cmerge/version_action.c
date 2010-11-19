@@ -18,12 +18,20 @@
 */
 
 #include "actions.h"
+#include "config.h"
 
 void
-cmerge_clean_action(
-    /*@unused@*/ const MergeOptions options G_GNUC_UNUSED,
-    /*@unused@*/ gboolean with_deps G_GNUC_UNUSED,
+cmerge_version_action(
+    CPSettings settings G_GNUC_UNUSED,
+    const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
     g_assert(error == NULL || *error == NULL);
+
+    g_print("cportage " CP_VERSION "\n\n");
+    g_print("Copyright (C) 2009-2010 Marat Radchenko <marat@slonopotamus.org>\n"
+         "License GPLv3+: GNU GPL version 3 or later"
+             " <http://gnu.org/licenses/gpl.html>\n"
+         "This is free software: you are free to change and redistribute it.\n"
+         "There is NO WARRANTY, to the extent permitted by law.\n");
 }

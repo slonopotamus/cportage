@@ -22,11 +22,10 @@
 
 #include <cportage/atom.h>
 #include <cportage/io.h>
-#include <cportage/settings.h>
 #include <cportage/strings.h>
 
-#include "config.h"
 #include "actions.h"
+#include "config.h"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 relative_path(const char *base, const char *path) /*@modifies errno@*/ {
@@ -157,26 +156,23 @@ print_settings(
 }
 
 void
-cmerge_info_action(const GlobalOptions opts, GError **error) {
-    CPSettings settings;
+cmerge_info_action(
+    CPSettings settings,
+    const CMergeOptions opts G_GNUC_UNUSED,
+    GError **error
+) {
     struct utsname utsname;
     /* TODO: read cpu name from /proc/cpuinfo */
     const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
     /* TODO: read system name from /etc/gentoo-release */
     const char *sys_version = "gentoo-1.12.11.1";
     const char *portdir;
+    int rc;
 
     g_assert(error == NULL || *error == NULL);
 
-    settings = cp_settings_new(opts->config_root, opts->target_root, error);
-    if (settings == NULL) {
-        goto ERR;
-    }
-
-    {
-        int rc = uname(&utsname);
-        g_assert(rc == 0);
-    }
+    rc = uname(&utsname);
+    g_assert(rc == 0);
 
     portdir = cp_repository_get_path(cp_settings_get_main_repository(settings));
 
@@ -188,7 +184,4 @@ cmerge_info_action(const GlobalOptions opts, GError **error) {
     print_porttree_timestamp(portdir);
     print_packages(portdir);
     print_settings(settings, portdir);
-
-ERR:
-    cp_settings_unref(settings);
 }
