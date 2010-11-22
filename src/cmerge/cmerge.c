@@ -17,27 +17,28 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "actions.h"
-
-static gboolean
-action_cb(const char *option_name, const char *value, void *data, GError **error);
+#include "config.h"
 
 typedef struct ActionDesc {
     CMergeAction func;
 } ActionDesc;
 
-static ActionDesc actions[] = {
+static const ActionDesc actions[] = {
     { cmerge_help_action },
     { cmerge_info_action },
     { cmerge_install_action },
     { cmerge_sync_action },
     { cmerge_version_action },
 };
+static const ActionDesc *default_action = &actions[2];
 
-static ActionDesc *action = NULL;
+static const ActionDesc *action = NULL;
 static const char *config_root = "/";
 static const char *target_root = "/";
 
@@ -56,6 +57,9 @@ verbosity_cb(
     opts.verbosity= verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
     return TRUE;
 }
+
+static gboolean
+action_cb(const char *option_name, const char *value, void *data, GError **error);
 
 /* Know how to compile this without G_GNUC_EXTENSION? Tell me */
 /*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry
@@ -120,6 +124,27 @@ action_cb(
     return FALSE;
 }
 
+static void
+adjust_niceness(const CPSettings settings) {
+    const char *key = "PORTAGE_NICENESS";
+    const char *value = cp_settings_get(settings, key);
+    int unused;
+
+    if (value == NULL) {
+        return;
+    }
+
+#if HAVE_NICE
+    errno = 0;
+    unused = nice(atoi(value));
+    if (errno) {
+        g_warning("Failed to change nice value to '%s': %s", value, g_strerror(errno));
+    }
+#else
+    g_warning("%s is specified but system doesn't have nice() function", key);
+#endif
+}
+
 int
 main(int argc, char *argv[]) {
     GOptionContext *ctx;
@@ -136,18 +161,16 @@ main(int argc, char *argv[]) {
         goto ERR;
     }
 
-    /*
-        Special case for `cmerge foo/bar`.
-        We treat it as if --install was specified.
-    */
     if (action == NULL) {
-        action = &actions[2];
+        action = default_action;
     }
 
     settings = cp_settings_new(config_root, target_root, &error);
     if (settings == NULL) {
         goto ERR;
     }
+
+    adjust_niceness(settings);
 
     action->func(settings, &opts, &error);
 

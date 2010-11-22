@@ -1,1 +1,2 @@
-#cmakedefine CP_VERSION "${CP_VERSION}"
+#define CP_VERSION "${CP_VERSION}"
+#cmakedefine01 HAVE_NICE

@@ -83,6 +83,8 @@ if(NOT HAVE_EXECLP)
     message(FATAL_ERROR "Your system doesn't have execlp() function")
 endif()
 
+check_symbol_exists(nice unistd.h HAVE_NICE)
+
 # Macros
 macro(set_link_flags _target)
   set_target_properties(${_target} PROPERTIES
