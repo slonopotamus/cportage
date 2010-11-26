@@ -42,6 +42,7 @@
 
 #include "shellparser.h"
 #include "shellscanner.h"
+#include "shellconfig_ctx.h"
 
 #define scanner ctx->yyscanner
 #define YYDEBUG 1
@@ -51,14 +52,6 @@
     g_free(str1); g_free(str2);
 #define DOCONCAT3(str1, str2, str3) g_strconcat(str1, str2, str3, NULL); \
     g_free(str1); g_free(str2); g_free(str3);
-
-typedef struct cp_shellconfig_ctx_t {
-    yyscan_t yyscanner;
-    const char *filename;
-    GHashTable *entries;
-    GError **error;
-    gboolean allow_source;
-} cp_shellconfig_ctx;
 
 %}
 
@@ -136,7 +129,7 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 %token <str> RPAREN RRPAREN RSQUARE SEMIC SLASH SQUOTE TICK TILDE TIMES
 %token <str> UNDERLINE
 
-%token EXPORT SOURCE
+%token EXPORT SOURCE VAR_MAGIC FILE_MAGIC
 
 %type <str> blank value var_ref
 %type <str> fname fname_part vname vname_start vname_end vname_end_part
@@ -148,6 +141,10 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 %%
 
 start:
+    FILE_MAGIC file
+  | VAR_MAGIC dqstr_loop { ctx->expanded = $2; }
+
+file:
     /* empty */
   | stmt_list
 
@@ -374,6 +371,32 @@ cp_shellconfig_error_quark(void) {
   return g_quark_from_static_string("cp-shellconfig-error-quark");
 }
 
+static gboolean
+doparse(
+    cp_shellconfig_ctx *ctx,
+    GHashTable *entries,
+    const char *path,
+    gboolean allow_source,
+    int magic,
+    GError **error
+) {
+    g_assert(error == NULL || *error == NULL);
+
+    ctx->filename = path;
+    ctx->entries = entries;
+    ctx->error = error;
+    ctx->allow_source = allow_source;
+    ctx->magic = magic;
+    cp_shellconfig_set_extra(ctx, ctx->yyscanner);
+
+    if (cp_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"))) {
+        cp_shellconfig_debug = 1;
+        cp_shellconfig_set_debug(1, ctx->yyscanner);
+    }
+
+    return cp_shellconfig_parse(ctx) == 0;
+}
+
 gboolean
 cp_read_shellconfig(
     GHashTable *into,
@@ -398,24 +421,31 @@ cp_read_shellconfig(
         return FALSE;
     }
 
-    ctx.filename = path;
-    ctx.entries = into;
-    ctx.error = error;
-    ctx.allow_source = allow_source;
-
     cp_shellconfig_lex_init(&ctx.yyscanner);
-    cp_shellconfig_set_extra(&ctx, ctx.yyscanner);
     cp_shellconfig_set_in(f, ctx.yyscanner);
-
-    if (cp_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"))) {
-        cp_shellconfig_debug = 1;
-        cp_shellconfig_set_debug(1, ctx.yyscanner);
-    }
-
-    retval = cp_shellconfig_parse(&ctx) == 0;
-
+    retval = doparse(&ctx, into, path, allow_source, FILE_MAGIC, error);
     cp_shellconfig_lex_destroy(ctx.yyscanner);
     fclose(f);
 
     return retval;
+}
+
+char *
+cp_varexpand(const char *str, GHashTable *vars G_GNUC_UNUSED, GError **error) {
+    cp_shellconfig_ctx ctx;
+    gboolean retval;
+    YY_BUFFER_STATE bp;
+
+    g_assert(error == NULL || *error == NULL);
+
+    ctx.expanded = NULL;
+
+    cp_shellconfig_lex_init(&ctx.yyscanner);
+    bp = cp_shellconfig__scan_string(str, ctx.yyscanner);
+    cp_shellconfig__switch_to_buffer(bp, ctx.yyscanner);
+    retval = doparse(&ctx, vars, str, FALSE, VAR_MAGIC, error);
+    cp_shellconfig__delete_buffer(bp, ctx.yyscanner);
+    cp_shellconfig_lex_destroy(ctx.yyscanner);
+
+    return ctx.expanded;
 }

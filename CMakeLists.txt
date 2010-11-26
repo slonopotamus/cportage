@@ -78,12 +78,23 @@ if(NOT HAVE_QSORT)
     message(FATAL_ERROR "Your system doesn't have qsort() function")
 endif()
 
-check_symbol_exists(execlp unistd.h HAVE_EXECLP)
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    check_symbol_exists(nice unistd.h HAVE_NICE)
+    check_symbol_exists(getpid unistd.h HAVE_GETPID)
+    check_symbol_exists(read unistd.h HAVE_READ)
+    check_symbol_exists(execlp unistd.h HAVE_EXECLP)
+endif()
+
 if(NOT HAVE_EXECLP)
     message(FATAL_ERROR "Your system doesn't have execlp() function")
 endif()
 
-check_symbol_exists(nice unistd.h HAVE_NICE)
+check_include_file(sys/resource.h HAVE_RESOURCE_H)
+if(HAVE_RESOURCE_H)
+    check_symbol_exists(getpriority sys/resource.h HAVE_GETPRIORITY)
+    check_symbol_exists(setpriority sys/resource.h HAVE_SETPRIORITY)
+endif()
 
 # Macros
 macro(set_link_flags _target)

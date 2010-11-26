@@ -17,18 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <unistd.h>
+#include <glib.h>
 
-#include "actions.h"
-
-void
-cmerge_help_action(
-    CPSettings settings G_GNUC_UNUSED,
-    const CMergeOptions options G_GNUC_UNUSED,
-    GError **error
-) {
-    g_assert(error == NULL || *error == NULL);
-    /* TODO: use glib function instead */
-    /* TODO: handle errors */
-    execlp("man", "man", "cmerge", NULL);
-}
+typedef struct cp_shellconfig_ctx_t {
+    yyscan_t yyscanner;
+    const char *filename;
+    GHashTable *entries;
+    char *expanded;
+    GError **error;
+    int magic;
+    gboolean allow_source;
+} cp_shellconfig_ctx;

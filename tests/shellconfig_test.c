@@ -120,6 +120,33 @@ exotic(void) {
     g_hash_table_destroy(entries);
 }
 
+static void
+expand_simple(void) {
+    GHashTable *entries = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, g_free
+    );
+    char *expanded;
+    g_hash_table_insert(entries, g_strdup("PID"), g_strdup("123"));
+
+    expanded = cp_varexpand("", entries, NULL);
+    g_assert_cmpstr(expanded, ==, "");
+    g_free(expanded);
+
+    expanded = cp_varexpand("abc", entries, NULL);
+    g_assert_cmpstr(expanded, ==, "abc");
+    g_free(expanded);
+
+    expanded = cp_varexpand(" ", entries, NULL);
+    g_assert_cmpstr(expanded, ==, " ");
+    g_free(expanded);
+
+    expanded = cp_varexpand("${PID}", entries, NULL);
+    g_assert_cmpstr(expanded, ==, "123");
+    g_free(expanded);
+
+    g_hash_table_destroy(entries);
+}
+
 int
 main(int argc, char *argv[]) {
     g_test_init(&argc, &argv, NULL);
@@ -127,14 +154,16 @@ main(int argc, char *argv[]) {
     g_assert(argc == 2);
     dir = argv[1];
 
-    g_test_add_func("/io/shellconfig/empty", empty);
-    g_test_add_func("/io/shellconfig/eol", eol);
-    g_test_add_func("/io/shellconfig/simple", simple);
-    g_test_add_func("/io/shellconfig/comments", comments);
-    g_test_add_func("/io/shellconfig/line_cont", line_cont);
-    g_test_add_func("/io/shellconfig/source", source);
-    g_test_add_func("/io/shellconfig/escapes", escapes);
-    g_test_add_func("/io/shellconfig/exotic", exotic);
+    g_test_add_func("/shellconfig/read/empty", empty);
+    g_test_add_func("/shellconfig/read/eol", eol);
+    g_test_add_func("/shellconfig/read/simple", simple);
+    g_test_add_func("/shellconfig/read/comments", comments);
+    g_test_add_func("/shellconfig/read/line_cont", line_cont);
+    g_test_add_func("/shellconfig/read/source", source);
+    g_test_add_func("/shellconfig/read/escapes", escapes);
+    g_test_add_func("/shellconfig/read/exotic", exotic);
+
+    g_test_add_func("/shellconfig/expand/simple", expand_simple);
 
     return g_test_run();
 }

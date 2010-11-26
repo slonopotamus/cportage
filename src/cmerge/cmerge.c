@@ -17,13 +17,21 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 #include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
+
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#elif HAVE_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
+#include <cportage/shellconfig.h>
 
 #include "actions.h"
-#include "config.h"
 
 typedef struct ActionDesc {
     CMergeAction func;
@@ -126,22 +134,82 @@ action_cb(
 
 static void
 adjust_niceness(const CPSettings settings) {
-    const char *key = "PORTAGE_NICENESS";
+    static const char *key = "PORTAGE_NICENESS";
     const char *value = cp_settings_get(settings, key);
-    int unused;
+    int inc;
 
     if (value == NULL) {
         return;
     }
+    inc = atoi(value);
+    if (inc == 0) {
+        return;
+    }
+    errno = 0;
 
 #if HAVE_NICE
-    errno = 0;
-    unused = nice(atoi(value));
+    inc = nice(inc);
+#elif HAVE_GETPRIORITY && HAVE_SETPRIORITY
+    inc += getpriority(PRIO_PROCESS, 0);
+    if (errno) {
+        g_warning("Failed to get current priority: %s", g_strerror(errno));
+        return;
+    }
+    setpriority(PRIO_PROCESS, 0, inc);
+#else
+    g_warning("%s is specified but system doesn't have neither nice()"
+        " nor getpriority()/setpriority() functions", key);
+#endif
+
     if (errno) {
         g_warning("Failed to change nice value to '%s': %s", value, g_strerror(errno));
     }
+}
+
+static void adjust_ionice(const CPSettings settings) {
+    static const char *key = "PORTAGE_IONICE_COMMAND";
+    const char *raw_value = cp_settings_get(settings, key);
+
+    if (raw_value == NULL) {
+        return;
+    }
+
+#if HAVE_GETPID
+    {
+        G_STATIC_ASSERT(sizeof(pid_t) <= sizeof(long));
+        GError *error = NULL;
+        GHashTable *vars = NULL;
+        char *cmd = NULL;
+        int retval;
+        vars = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        g_hash_table_insert(vars,
+            g_strdup("PID"),
+            g_strdup_printf("%ld", (long)getpid())
+        );
+        cmd = cp_varexpand(raw_value, vars, &error);
+        if (cmd == NULL) {
+            goto ERR;
+        }
+        if (!g_spawn_command_line_sync(cmd, NULL, NULL, &retval, &error)) {
+            goto ERR;
+        }
+        if (retval != EXIT_SUCCESS) {
+            g_warning("%s returned %d", key, retval);
+		        g_warning("See the make.conf(5) man page for %s usage instructions.", key);
+        }
+
+ERR:
+        if (error != NULL) {
+            g_warning("%s failed: %s", key, error->message);
+        }
+        g_free(cmd);
+        if (vars != NULL) {
+            g_hash_table_destroy(vars);
+        }
+        g_error_free(error);
+    }
 #else
-    g_warning("%s is specified but system doesn't have nice() function", key);
+    g_warning("%s is specified but system doesn't have getpid() function", key);
 #endif
 }
 
@@ -171,6 +239,7 @@ main(int argc, char *argv[]) {
     }
 
     adjust_niceness(settings);
+    adjust_ionice(settings);
 
     action->func(settings, &opts, &error);
 

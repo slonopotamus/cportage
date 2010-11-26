@@ -18,8 +18,12 @@
 */
 
 %option prefix="cp_shellconfig_"
-%option batch bison-bridge bison-locations reentrant yylineno warn debug
-%option nodefault noinput nounistd nounput noyywrap
+%option batch bison-bridge bison-locations reentrant yylineno warn debug 8bit
+%option nodefault noinput nounput noyywrap noyyget_extra noyy_push_state
+%option noyy_pop_state noyy_top_state
+%option noyyget_extra noyyget_leng noyyget_text noyyget_lineno noyyset_lineno
+%option noyyget_in noyyget_out noyyset_out noyyget_lval noyyset_lval
+%option noyyget_lloc noyyset_lloc noyyget_debug
 
 %{
 
@@ -31,10 +35,10 @@
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wunreachable-code"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-
-#include <glib.h>
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 #include "shellparser.h"
+#include "shellconfig_ctx.h"
 
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng; \
@@ -42,13 +46,19 @@
 #define YY_EXTRA_TYPE cp_shellconfig_ctx *
 #define DUPSTR yylval->str = g_strdup(yytext)
 
-typedef struct cp_shellconfig_ctx_t cp_shellconfig_ctx;
-
 %}
 
 NewLine    \r?\n
 
 %%
+
+%{
+    if (yyextra->magic) {
+        int retval = yyextra->magic;
+        yyextra->magic = 0;
+        return retval;
+    }
+%}
 
 [[:blank:]]*#.*  { /* comments          */   }
 \\{NewLine}      { /* line continuation */   }

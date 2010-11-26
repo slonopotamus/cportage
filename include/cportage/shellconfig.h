@@ -64,6 +64,14 @@ cp_read_shellconfig(
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *into,*error,errno@*/;
 
+/** TODO: documentation */
+/*@null@*/ char *
+cp_varexpand(
+    const char *str,
+    GHashTable *vars,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+
 #pragma GCC visibility pop
 
 G_END_DECLS
