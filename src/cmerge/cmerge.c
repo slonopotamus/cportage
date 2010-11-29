@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include <glib-object.h>
 #include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -219,6 +220,7 @@ main(int argc, char *argv[]) {
     GError *error = NULL;
     CPSettings settings = NULL;
 
+    g_type_init();
     (void)setlocale(LC_ALL, "");
 
     ctx = g_option_context_new(NULL);

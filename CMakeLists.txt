@@ -38,12 +38,12 @@ add_definitions(${CMAKE_REQUIRED_DEFINITIONS}
 include(FindPkgConfig)
 set(GLIB_MINIMAL_REQUIRED 2.20)
 
-pkg_check_modules(GLIB2 REQUIRED "glib-2.0>=${GLIB_MINIMAL_REQUIRED}")
+pkg_check_modules(GIO2 REQUIRED "gio-2.0>=${GLIB_MINIMAL_REQUIRED}")
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
-include_directories(SYSTEM ${GLIB2_INCLUDE_DIRS})
+include_directories(SYSTEM ${GIO2_INCLUDE_DIRS})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Platform checks

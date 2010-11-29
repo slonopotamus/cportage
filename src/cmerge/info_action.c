@@ -17,7 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
+#include <gio/gio.h>
+
 #include <sys/utsname.h>
 
 #include <cportage/atom.h>
@@ -28,31 +29,21 @@
 #include "config.h"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-relative_path(const char *base, const char *path) /*@modifies errno@*/ {
-    /*
-      TODO: try using g_file_get_relative_path instead of all this stuff.
-      Otherwise, check if it works correctly (preferrably with a testcase) for
-      base="/foo" path="/foobar"
-     */
-    char *path_abs = NULL;
-    char *base_abs = NULL;
-    char *result;
+build_profile_str(const CPSettings settings, const char *portdir) /*@*/ {
+    char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
+    const char *profile = cp_settings_get_profile(settings);
+    /* TODO: encoding */
+    GFile *profiles_dir_file = g_file_new_for_path(profiles_dir);
+    GFile *profile_file = g_file_new_for_path(profile);
 
-    g_assert(g_utf8_validate(base, -1, NULL));
-    g_assert(g_utf8_validate(path, -1, NULL));
-
-    if ((path_abs = cp_canonical_path(path, NULL)) == NULL) {
-        result = g_strdup(path);
-    } else if ((base_abs = cp_canonical_path(base, NULL)) == NULL) {
-        result = g_strdup(path_abs);
-    } else if (g_strstr_len(path_abs, -1, base_abs) == path_abs) {
-        result = g_strdup(&path_abs[strlen(base_abs) + 1]);
-    } else {
-        result = g_strdup(path_abs);
+    char *result = g_file_get_relative_path(profiles_dir_file, profile_file);
+    if (result == NULL) {
+        result = g_strconcat("!", profile, NULL);
     }
 
-    g_free(path_abs);
-    g_free(base_abs);
+    g_free(profiles_dir);
+    g_object_unref(profiles_dir_file);
+    g_object_unref(profile_file);
     return result;
 }
 
@@ -62,9 +53,7 @@ print_version(
     const struct utsname *utsname,
     const char *portdir
 ) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
-    char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
-    const char *profile = cp_settings_get_profile(settings);
-    char *profile_str = relative_path(profiles_dir, profile);
+    char *profile_str = build_profile_str(settings, portdir);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
     /* TODO: read libc from vartree */
@@ -73,7 +62,6 @@ print_version(
     g_print("cportage %s (%s, %s, %s, %s %s)\n",
            CP_VERSION, profile_str, gcc_ver, libc_ver,
            utsname->release, utsname->machine);
-    g_free(profiles_dir);
     g_free(profile_str);
 }
 
