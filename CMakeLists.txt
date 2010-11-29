@@ -11,8 +11,6 @@ set(CP_VERSION_PATCH 1)
 
 set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-
 # Compiler flags
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 -DCPORTAGE_COMPILATION
@@ -37,13 +35,15 @@ add_definitions(${CMAKE_REQUIRED_DEFINITIONS}
     -Wmissing-declarations -Wstrict-prototypes)
 
 # Dependencies
+include(FindPkgConfig)
 set(GLIB_MINIMAL_REQUIRED 2.20)
-find_package(GLIB2 ${GLIB_MINIMAL_REQUIRED} REQUIRED)
+
+pkg_check_modules(GLIB2 REQUIRED "glib-2.0>=${GLIB_MINIMAL_REQUIRED}")
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
-include_directories(SYSTEM ${GLIB2_INCLUDE_DIR})
+include_directories(SYSTEM ${GLIB2_INCLUDE_DIRS})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Platform checks
