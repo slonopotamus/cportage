@@ -17,11 +17,12 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "actions.h"
 
-void
+int
 cmerge_help_action(
     CPSettings settings G_GNUC_UNUSED,
     const CMergeOptions options G_GNUC_UNUSED,
@@ -30,5 +31,5 @@ cmerge_help_action(
     g_assert(error == NULL || *error == NULL);
     /* TODO: use glib function instead */
     /* TODO: handle errors */
-    execlp("man", "man", "cmerge", NULL);
+    return execlp("man", "man", "cmerge", NULL);
 }

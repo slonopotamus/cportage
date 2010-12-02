@@ -41,41 +41,35 @@ typedef struct CMergeOptions {
     gboolean update;
 } *CMergeOptions;
 
-typedef void (*CMergeAction) (
-    CPSettings settings,
-    const CMergeOptions options,
-    /*@null@*/ GError **error
-);
-
-void
+int
 cmerge_help_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
 );
 
-void
+int
 cmerge_info_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout,*error@*/;
 
-void
+int
 cmerge_install_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
 );
 
-void
+int
 cmerge_sync_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies *error@*/;
 
-void
+int
 cmerge_version_action(
     CPSettings settings,
     const CMergeOptions options,

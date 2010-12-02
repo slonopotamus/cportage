@@ -34,6 +34,12 @@
 
 #include "actions.h"
 
+typedef int (*CMergeAction) (
+    CPSettings settings,
+    const CMergeOptions options,
+    /*@null@*/ GError **error
+);
+
 typedef struct ActionDesc {
     CMergeAction func;
 } ActionDesc;
@@ -219,6 +225,7 @@ main(int argc, char *argv[]) {
     GOptionContext *ctx;
     GError *error = NULL;
     CPSettings settings = NULL;
+    int retval;
 
     g_type_init();
     (void)setlocale(LC_ALL, "");
@@ -228,6 +235,7 @@ main(int argc, char *argv[]) {
     g_option_context_set_help_enabled(ctx, FALSE);
 
     if (!g_option_context_parse(ctx, &argc, &argv, &error)) {
+        retval = EXIT_FAILURE;
         goto ERR;
     }
 
@@ -237,23 +245,26 @@ main(int argc, char *argv[]) {
 
     settings = cp_settings_new(config_root, target_root, &error);
     if (settings == NULL) {
+        retval = EXIT_FAILURE;
         goto ERR;
     }
 
     adjust_niceness(settings);
     adjust_ionice(settings);
 
-    action->func(settings, &opts, &error);
+    retval = action->func(settings, &opts, &error);
 
 ERR:
     cp_settings_unref(settings);
     g_option_context_free(ctx);
 
-    if (error == NULL) {
-        return EXIT_SUCCESS;
-    } else {
-        g_print("%s: %s\n", argv[0], error->message);
-        g_error_free(error);
-        return EXIT_FAILURE;
+    if (retval == EXIT_SUCCESS) {
+        return retval;
     }
+
+    g_assert(error != NULL);
+    g_error("%s: %s", argv[0], error->message);
+    g_error_free(error);
+
+    return retval;
 }

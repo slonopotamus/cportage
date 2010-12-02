@@ -17,13 +17,17 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
+
 #include "actions.h"
 
-void
+int
 cmerge_install_action(
     CPSettings settings G_GNUC_UNUSED,
     const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
     g_assert(error == NULL || *error == NULL);
+
+    return EXIT_SUCCESS;
 }

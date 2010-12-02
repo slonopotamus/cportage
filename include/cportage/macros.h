@@ -36,7 +36,6 @@ G_BEGIN_DECLS
 
 #define CP_ITER(type, arr, m_elem) { \
     type *m_iter = (arr); \
-    g_assert(m_iter != NULL); \
     while (*m_iter != NULL) { \
         type m_elem = *m_iter++;
 #define end_CP_ITER }}

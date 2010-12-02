@@ -17,9 +17,11 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
+
 #include "actions.h"
 
-void
+int
 cmerge_sync_action(
     CPSettings settings,
     const CMergeOptions options G_GNUC_UNUSED,
@@ -29,7 +31,9 @@ cmerge_sync_action(
 
     CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo)
         if (!cp_repository_sync(repo, error)) {
-            return;
+            return EXIT_FAILURE;
         }
     end_CP_REPOSITORY_ITER
+
+    return EXIT_SUCCESS;
 }

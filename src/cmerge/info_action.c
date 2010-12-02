@@ -18,7 +18,7 @@
 */
 
 #include <gio/gio.h>
-
+#include <stdlib.h>
 #include <sys/utsname.h>
 
 #include <cportage/atom.h>
@@ -143,7 +143,7 @@ print_settings(
     g_strfreev(data);
 }
 
-void
+int
 cmerge_info_action(
     CPSettings settings,
     const CMergeOptions opts G_GNUC_UNUSED,
@@ -172,4 +172,6 @@ cmerge_info_action(
     print_porttree_timestamp(portdir);
     print_packages(portdir);
     print_settings(settings, portdir);
+
+    return EXIT_SUCCESS;
 }
