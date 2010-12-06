@@ -75,23 +75,15 @@ cp_shellconfig_error(
     }
 
     if (locp->first_line) {
-        g_set_error(ctx->error,
-            CP_SHELLCONFIG_ERROR,
-            CP_SHELLCONFIG_ERROR_SYNTAX,
+        g_set_error(ctx->error, CP_SHELLCONFIG_ERROR, CP_SHELLCONFIG_ERROR_SYNTAX,
             _("Could not parse '%s' at %d.%d-%d.%d: %s"),
             ctx->filename,
             locp->first_line, locp->first_column,
             locp->last_line, locp->last_column,
-            err
-        );
+            err);
     } else {
-        g_set_error(ctx->error,
-            CP_SHELLCONFIG_ERROR,
-            CP_SHELLCONFIG_ERROR_SYNTAX,
-            _("Could not parse %s: %s"),
-            ctx->filename,
-            err
-        );
+        g_set_error(ctx->error, CP_SHELLCONFIG_ERROR, CP_SHELLCONFIG_ERROR_SYNTAX,
+            _("Could not parse %s: %s"), ctx->filename, err);
     }
 }
 
@@ -412,12 +404,9 @@ cp_read_shellconfig(
 
     f = fopen(path, "r");
     if (f == NULL) {
-        g_set_error(error,
-            G_FILE_ERROR,
-            g_file_error_from_errno(errno),
-            _("Error reading file '%s': %s"),
-            path,
-            g_strerror(errno));
+        int save_errno = errno;
+        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(save_errno),
+            _("Error reading file '%s': %s"), path, g_strerror(save_errno));
         return FALSE;
     }
 

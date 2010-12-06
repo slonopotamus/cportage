@@ -32,13 +32,8 @@ cp_eapi_check(const char *eapi, const char *file, GError **error) {
     if (cp_eapi_supported(eapi)) {
         return TRUE;
     }
-    g_set_error(error,
-        CP_EAPI_ERROR,
-        CP_EAPI_ERROR_UNSUPPORTED,
-        _("Unsupported EAPI %s in %s"),
-        eapi,
-        file
-    );
+    g_set_error(error, CP_EAPI_ERROR, CP_EAPI_ERROR_UNSUPPORTED,
+        _("Unsupported EAPI %s in %s"), eapi, file);
     return FALSE;
 }
 

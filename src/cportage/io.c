@@ -45,9 +45,8 @@ cp_canonical_path(const char *path, GError **error) {
             /*@-type@*/
             int error_code = g_file_error_from_errno(save_errno);
             /*@=type@*/
-            g_set_error(error, G_FILE_ERROR,
-                error_code,
-                _("Failed to canonicalize file '%s': realpath() failed: %s"),
+            g_set_error(error, G_FILE_ERROR, error_code,
+                _("realpath() on '%s' failed: %s"),
                 path, g_strerror(save_errno));
             result = NULL;
         } else {
@@ -116,8 +115,7 @@ cp_read_lines(const char *path, const gboolean ignore_comments, GError **error) 
         }
         g_strfreev(lines);
     } else {
-        g_set_error(error, G_CONVERT_ERROR,
-            G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+        g_set_error(error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
             _("Invalid byte sequence in %s"), path);
         result = NULL;
     }

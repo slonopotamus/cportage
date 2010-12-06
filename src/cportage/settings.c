@@ -440,12 +440,8 @@ cp_settings_get_required(
 
     result = cp_settings_get(self, key);
     if (result == NULL) {
-        g_set_error(error,
-            CP_SETTINGS_ERROR,
-            CP_SETTINGS_ERROR_REQUIRED,
-            _("Required config variable %s not found"),
-            key
-        );
+        g_set_error(error, CP_SETTINGS_ERROR, CP_SETTINGS_ERROR_REQUIRED,
+            _("Required config variable %s not found"), key);
     }
     return result;
 }

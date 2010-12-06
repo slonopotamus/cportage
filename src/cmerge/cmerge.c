@@ -159,17 +159,20 @@ adjust_niceness(const CPSettings settings) {
 #elif HAVE_GETPRIORITY && HAVE_SETPRIORITY
     inc += getpriority(PRIO_PROCESS, 0);
     if (errno) {
-        g_warning("Failed to get current priority: %s", g_strerror(errno));
+        int save_errno = ernno;
+        g_warning(_("Failed to get current priority: %s"), g_strerror(save_errno));
         return;
     }
     setpriority(PRIO_PROCESS, 0, inc);
 #else
-    g_warning("%s is specified but system doesn't have neither nice()"
-        " nor getpriority()/setpriority() functions", key);
+    g_warning(_("%s is specified but system doesn't have neither nice()"
+        " nor getpriority()/setpriority() functions"), key);
 #endif
 
     if (errno) {
-        g_warning("Failed to change nice value to '%s': %s", value, g_strerror(errno));
+        int save_errno = errno;
+        g_warning(_("Failed to change nice value to '%s': %s"),
+            value, g_strerror(save_errno));
     }
 }
 
@@ -201,13 +204,13 @@ static void adjust_ionice(const CPSettings settings) {
             goto ERR;
         }
         if (retval != EXIT_SUCCESS) {
-            g_warning("%s returned %d", key, retval);
-		        g_warning("See the make.conf(5) man page for %s usage instructions.", key);
+            g_warning(_("%s returned %d"), key, retval);
+		        g_warning(_("See the make.conf(5) man page for %s usage instructions."), key);
         }
 
 ERR:
         if (error != NULL) {
-            g_warning("%s failed: %s", key, error->message);
+            g_warning(_("%s failed: %s"), key, error->message);
         }
         g_free(cmd);
         if (vars != NULL) {
@@ -216,7 +219,7 @@ ERR:
         g_error_free(error);
     }
 #else
-    g_warning("%s is specified but system doesn't have getpid() function", key);
+    g_warning(_("%s is specified but system doesn't have getpid() function"), key);
 #endif
 }
 
@@ -263,7 +266,7 @@ ERR:
     }
 
     g_assert(error != NULL);
-    g_error("%s: %s", argv[0], error->message);
+    g_critical("%s: %s", argv[0], error->message);
     g_error_free(error);
 
     return retval;
