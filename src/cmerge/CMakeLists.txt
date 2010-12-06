@@ -2,7 +2,7 @@ configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 # Executables
 
-add_definitions(-DG_LOG_DOMAIN="cmerge")
+add_definitions(-DG_LOG_DOMAIN="cmerge" -DGETTEXT_PACKAGE="cmerge")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 

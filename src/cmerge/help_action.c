@@ -17,6 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -28,8 +29,21 @@ cmerge_help_action(
     const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
+    int retval;
+    int save_errno;
+
     g_assert(error == NULL || *error == NULL);
-    /* TODO: use glib function instead */
-    /* TODO: handle errors */
-    return execlp("man", "man", "cmerge", NULL);
+
+    /* TODO: use glib function instead? */
+    retval = execlp("man", "man", "cmerge", NULL);
+
+    save_errno = errno;
+    /*
+      We could use own error type but it isn't worth it
+      since no sensible handling can be done in calling code anyway.
+     */
+    g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
+        _("man: %s"), g_strerror(save_errno));
+
+    return retval;
 }
