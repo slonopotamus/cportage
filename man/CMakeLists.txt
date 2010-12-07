@@ -1,4 +1,4 @@
-set(CMAKE_MAN_DIR "/share/man"
+set(CMAKE_MAN_DIR "share/man"
     CACHE STRING
     "Path for documentation files. Will be prepended with CMAKE_INSTALL_PREFIX")
 
