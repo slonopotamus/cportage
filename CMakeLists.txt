@@ -13,7 +13,8 @@ set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 
 # Compiler flags
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
-    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 -DCPORTAGE_COMPILATION
+    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500
+    -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage"
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
     -pedantic -ansi -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
@@ -39,8 +40,6 @@ include(FindPkgConfig)
 set(GLIB_MINIMAL_REQUIRED 2.20)
 
 pkg_check_modules(GIO2 REQUIRED "gio-2.0>=${GLIB_MINIMAL_REQUIRED}")
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
 include_directories(SYSTEM ${GIO2_INCLUDE_DIRS})
@@ -103,12 +102,17 @@ macro(set_link_flags _target)
 endmacro()
 
 # Subdirs
-add_subdirectory(man)
 add_subdirectory(include)
+add_subdirectory(man)
 add_subdirectory(src)
 
 option(ENABLE_TESTS "Enable unit tests" ON)
 if(ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+option(ENABLE_NLS "Enable Native Language Support" ON)
+if(ENABLE_NLS)
+    add_subdirectory(po)
 endif()

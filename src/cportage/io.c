@@ -46,7 +46,7 @@ cp_canonical_path(const char *path, GError **error) {
             int error_code = g_file_error_from_errno(save_errno);
             /*@=type@*/
             g_set_error(error, G_FILE_ERROR, error_code,
-                _("realpath() on '%s' failed: %s"),
+                _("Can't get real path of '%s': %s"),
                 path, g_strerror(save_errno));
             result = NULL;
         } else {
@@ -75,51 +75,51 @@ cp_read_file(const char *path, char **data, size_t *len, GError **error) {
     return result;
 }
 
+/**
+    TODO: current impl temporarily allocs 3x size of file.
+    Could be rewritten to 1x.
+ */
 char **
 cp_read_lines(const char *path, const gboolean ignore_comments, GError **error) {
     char *data = NULL;
-    char **result;
+    char **result = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
-    /*
-        TODO: current impl temporarily allocs 3x size of file.
-        Could be rewritten to 1x.
-     */
     if (!cp_read_file(path, &data, NULL, error)) {
-        result = NULL;
-    } else if (g_utf8_validate(data, -1, NULL)) {
-        char **lines = g_strsplit(data, "\n", -1);
-        if (ignore_comments) {
-            char *line;
-            size_t i = 0;
-            size_t j = 0;
-            result = g_new(char *, g_strv_length(lines) + 1);
-            while ((line = lines[i++]) != NULL) {
-                char *comment = g_utf8_strchr(line, -1, '#');
-                if (comment != NULL) {
-                    *comment = '\0';
-                }
-                (void)g_strstrip(line);
-                if (line[0] != '\0') {
-                    result[j++] = g_strdup(line);
-                }
-            }
-            result[j] = NULL;
-        } else {
-            /*
-              TODO: is it possible to avoid copying without triggering
-              splint warning?
-             */
-            result = g_strdupv(lines);
-        }
-        g_strfreev(lines);
-    } else {
+        goto ERR;
+    }
+
+    if (!g_utf8_validate(data, -1, NULL)) {
+        /* TODO: report where we got invalid byte sequence exactly */
         g_set_error(error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
-            _("Invalid byte sequence in %s"), path);
+            _("Invalid UTF-8 byte sequence in '%s'"), path);
         result = NULL;
     }
 
+    if (ignore_comments) {
+        char **lines = g_strsplit(data, "\n", -1);
+        char *line;
+        size_t i = 0;
+        size_t j = 0;
+        result = g_new(char *, g_strv_length(lines) + 1);
+        while ((line = lines[i++]) != NULL) {
+            char *comment = g_utf8_strchr(line, -1, '#');
+            if (comment != NULL) {
+                *comment = '\0';
+            }
+            (void)g_strstrip(line);
+            if (line[0] != '\0') {
+                result[j++] = g_strdup(line);
+            }
+        }
+        result[j] = NULL;
+        g_strfreev(lines);
+    } else {
+        result = g_strsplit(data, "\n", -1);
+    }
+
+ERR:
     g_free(data);
     return result;
 }

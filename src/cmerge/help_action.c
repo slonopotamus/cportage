@@ -43,7 +43,7 @@ cmerge_help_action(
       since no sensible handling can be done in calling code anyway.
      */
     g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
-        _("man: %s"), g_strerror(save_errno));
+        _("Can't run '%s': %s"), "man", g_strerror(save_errno));
 
     return retval;
 }

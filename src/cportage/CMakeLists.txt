@@ -1,7 +1,10 @@
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
 bison_target(ShellParser
     shellparser.y
     "${CMAKE_CURRENT_BINARY_DIR}/shellparser.c"
-    COMPILE_FLAGS "-Wall -Werror -r all")
+    COMPILE_FLAGS "-Wall -Werror --report=all")
 
 set(SHELLSCANNER_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/shellscanner.h")
 if(HAVE_READ)
@@ -15,8 +18,6 @@ flex_target(ShellScanner
     "${CMAKE_CURRENT_BINARY_DIR}/shellscanner.c"
     COMPILE_FLAGS "${SHELLSCANNER_FLAGS}")
 add_flex_bison_dependency(ShellScanner ShellParser)
-
-add_definitions(-DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage")
 
 configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
 

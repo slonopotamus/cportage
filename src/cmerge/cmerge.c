@@ -160,7 +160,7 @@ adjust_niceness(const CPSettings settings) {
     inc += getpriority(PRIO_PROCESS, 0);
     if (errno) {
         int save_errno = ernno;
-        g_warning(_("Failed to get current priority: %s"), g_strerror(save_errno));
+        g_warning(_("Can't get current process priority: %s"), g_strerror(save_errno));
         return;
     }
     setpriority(PRIO_PROCESS, 0, inc);
@@ -171,7 +171,7 @@ adjust_niceness(const CPSettings settings) {
 
     if (errno) {
         int save_errno = errno;
-        g_warning(_("Failed to change nice value to '%s': %s"),
+        g_warning(_("Can't change nice value to '%s': %s"),
             value, g_strerror(save_errno));
     }
 }
@@ -204,13 +204,13 @@ static void adjust_ionice(const CPSettings settings) {
             goto ERR;
         }
         if (retval != EXIT_SUCCESS) {
-            g_warning(_("%s returned %d"), key, retval);
+            g_warning(_("Command '%s' returned %d"), cmd, retval);
 		        g_warning(_("See the make.conf(5) man page for %s usage instructions."), key);
         }
 
 ERR:
         if (error != NULL) {
-            g_warning(_("%s failed: %s"), key, error->message);
+            g_warning(_("Can't run '%s': %s"), cmd, error->message);
         }
         g_free(cmd);
         if (vars != NULL) {
@@ -230,8 +230,8 @@ main(int argc, char *argv[]) {
     CPSettings settings = NULL;
     int retval;
 
+    setlocale(LC_ALL, "");
     g_type_init();
-    (void)setlocale(LC_ALL, "");
 
     ctx = g_option_context_new(NULL);
     g_option_context_add_main_entries(ctx, options, NULL);
