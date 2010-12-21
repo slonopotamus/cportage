@@ -114,21 +114,16 @@ dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
 
 %}
 
-%token <str> ALPHA AMP AT BANG BLANK CARET COLON COMMA DEC DOLLAR DOT DOTDOT
-%token <str> DOUBLE_SEMIC EOL EQUALS ESC_CHAR GEQ GREATER_THAN INC LBRACE LEQ
-%token <str> LESS_THAN LLPAREN LOGICAND LOGICOR LPAREN LSQUARE MINUS NQSTR
-%token <str> NUMBER PCT PCTPCT PIPE PLUS POUND POUNDPOUND QMARK QUOTE RBRACE
-%token <str> RPAREN RRPAREN RSQUARE SEMIC SLASH SQUOTE TICK TILDE TIMES
-%token <str> UNDERLINE
+%token <str> ALPHA BLANK DOLLAR DOT EOL EQUALS ESC_CHAR LBRACE NQCHAR NUMBER
+%token <str> POUND QCHAR QUOTE RBRACE SQUOTE UNDERLINE
 
 %token EXPORT SOURCE VAR_MAGIC FILE_MAGIC
 
 %type <str> blank value var_ref
 %type <str> fname fname_part vname vname_start vname_end vname_end_part
-%type <str> sqstr sqstr_loop sq_str_part
-%type <str> dqstr dqstr_loop dq_str_part dqstr_part
-%type <str> ns_str_part ns_str_part_no_res str_part str_part_with_pound str_part_with_pound_loop
-%type <str> pattern_match_trigger
+%type <str> sqstr sqstr_loop sqstr_part
+%type <str> dqstr dqstr_loop dqstr_part
+%type <str> nqstr_part qstr_part
 
 %%
 
@@ -200,8 +195,7 @@ fname_part:
     var_ref
   | sqstr
   | dqstr
-  /* TODO: causes shift/reduce conflict because we have loop of loops of str_part */
-  | str_part str_part_with_pound_loop { $$ = DOCONCAT2($1, $2); }
+  | nqstr_part
 
 /* --- Variable name --- */
 
@@ -231,126 +225,42 @@ dqstr_loop:
   | dqstr_loop dqstr_part { $$ = DOCONCAT2($1, $2); }
 
 dqstr_part:
-  /* TODO: uncomment this
-  bracket_pattern_match
-  | extended_pattern_match
-  | */
-  var_ref
-  /* TODO: uncomment this
-  | command_sub
-  | arithmetic_expansion */
-  | dq_str_part
-  | pattern_match_trigger
-  | BANG
-
-dq_str_part:
-    str_part_with_pound
-  | BLANK
-  | EOL
-  | AMP
-  | LOGICAND
-  | LOGICOR
-  | LESS_THAN
-  | GREATER_THAN
-  | PIPE
+    qstr_part
+  | var_ref
   | SQUOTE
-  | SEMIC
-  | COMMA
-  | LPAREN
-  | RPAREN
-  | LLPAREN
-  | RRPAREN
-  | DOUBLE_SEMIC
-  | LBRACE
-  | RBRACE
-  | TICK
-  | LEQ
-  | GEQ
 
 /* -- Single-quoted string -- */
 sqstr:
     SQUOTE sqstr_loop SQUOTE { $$ = $2; g_free($1); g_free($3); }
 
 sqstr_loop:
-    /* empty */            { $$ = g_strdup(""); }
-  | sqstr_loop sq_str_part { $$ = DOCONCAT2($1, $2); }
+    /* empty */           { $$ = g_strdup(""); }
+  | sqstr_loop sqstr_part { $$ = DOCONCAT2($1, $2); }
 
-sq_str_part:
-    str_part_with_pound
-  | BLANK
-  | EOL
-  | AMP
-  | LOGICAND
-  | LOGICOR
-  | LESS_THAN
-  | GREATER_THAN
-  | PIPE
-  | QUOTE
-  | SEMIC
-  | COMMA
-  | LPAREN
-  | RPAREN
-  | LLPAREN
-  | RRPAREN
-  | DOUBLE_SEMIC
-  | LBRACE
-  | RBRACE
+sqstr_part:
+    qstr_part
   | DOLLAR
-  | TICK
-  /*|BOP|UOP*/
+  | QUOTE
 
 /* -- Misc string parts -- */
 
-str_part:
-    ns_str_part
-  | SLASH
+/* Symbols that can be part of quoted string */
+qstr_part:
+    nqstr_part
+  | QCHAR
+  | BLANK
+  | EOL
 
-str_part_with_pound:
-    str_part
-  | POUND
-  | POUNDPOUND
-
-str_part_with_pound_loop:
-    /* empty */                                  { $$ = g_strdup(""); }
-  | str_part_with_pound_loop str_part_with_pound { $$ = DOCONCAT2($1, $2); }
-
-ns_str_part:
-    ns_str_part_no_res
-/* | res_word_str
-
-res_word_str:
-  CASE|DO|DONE|ELIF|ELSE|ESAC|FI|FOR|FUNCTION|IF|IN|SELECT|THEN|UNTIL|WHILE|TIME
-*/
-
-ns_str_part_no_res:
-    NUMBER
-  /* TODO: causes shift/reduce conflict */
-  | vname
-  | NQSTR
-  | EQUALS
-  | PCT
-  | PCTPCT
-  | MINUS
+/* Symbols that can be part of nonquoted string */
+nqstr_part:
+    vname_end_part
+  | NQCHAR
   | DOT
-  | DOTDOT
-  | COLON
-  /*|BOP|UOP|TEST*/
-  /* TODO: causes reduce/reduce conflict
-  |UNDERLINE */
-  | TILDE
-  | INC
-  | DEC
-  /*|ARITH_ASSIGN*/
+  | EQUALS
   | ESC_CHAR
-  | CARET
-
-pattern_match_trigger:
-    LSQUARE
-  | RSQUARE
-  | QMARK
-  | PLUS
-  | TIMES
-  | AT
+  | POUND
+  | LBRACE
+  | RBRACE
 
 blank:
     BLANK

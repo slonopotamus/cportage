@@ -65,53 +65,20 @@ NewLine    \r?\n
 export           {         return EXPORT;    }
 source           {         return SOURCE;    }
 {NewLine}        { yylval->str = g_strdup(" "); return EOL; }
-[[:blank:]]+     { DUPSTR; return BLANK;     }
+[[:blank:]]+     { yylval->str = g_strdup(" "); return BLANK; }
 [a-zA-Z]+        { DUPSTR; return ALPHA;     }
 [[:digit:]]+     { DUPSTR; return NUMBER;    }
 \\([0-7]{2,3}|x[0-9a-fA-F]{1,2}|c.|.) { yylval->str = g_strcompress(yytext); return ESC_CHAR; }
 \$               { DUPSTR; return DOLLAR;    }
-\>\=             { DUPSTR; return GEQ;       }
-\<\=             { DUPSTR; return LEQ;       }
-\=               { DUPSTR; return EQUALS;    }
-\<               { DUPSTR; return LESS_THAN; }
-\>               { DUPSTR; return GREATER_THAN; }
-\_               { DUPSTR; return UNDERLINE; }
-\!               { DUPSTR; return BANG;      }
-\,               { DUPSTR; return COMMA;     }
-\.{2}            { DUPSTR; return DOTDOT;    }
 \.               { DUPSTR; return DOT;       }
+\=               { DUPSTR; return EQUALS;    }
+\_               { DUPSTR; return UNDERLINE; }
 \{               { DUPSTR; return LBRACE;    }
 \}               { DUPSTR; return RBRACE;    }
-\({2}            { DUPSTR; return LLPAREN;   }
-\(               { DUPSTR; return LPAREN;    }
-\){2}            { DUPSTR; return RRPAREN;   }
-\)               { DUPSTR; return RPAREN;    }
-\[               { DUPSTR; return LSQUARE;   }
-\]               { DUPSTR; return RSQUARE;   }
-\~               { DUPSTR; return TILDE;     }
-\`               { DUPSTR; return TICK;      }
-\/               { DUPSTR; return SLASH;     }
 \"               { DUPSTR; return QUOTE;     }
 \'               { DUPSTR; return SQUOTE;    }
-\+{2}            { DUPSTR; return INC;       }
-\+               { DUPSTR; return PLUS;      }
-\-{2}            { DUPSTR; return DEC;       }
-\-               { DUPSTR; return MINUS;     }
-\*               { DUPSTR; return TIMES;     }
-\%{2}            { DUPSTR; return PCTPCT;    }
-\%               { DUPSTR; return PCT;       }
-\|{2}            { DUPSTR; return LOGICOR;   }
-\|               { DUPSTR; return PIPE;      }
-\&{2}            { DUPSTR; return LOGICAND;  }
-\&               { DUPSTR; return AMP;       }
-\^               { DUPSTR; return CARET;     }
-\?               { DUPSTR; return QMARK;     }
-\:               { DUPSTR; return COLON;     }
-\;{2}            { DUPSTR; return DOUBLE_SEMIC; }
-\;               { DUPSTR; return SEMIC;     }
-\@               { DUPSTR; return AT;        }
-\#{2}            { DUPSTR; return POUNDPOUND; }
 \#               { DUPSTR; return POUND;     }
-.                { DUPSTR; return NQSTR;     }
+[&<>()|;`]       { DUPSTR; return QCHAR;     }
+.                { DUPSTR; return NQCHAR;    }
 
 %%
