@@ -110,6 +110,15 @@ print_packages(
 }
 
 static void
+print_repositories(const CPSettings settings) {
+    g_print("Repositories:");
+    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo)
+        g_print(" %s", cp_repository_get_name(repo));
+    end_CP_REPOSITORY_ITER
+    g_print("\n");
+}
+
+static void
 print_settings(
     const CPSettings settings,
     const char *portdir
@@ -171,6 +180,7 @@ cmerge_info_action(
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
     print_porttree_timestamp(portdir);
     print_packages(portdir);
+    print_repositories(settings);
     print_settings(settings, portdir);
 
     return EXIT_SUCCESS;

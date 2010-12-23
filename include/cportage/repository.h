@@ -45,6 +45,7 @@ typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 /** TODO: documentation */
 /*@newref@*/ CPRepository
 cp_repository_new(
+    const char *name,
     const char *path
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
@@ -75,6 +76,11 @@ cp_repository_unref(
  */
 /*@observer@*/ const char *
 cp_repository_get_path(
+    const CPRepository self
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/*@observer@*/ const char *
+cp_repository_get_name(
     const CPRepository self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 

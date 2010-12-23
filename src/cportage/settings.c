@@ -262,7 +262,7 @@ cp_settings_init_main_repo(CPSettings self, GError **error) {
         return FALSE;
     }
 
-    self->main_repo = cp_repository_new(canonical);
+    self->main_repo = cp_repository_new("portage", canonical);
 
     g_hash_table_insert(self->config, g_strdup("PORTDIR"), canonical);
 

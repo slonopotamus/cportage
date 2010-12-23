@@ -22,17 +22,19 @@
 #include <cportage/repository.h>
 
 struct CPRepository {
+    /*@only@*/ char *name;
     /*@only@*/ char *path;
 
     /*@refs@*/ int refs;
 };
 
 CPRepository
-cp_repository_new(const char *path) {
+cp_repository_new(const char *name, const char *path) {
     CPRepository self;
 
     self = g_new0(struct CPRepository, 1);
     self->refs = 1;
+    self->name = g_strdup(name);
     self->path = g_strdup(path);
 
     return self;
@@ -53,6 +55,7 @@ cp_repository_unref(CPRepository self) {
     }
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
+        g_free(self->name);
         g_free(self->path);
 
         /*@-refcounttrans@*/
@@ -84,6 +87,11 @@ cp_repository_sync(const CPRepository self, GError **error) {
     }
 
     return result;
+}
+
+const char *
+cp_repository_get_name(const CPRepository self) {
+    return self->name;
 }
 
 const char *
