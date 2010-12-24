@@ -54,7 +54,7 @@ eol(void) {
 static void
 simple(void) {
     GHashTable *entries = assert_parse("shellconfig_test_simple.conf");
-    g_assert(g_hash_table_size(entries) == 12);
+    g_assert(g_hash_table_size(entries) == 13);
     g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "B");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "B");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C1_A1"), ==, "B");
@@ -64,6 +64,7 @@ simple(void) {
     g_assert_cmpstr(g_hash_table_lookup(entries, "G"), ==, "BG");
     g_assert_cmpstr(g_hash_table_lookup(entries, "H"), ==, "$G");
     g_assert_cmpstr(g_hash_table_lookup(entries, "I"), ==, "${G}");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "J"), ==, "{}");
     g_assert_cmpstr(g_hash_table_lookup(entries, "NONREF"), ==, "");
     g_assert_cmpstr(g_hash_table_lookup(entries, "SHELL"), ==, "/bin/bash");
     g_assert_cmpstr(g_hash_table_lookup(entries, "UNICODE"), ==, "юникод");
@@ -110,9 +111,9 @@ escapes(void) {
 static void
 exotic(void) {
     GHashTable *entries = assert_parse("shellconfig_test_exotic.conf");
-    g_assert(g_hash_table_size(entries) == 4);
-    /* g_assert_cmpstr(g_hash_table_lookup(entries, "F"     ), ==, "#");
-    g_assert_cmpstr(g_hash_table_lookup(entries, "G"     ), ==, "##"); */
+    g_assert(g_hash_table_size(entries) == 6);
+    g_assert_cmpstr(g_hash_table_lookup(entries, "F"     ), ==, "#");
+    g_assert_cmpstr(g_hash_table_lookup(entries, "G"     ), ==, "##");
     g_assert_cmpstr(g_hash_table_lookup(entries, "source"), ==, "source");
     g_assert_cmpstr(g_hash_table_lookup(entries, "export"), ==, "export");
     g_assert_cmpstr(g_hash_table_lookup(entries, "E"     ), ==, "a b");

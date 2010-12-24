@@ -48,6 +48,8 @@
 
 %}
 
+%s QUOTE_STATE SQUOTE_STATE
+
 NewLine    \r?\n
 
 %%
@@ -60,7 +62,10 @@ NewLine    \r?\n
     }
 %}
 
-[[:blank:]]*#.*  { /* comments          */   }
+<INITIAL>[[:blank:]]+#.* { /* comments          */ }
+<INITIAL>^#.*            { /* comments          */ }
+<INITIAL>[[:blank:]]+$   { /* trailing whitespace */ }
+
 \\{NewLine}      { /* line continuation */   }
 export           {         return EXPORT;    }
 source           {         return SOURCE;    }
@@ -75,9 +80,16 @@ source           {         return SOURCE;    }
 \_               { DUPSTR; return UNDERLINE; }
 \{               { DUPSTR; return LBRACE;    }
 \}               { DUPSTR; return RBRACE;    }
-\"               { DUPSTR; return QUOTE;     }
-\'               { DUPSTR; return SQUOTE;    }
-\#               { DUPSTR; return POUND;     }
+
+<INITIAL>\"      { DUPSTR; BEGIN QUOTE_STATE; return QUOTE; }
+<QUOTE_STATE>\"  { DUPSTR; BEGIN INITIAL; return QUOTE; }
+\"               { DUPSTR; return QUOTE; }
+
+<INITIAL>\'      { DUPSTR; BEGIN SQUOTE_STATE; return SQUOTE; }
+<SQUOTE_STATE>\' { DUPSTR; BEGIN INITIAL; return SQUOTE; }
+\'               { DUPSTR; return SQUOTE; }
+
+\#               { DUPSTR; return POUND; }
 [&<>()|;`]       { DUPSTR; return QCHAR;     }
 .                { DUPSTR; return NQCHAR;    }
 
