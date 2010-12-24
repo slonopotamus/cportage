@@ -332,7 +332,6 @@ cp_read_shellconfig(
 char *
 cp_varexpand(const char *str, GHashTable *vars G_GNUC_UNUSED, GError **error) {
     cp_shellconfig_ctx ctx;
-    gboolean retval;
     YY_BUFFER_STATE bp;
 
     g_assert(error == NULL || *error == NULL);
@@ -342,7 +341,12 @@ cp_varexpand(const char *str, GHashTable *vars G_GNUC_UNUSED, GError **error) {
     cp_shellconfig_lex_init(&ctx.yyscanner);
     bp = cp_shellconfig__scan_string(str, ctx.yyscanner);
     cp_shellconfig__switch_to_buffer(bp, ctx.yyscanner);
-    retval = doparse(&ctx, vars, str, FALSE, VAR_MAGIC, error);
+    if (doparse(&ctx, vars, str, FALSE, VAR_MAGIC, error)) {
+        g_assert(ctx.expanded != NULL);
+    } else {
+        g_free(ctx.expanded);
+        ctx.expanded = NULL;
+    }
     cp_shellconfig__delete_buffer(bp, ctx.yyscanner);
     cp_shellconfig_lex_destroy(ctx.yyscanner);
 
