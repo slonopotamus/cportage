@@ -1,7 +1,8 @@
 cportage - damn fast Gentoo Linux package manager
 =================================================
 
-http://github.com/slonopotamus/cportage
+Latest cportage sources & docs are available
+at <http://github.com/slonopotamus/cportage>
 
 Dependencies
 ------------
@@ -19,13 +20,13 @@ Both build and runtime:
 Compiling
 ---------
 
-1. Create an empty directory and `cd` into it.
-2. Run `cmake /path/to/cportage/source/dir/`.
+1. Create an empty directory and `cd` into it
+2. Run `cmake /path/to/cportage/sources/dir/`
 That'll generate a makefile and various cmake helper things.
-3. Run `ccmake .` and configure build options.
-4. Now, run `make` to compile cportage sources and `make install` to install.
+3. Run `ccmake .` and configure build options
+4. Now, run `make` to compile cportage sources and `make install` to install
 
-**Attention**, CMake doesn't support `make uninstall`.
+**Attention**, CMake doesn't support `make uninstall`
 
 Documentation
 -------------
@@ -36,7 +37,7 @@ License
 cportage is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+(at your option) any later version
 
 Authors
 -------
@@ -44,5 +45,5 @@ Authors
 
 Contact
 -------
-If you have some ideas about cportage improvements, please feel
+If you have ideas about cportage improvement, feel
 free to send a message to <marat@slonopotamus.org>
