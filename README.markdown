@@ -1,18 +1,18 @@
 cportage - damn fast Gentoo Linux package manager
+=================================================
 
 http://github.com/slonopotamus/cportage
 
 Dependencies
 ------------
-
 Build time only:
- - CMake >= 2.8 (tested with 2.8.1)
- - bison (tested with 2.4.3)
- - flex (tested with 2.5.35)
- - GCC (tested with 4.4.3)
+ -  CMake >= 2.8 (tested with 2.8.1)
+ -  bison (tested with 2.4.3)
+ -  flex (tested with 2.5.35)
+ -  GCC (tested with 4.4.3)
 
 Both build and runtime:
- - GLib >= 2.20 (tested with 2.22.5)
+ -  GLib >= 2.20 (tested with 2.22.5)
 
 Compiling
 ---------
