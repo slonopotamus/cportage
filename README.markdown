@@ -8,7 +8,7 @@ Dependencies
 Build time only:
  - CMake >= 2.8 (tested with 2.8.1)
  - bison (tested with 2.4.3)
- - flex(tested with 2.5.35)
+ - flex (tested with 2.5.35)
  - GCC (tested with 4.4.3)
 
 Both build and runtime:
