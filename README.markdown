@@ -1,6 +1,5 @@
 cportage - damn fast Gentoo Linux package manager
 =================================================
-
 Latest cportage sources & docs are available
 at <http://github.com/slonopotamus/cportage>
 
@@ -19,7 +18,6 @@ Both build and runtime:
 
 Compiling
 ---------
-
 1. Create an empty directory and `cd` into it
 2. Run `cmake /path/to/cportage/sources/dir/`
 That'll generate a makefile and various cmake helper things.
