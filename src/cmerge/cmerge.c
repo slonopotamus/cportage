@@ -65,8 +65,7 @@ static int verbosity = VERBOSITY_NORMAL;
 static const char *config_root = "/";
 static const char *target_root = "/";
 
-/*@unchecked@*/ static struct CMergeOptions
-opts = { NULL, FALSE, FALSE };
+/*@unchecked@*/ static struct CMergeOptions opts = { NULL, FALSE, FALSE };
 
 static gboolean
 verbosity_cb(
@@ -202,8 +201,7 @@ static void adjust_ionice(const CPSettings settings) {
         vars = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         g_hash_table_insert(vars,
             g_strdup("PID"),
-            g_strdup_printf("%ld", (long)getpid())
-        );
+            g_strdup_printf("%ld", (long)getpid()));
         cmd = cp_varexpand(raw_value, vars, &error);
         if (cmd == NULL) {
             goto ERR;

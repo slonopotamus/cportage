@@ -40,8 +40,8 @@ read_repo_name(const char *repo_path) {
         char *basename = g_path_get_basename(repo_path);
         result = g_strconcat("x-", basename, NULL);
         g_free(basename);
-        g_warning("Repository '%s' is missing 'profiles/repo_name' file,"
-          " using '%s' as repository name", repo_path, result);
+        g_warning(_("Repository '%s' is missing 'profiles/repo_name' file,"
+          " using '%s' as repository name"), repo_path, result);
     } else {
         g_strstrip(result);
     }

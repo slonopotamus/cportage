@@ -101,7 +101,7 @@ print_packages(
     if (data != NULL) {
         cp_strings_sort(data);
 
-        CP_STRV_ITER(data, s) {
+        CP_STRV_ITER(data, s)
             CPAtom atom = cp_atom_new(s, NULL);
             char *atom_label = g_strconcat(s, ":", NULL);
             if (atom == NULL) {
@@ -112,7 +112,7 @@ print_packages(
             }
             g_free(atom_label);
             cp_atom_unref(atom);
-        } end_CP_STRV_ITER
+        end_CP_STRV_ITER
     }
     g_free(path);
     g_strfreev(data);
