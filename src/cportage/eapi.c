@@ -22,7 +22,7 @@
 
 static gboolean
 cp_eapi_supported(const char *eapi) {
-    return eapi[0] >= '0' && eapi[0] <= '3' && eapi[1] == '\0';
+    return eapi[0] >= '0' && eapi[0] <= '4' && eapi[1] == '\0';
 }
 
 gboolean
