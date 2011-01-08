@@ -52,13 +52,21 @@ static const ActionDesc actions[] = {
     { cmerge_version_action },
 };
 static const ActionDesc *default_action = &actions[2];
-
 static const ActionDesc *action = NULL;
+
+typedef enum {
+    VERBOSITY_QUIET = -1,
+    VERBOSITY_NORMAL = 0,
+    VERBOSITY_VERBOSE = 1
+} VerbosityLevel;
+
+static int verbosity = VERBOSITY_NORMAL;
+
 static const char *config_root = "/";
 static const char *target_root = "/";
 
 /*@unchecked@*/ static struct CMergeOptions
-opts = { NULL, VERBOSITY_NORMAL, FALSE, FALSE };
+opts = { NULL, FALSE, FALSE };
 
 static gboolean
 verbosity_cb(
@@ -69,7 +77,7 @@ verbosity_cb(
 ) /*@modifies opts@*/ {
     const gboolean verbose = g_strcmp0(option_name, "--verbose") == 0
         || g_strcmp0(option_name, "-v");
-    opts.verbosity= verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
+    verbosity = verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
     return TRUE;
 }
 

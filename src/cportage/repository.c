@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 
+#include <cportage/io.h>
 #include <cportage/repository.h>
 
 struct CPRepository {
@@ -28,14 +29,39 @@ struct CPRepository {
     /*@refs@*/ int refs;
 };
 
+static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+read_repo_name(const char *repo_path) {
+    char *result;
+    char *path = g_build_filename(repo_path, "profiles", "repo_name", NULL);
+    FILE *f = cp_fopen(path, "r", NULL);
+
+    /* TODO: validate repo name */
+    if (f == NULL || cp_getline(f, path, &result, NULL) <= 0) {
+        char *basename = g_path_get_basename(repo_path);
+        result = g_strconcat("x-", basename, NULL);
+        g_free(basename);
+        g_warning("Repository '%s' is missing 'profiles/repo_name' file,"
+          " using '%s' as repository name", repo_path, result);
+    } else {
+        g_strstrip(result);
+    }
+
+    if (f != NULL) {
+        fclose(f);
+    }
+
+    g_free(path);
+    return result;
+}
+
 CPRepository
-cp_repository_new(const char *name, const char *path) {
+cp_repository_new(const char *path) {
     CPRepository self;
 
     self = g_new0(struct CPRepository, 1);
     self->refs = 1;
-    self->name = g_strdup(name);
     self->path = g_strdup(path);
+    self->name = read_repo_name(path);
 
     return self;
 }

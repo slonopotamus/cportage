@@ -44,10 +44,7 @@ typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 
 /** TODO: documentation */
 /*@newref@*/ CPRepository
-cp_repository_new(
-    const char *name,
-    const char *path
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+cp_repository_new(const char *path) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Increases reference count of \a self by 1.

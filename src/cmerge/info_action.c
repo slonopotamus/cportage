@@ -71,15 +71,24 @@ print_porttree_timestamp(
 ) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     GError *error = NULL;
-    char **data = cp_read_lines(path, FALSE, &error);
-    g_print("Timestamp of tree: %s\n",
-        data != NULL && data[0] != NULL ? data[0] : "Unknown");
+    FILE *f;
+    char *timestamp = NULL;
+
+    f = cp_fopen(path, "r", &error);
+    if (f == NULL || cp_getline(f, path, &timestamp, &error) < 1) {
+        timestamp = g_strdup("Unknown");
+    }
+    if (f != NULL) {
+        fclose(f);
+    }
+    g_free(path);
+
+    g_print("Timestamp of tree: %s\n", g_strstrip(timestamp));
+    g_free(timestamp);
     if (error != NULL) {
         g_debug("%s", error->message);
+        g_error_free(error);
     }
-    g_clear_error(&error);
-    g_free(path);
-    g_strfreev(data);
 }
 
 static void

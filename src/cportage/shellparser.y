@@ -312,11 +312,8 @@ cp_read_shellconfig(
 
     g_assert(error == NULL || *error == NULL);
 
-    f = fopen(path, "r");
+    f = cp_fopen(path, "r", error);
     if (f == NULL) {
-        int save_errno = errno;
-        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(save_errno),
-            _("Error reading file '%s': %s"), path, g_strerror(save_errno));
         return FALSE;
     }
 

@@ -26,17 +26,10 @@
 
 /*@-exportany@*/
 
-typedef enum {
-    VERBOSITY_QUIET = -1,
-    VERBOSITY_NORMAL = 0,
-    VERBOSITY_VERBOSE = 1
-} VerbosityLevel;
-
 /* Global options */
 typedef struct CMergeOptions {
     /* Leftover args */
-    /*@null@*/ char * const *args;
-    VerbosityLevel verbosity;
+    /*@null@*/ char **args;
     gboolean pretend;
     gboolean update;
 } *CMergeOptions;

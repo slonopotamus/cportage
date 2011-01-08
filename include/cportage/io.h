@@ -27,12 +27,49 @@
 #define CP_IO_H
 
 #include <glib.h>
+#include <stdio.h>
 
 /*@-exportany@*/
 
 G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
+
+/**
+ * GLib-style fopen() wrapper.
+ *
+ * \param path  UTF8-encoded filename
+ * \param error return location for a %GError, or %NULL
+ * \param mode  open mode (see fopen() for possible values)
+ * \return      a %FILE pointer or %NULL if an error occured
+ */
+/*@null@*/ FILE *
+cp_fopen(
+    const char *path,
+    const char *mode,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+/**
+ * Reads a single line of input (including line separator if it was encountered).
+ * Line is checked to be valid UTF8.
+ *
+ * \param stream      a %FILE pointer
+ * \param stream_desc human-readable description of stream (filename, url, etc)
+ *                    in UTF-8 encoding
+ * \param into        return location for read line, free it using g_free().
+ *                    Only modified on successful read.
+ * \param error       return location for a %GError, or %NULL
+ * \return            negative number on error, 0 if EOF was reached,
+ *                    positive number on successful read
+ */
+int
+cp_getline(
+    FILE *stream,
+    const char *stream_desc,
+    /*@out@*/ char **into,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * GLib-style realpath() wrapper.
@@ -68,10 +105,11 @@ cp_read_file(
 
 /**
  * Fully reads text file and splits it at line endings.
- * File contents is checked to be valid UTF8.
+ * File contents is checked to be valid UTF8. Skips empty lines.
  *
  * \param path            UTF8-encoded filename
- * \param ignore_comments if %TRUE, comments starting with \c '#' will be excluded
+ * \param ignore_comments if %TRUE, comments starting with \c '#' will be
+ *                        excluded
  * \param error           return location for a %GError, or %NULL
  * \return                a %NULL-terminated string array
  *                        or %NULL if an error occurred,

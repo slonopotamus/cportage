@@ -134,7 +134,7 @@ cp_settings_add_profile(
     config_file = g_build_filename(profile_dir, "deprecated", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         g_warning("Profile %s is deprecated", profile_dir);
-        /* TODO: read and print file contents */
+        /* TODO: read and print deprecation reason from file */
     }
     g_free(config_file);
     if (!result) {
@@ -262,7 +262,7 @@ cp_settings_init_main_repo(CPSettings self, GError **error) {
         return FALSE;
     }
 
-    self->main_repo = cp_repository_new("portage", canonical);
+    self->main_repo = cp_repository_new(canonical);
 
     g_hash_table_insert(self->config, g_strdup("PORTDIR"), canonical);
 
