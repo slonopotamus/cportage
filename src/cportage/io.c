@@ -78,7 +78,7 @@ cp_getline(FILE *stream, const char *stream_desc, char **into, GError **error) {
     string = g_string_new("");
 
     while ((c = fgetc(stream)) != EOF) {
-        g_string_append_c(string, (unsigned char)c);
+        g_string_append_c(string, (gchar)(unsigned char)c);
         if (c == '\n') {
             break;
         }
