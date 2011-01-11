@@ -32,9 +32,8 @@ set(CMAKE_REQUIRED_FLAGS
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
     -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs -Winline
-    -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization
-    -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing
-    -Wimport -Wunreachable-code -Wno-error=unreachable-code)
+    -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization -Wimport
+    -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing)
 
 add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS}
     -Wold-style-definition -Wmissing-prototypes
