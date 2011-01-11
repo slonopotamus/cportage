@@ -17,16 +17,20 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 #include <gio/gio.h>
 #include <stdlib.h>
-#include <sys/utsname.h>
+
+#if HAVE_UTSNAME_H
+#   include <sys/utsname.h>
+#endif
 
 #include <cportage/atom.h>
 #include <cportage/io.h>
 #include <cportage/strings.h>
 
 #include "actions.h"
-#include "config.h"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 build_profile_str(const CPSettings settings, const char *portdir) /*@*/ {
@@ -167,11 +171,14 @@ cmerge_info_action(
     const CMergeOptions opts G_GNUC_UNUSED,
     GError **error
 ) {
+#if HAVE_UNAME
     struct utsname utsname;
     /* TODO: read cpu name from /proc/cpuinfo */
     const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
     /* TODO: read system name from /etc/gentoo-release */
     const char *sys_version = "gentoo-1.12.11.1";
+#endif
+
     const char *portdir;
     int rc;
 
@@ -183,10 +190,14 @@ cmerge_info_action(
     portdir = cp_repository_get_path(cp_settings_get_main_repository(settings));
 
     print_version(settings, &utsname, portdir);
+
+#if HAVE_UNAME
     g_print("===============================================================\n");
     g_print("System uname: ");
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
+#endif
+
     print_porttree_timestamp(portdir);
     print_packages(portdir);
     print_repositories(settings);

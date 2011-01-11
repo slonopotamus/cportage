@@ -1,32 +1,27 @@
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
-
 bison_target(ShellParser
     shellparser.y
     "${CMAKE_CURRENT_BINARY_DIR}/shellparser.c"
     COMPILE_FLAGS "-Wall -Werror --report=all")
 
-set(SHELLSCANNER_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/shellscanner.h")
 if(HAVE_READ)
-    set(SHELLSCANNER_FLAGS "${SHELLSCANNER_FLAGS} --fast")
+    set(flex_mode "--fast")
 else()
-    set(SHELLSCANNER_FLAGS "${SHELLSCANNER_FLAGS} --nounistd")
+    set(flex_mode "--nounistd")
 endif()
 
 flex_target(ShellScanner
     shellscanner.l
     "${CMAKE_CURRENT_BINARY_DIR}/shellscanner.c"
-    COMPILE_FLAGS "${SHELLSCANNER_FLAGS}")
+    COMPILE_FLAGS
+    "${flex_mode} --header-file=${CMAKE_CURRENT_BINARY_DIR}/shellscanner.h")
 add_flex_bison_dependency(ShellScanner ShellParser)
-
-configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
-# Executables
-file(GLOB cportage_sources *.c)
+file(GLOB sources *.c)
+
 add_library(cportage SHARED
-    ${cportage_sources}
+    ${sources}
     ${BISON_ShellParser_OUTPUTS}
     ${FLEX_ShellScanner_OUTPUTS})
 target_link_libraries(cportage ${GIO2_LIBRARIES})
@@ -35,6 +30,7 @@ set_target_properties(cportage PROPERTIES
   VERSION "${CP_VERSION}")
 set_link_flags(cportage)
 
-# Installation
+configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
+
 install(TARGETS cportage LIBRARY DESTINATION lib)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc" DESTINATION lib/pkgconfig)

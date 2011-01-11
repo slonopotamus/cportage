@@ -1,0 +1,15 @@
+#define CP_VERSION "${CP_VERSION}"
+
+#cmakedefine01 HAVE_LOCALE_H
+#cmakedefine01 HAVE_SETLOCALE
+
+#cmakedefine01 HAVE_RESOURCE_H
+#cmakedefine01 HAVE_GETPRIORITY
+#cmakedefine01 HAVE_SETPRIORITY
+
+#cmakedefine01 HAVE_UNISTD_H
+#cmakedefine01 HAVE_GETPID
+#cmakedefine01 HAVE_NICE
+
+#cmakedefine01 HAVE_UTSNAME_H
+#cmakedefine01 HAVE_UNAME

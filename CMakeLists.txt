@@ -11,33 +11,44 @@ set(CP_VERSION_PATCH 1)
 
 set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 
-# Compiler flags
-set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
+##################
+# Compiler flags #
+##################
+
+set(CMAKE_REQUIRED_DEFINITIONS
     -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500
-    -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="cportage" -DGETTEXT_PACKAGE="cportage"
+    -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="${CMAKE_PROJECT_NAME}"
+    -DGETTEXT_PACKAGE="${CMAKE_PROJECT_NAME}"
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
-set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
+
+set(CMAKE_REQUIRED_FLAGS
     -pedantic -ansi -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
     -fdiagnostics-show-option -ffast-math -O -Wabi
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
     -fstrict-overflow -Wstrict-overflow=5 -Wfloat-equal -Wsync-nand
     -Wdeclaration-after-statement -Wundef -Wshadow -Wno-overlength-strings
-    -Wbad-function-cast -Wcast-qual -Wcast-align
+    -Wbad-function-cast -Wcast-qual -Wcast-align -Wpacked-bitfield-compat
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
     -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs -Winline
     -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization
     -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing
-    -Wimport -Wdisabled-optimization -Wpacked-bitfield-compat
-    -Wunreachable-code -Wno-error=unreachable-code)
-add_definitions(${CMAKE_REQUIRED_DEFINITIONS}
+    -Wimport -Wunreachable-code -Wno-error=unreachable-code)
+
+add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS}
     -Wold-style-definition -Wmissing-prototypes
     -Wmissing-declarations -Wstrict-prototypes)
 
-# Dependencies
+################
+# Dependencies #
+################
+
 include(FindPkgConfig)
 set(GLIB_MINIMAL_REQUIRED 2.20)
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 pkg_check_modules(GIO2 REQUIRED "gio-2.0>=${GLIB_MINIMAL_REQUIRED}")
 
@@ -45,7 +56,10 @@ set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
 include_directories(SYSTEM ${GIO2_INCLUDE_DIRS})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-# Platform checks
+###################
+# Platform checks #
+###################
+
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckCSourceRuns)
@@ -62,14 +76,14 @@ if(NOT REALPATH_ACCEPTS_NULL)
     message(FATAL_ERROR "Your realpath() function doesn't accept NULL")
 endif()
 
-check_symbol_exists(uname sys/utsname.h HAVE_UNAME)
-if(NOT HAVE_UNAME)
-    message(FATAL_ERROR "Your system doesn't have uname() function")
+check_include_file(sys/utsname.h HAVE_UTSNAME_H)
+if(HAVE_UTSNAME_H)
+    check_symbol_exists(uname sys/utsname.h HAVE_UNAME)
 endif()
 
-check_symbol_exists(setlocale locale.h HAVE_SETLOCALE)
-if(NOT HAVE_SETLOCALE)
-    message(FATAL_ERROR "Your system doesn't have setlocale() function")
+check_include_file(locale.h HAVE_LOCALE_H)
+if(HAVE_LOCALE_H)
+    check_symbol_exists(setlocale locale.h HAVE_SETLOCALE)
 endif()
 
 check_symbol_exists(qsort stdlib.h HAVE_QSORT)
@@ -95,13 +109,22 @@ if(HAVE_RESOURCE_H)
     check_symbol_exists(setpriority sys/resource.h HAVE_SETPRIORITY)
 endif()
 
-# Macros
+configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+
+##########
+# Macros #
+##########
+
 macro(set_link_flags _target)
   set_target_properties(${_target} PROPERTIES
       LINK_FLAGS "-Wl,--as-needed,--no-add-needed,--fatal-warnings,--no-undefined,--warn-shared-textrel,-z=now,-z=noexecstack,--no-undefined-version")
 endmacro()
 
-# Subdirs
+###########
+# Subdirs #
+###########
+
 add_subdirectory(include)
 add_subdirectory(man)
 add_subdirectory(src)

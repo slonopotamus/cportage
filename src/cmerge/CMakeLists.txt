@@ -1,12 +1,6 @@
-configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h")
+file(GLOB sources *.c)
 
-# Executables
-
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-
-file(GLOB cmerge_sources *.c)
-
-add_executable(cmerge ${cmerge_sources})
+add_executable(cmerge ${sources})
 set_link_flags(cmerge)
 target_link_libraries(cmerge cportage)
 

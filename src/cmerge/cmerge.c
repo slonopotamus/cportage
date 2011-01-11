@@ -21,16 +21,18 @@
 
 #include <glib-object.h>
 #include <errno.h>
-#include <locale.h>
 #include <stdlib.h>
+#include <cportage/shellconfig.h>
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#elif HAVE_RESOURCE_H
-#include <sys/resource.h>
+#if HAVE_LOCALE_H
+#   include <locale.h>
 #endif
 
-#include <cportage/shellconfig.h>
+#if HAVE_UNISTD_H
+#   include <unistd.h>
+#elif HAVE_RESOURCE_H
+#   include <sys/resource.h>
+#endif
 
 #include "actions.h"
 
@@ -236,7 +238,9 @@ main(int argc, char *argv[]) {
     CPSettings settings = NULL;
     int retval;
 
+#if HAVE_SETLOCALE
     setlocale(LC_ALL, "");
+#endif
     g_type_init();
 
     ctx = g_option_context_new(NULL);
