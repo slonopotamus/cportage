@@ -33,7 +33,10 @@
 #include "actions.h"
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-build_profile_str(const CPSettings settings, const char *portdir) /*@*/ {
+build_profile_str(
+    const CPSettings settings,
+    const char *portdir
+) /*@modifies errno@*/ {
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cp_settings_get_profile(settings);
     /* TODO: encoding */
@@ -56,7 +59,7 @@ print_version(
     const CPSettings settings,
     const struct utsname *utsname,
     const char *portdir
-) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+) /*@modifies *stdout,errno@*/ {
     char *profile_str = build_profile_str(settings, portdir);
     /* TODO: read gcc version from gcc-config */
     const char *gcc_ver = "gcc-4.3.2";
@@ -82,8 +85,9 @@ print_porttree_timestamp(
     if (f == NULL || cp_getline(f, path, &timestamp, &error) < 1) {
         timestamp = g_strdup("Unknown");
     }
+    g_assert(timestamp != NULL);
     if (f != NULL) {
-        fclose(f);
+        (void)fclose(f);
     }
     g_free(path);
 
@@ -98,14 +102,14 @@ print_porttree_timestamp(
 static void
 print_packages(
     const char *portdir
-) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
     char **data = cp_read_lines(path, TRUE, NULL);
 
     if (data != NULL) {
         cp_strings_sort(data);
 
-        CP_STRV_ITER(data, s)
+        CP_STRV_ITER(data, s) {
             CPAtom atom = cp_atom_new(s, NULL);
             char *atom_label = g_strconcat(s, ":", NULL);
             if (atom == NULL) {
@@ -116,18 +120,18 @@ print_packages(
             }
             g_free(atom_label);
             cp_atom_unref(atom);
-        end_CP_STRV_ITER
+        } end_CP_STRV_ITER
     }
     g_free(path);
     g_strfreev(data);
 }
 
 static void
-print_repositories(const CPSettings settings) {
+print_repositories(const CPSettings settings) /*@modifies *stdout,errno@*/ {
     g_print("Repositories:");
-    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo)
+    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo) {
         g_print(" %s", cp_repository_get_name(repo));
-    end_CP_REPOSITORY_ITER
+    } end_CP_REPOSITORY_ITER
     g_print("\n");
 }
 
@@ -135,7 +139,7 @@ static void
 print_settings(
     const CPSettings settings,
     const char *portdir
-) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cp_read_lines(path, TRUE, NULL);
 
@@ -158,8 +162,8 @@ print_settings(
 
         if (unset != NULL) {
             g_print("%s\n", unset->str);
+            (void)g_string_free(unset, TRUE);
         }
-        (void)g_string_free(unset, TRUE);
     }
     g_free(path);
     g_strfreev(data);
@@ -168,7 +172,7 @@ print_settings(
 int
 cmerge_info_action(
     CPSettings settings,
-    const CMergeOptions opts G_GNUC_UNUSED,
+    /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
 #if HAVE_UNAME
@@ -179,23 +183,34 @@ cmerge_info_action(
     const char *sys_version = "gentoo-1.12.11.1";
 #endif
 
+    CPRepository main_repo;
     const char *portdir;
     int rc;
 
     g_assert(error == NULL || *error == NULL);
 
+    /*@-compdef@*/
     rc = uname(&utsname);
+    /*@=compdef@*/
     g_assert(rc == 0);
 
-    portdir = cp_repository_get_path(cp_settings_get_main_repository(settings));
+    main_repo = cp_settings_get_main_repository(settings);
+    portdir = cp_repository_get_path(main_repo);
+    cp_repository_unref(main_repo);
 
+    /*@-compdef@*/
     print_version(settings, &utsname, portdir);
+    /*@=compdef@*/
 
 #if HAVE_UNAME
     g_print("===============================================================\n");
     g_print("System uname: ");
+    /*@-compdef@*/
+    /*@-usedef@*/
     g_print("%s-%s-%s-%s-with-%s\n",
            utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
+    /*@=usedef@*/
+    /*@=compdef@*/
 #endif
 
     print_porttree_timestamp(portdir);

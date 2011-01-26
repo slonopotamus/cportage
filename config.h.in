@@ -8,6 +8,7 @@
 #cmakedefine01 HAVE_SETPRIORITY
 
 #cmakedefine01 HAVE_UNISTD_H
+#cmakedefine01 HAVE_EXECLP
 #cmakedefine01 HAVE_GETPID
 #cmakedefine01 HAVE_NICE
 

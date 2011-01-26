@@ -32,19 +32,26 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-/*@iter CP_REPOSITORY_ITER(sef CPRepository *arr, yield CPRepository elem)@*/
-
-#define CP_REPOSITORY_ITER(arr, m_elem) CP_ITER(CPRepository, arr, m_elem)
-#define end_CP_REPOSITORY_ITER end_CP_ITER
-
 /**
  * A structure describing single repository.
  */
 typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 
+/*@iter CP_REPOSITORY_ITER(CPRepository *arr, yield CPRepository elem)@*/
+
+#define CP_REPOSITORY_ITER(arr, m_elem) { \
+    CPRepository *m_iter; \
+    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
+        CPRepository m_elem = *m_iter;
+
+#define end_CP_REPOSITORY_ITER }}
+
 /** TODO: documentation */
 /*@newref@*/ CPRepository
-cp_repository_new(const char *path) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+cp_repository_new(
+    const char *path
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *stderr,errno@*/ /*@globals fileSystem@*/;
 
 /**
  * Increases reference count of \a self by 1.
@@ -86,7 +93,8 @@ gboolean
 cp_repository_sync(
     const CPRepository self,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,*stdout,*stderr,errno,fileSystem@*/;
 
 #pragma GCC visibility pop
 

@@ -24,16 +24,16 @@
 int
 cmerge_sync_action(
     CPSettings settings,
-    const CMergeOptions options G_GNUC_UNUSED,
+    /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
     g_assert(error == NULL || *error == NULL);
 
-    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo)
+    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo) {
         if (!cp_repository_sync(repo, error)) {
             return EXIT_FAILURE;
         }
-    end_CP_REPOSITORY_ITER
+    } end_CP_REPOSITORY_ITER
 
     return EXIT_SUCCESS;
 }

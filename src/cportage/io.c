@@ -18,19 +18,23 @@
 */
 
 #include <errno.h>
-#include <glib/gstdio.h>
 #include <stdlib.h>
 
 #include <cportage/io.h>
 #include <cportage/strings.h>
 
-static gboolean
-cp_utf8_validate(const char *str, const char *file, GError **error) {
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+cp_utf8_validate(
+    const char *str,
+    const char *file,
+    /*@null@*/ GError **error
+) /*@modifies *error@*/ {
     g_assert(error == NULL || *error == NULL);
 
-    if (!g_utf8_validate(str, -1, NULL)) {
+    if (!g_utf8_validate(str, (gssize)-1, NULL)) {
         /* TODO: report where we got invalid byte sequence exactly */
-        g_set_error(error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+        g_set_error(error, G_CONVERT_ERROR,
+            (gint)G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
             _("Invalid UTF-8 byte sequence in '%s'"), file);
         return FALSE;
     }
@@ -44,14 +48,13 @@ cp_fopen(const char *path, const char *mode, GError **error) {
     FILE *result = NULL;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(g_utf8_validate(path, -1, NULL));
 
-    path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
+    path_enc = g_filename_from_utf8(path, (gssize)-1, NULL, NULL, error);
     if (path_enc == NULL) {
         goto ERR;
     }
 
-    result = g_fopen(path_enc, mode);
+    result = fopen(path_enc, mode);
     if (result == NULL) {
         int save_errno = errno;
         /*@-type@*/
@@ -69,47 +72,50 @@ ERR:
 }
 
 int
-cp_getline(FILE *stream, const char *stream_desc, char **into, GError **error) {
-    GString *string;
+cp_getline(FILE *file, const char *file_desc, char **into, GError **error) {
+    /*@only@*/ GString *line;
     int c;
 
     g_assert(error == NULL || *error == NULL);
 
-    string = g_string_new("");
+    line = g_string_new("");
 
-    while ((c = fgetc(stream)) != EOF) {
-        g_string_append_c(string, (gchar)(unsigned char)c);
+    while ((c = fgetc(file)) != EOF) {
+        line = g_string_append_c(line, (gchar)(unsigned char)c);
         if (c == '\n') {
             break;
         }
     }
 
-    if (ferror(stream)) {
+    if (ferror(file) != 0) {
         int save_errno = errno;
         /*@-type@*/
         int error_code = g_file_error_from_errno(save_errno);
         /*@=type@*/
         g_set_error(error, G_FILE_ERROR, error_code,
             _("Error reading from '%s': %s"),
-            stream_desc, g_strerror(save_errno));
+            file_desc, g_strerror(save_errno));
         goto ERR;
     }
 
-    if (string->len < 1) {
-        g_string_free(string, TRUE);
+    if (line->len == 0) {
+        *into = g_string_free(line, TRUE);
         return 0;
     }
 
-    if (!cp_utf8_validate(string->str, stream_desc, error)) {
+    if (!cp_utf8_validate(line->str, file_desc, error)) {
         goto ERR;
     }
 
-    *into = string->str;
-    g_string_free(string, FALSE);
+    *into = g_string_free(line, FALSE);
     return 1;
 
 ERR:
-    g_string_free(string, TRUE);
+    /*@-usereleased@*/
+    /*@-mustfreefresh*/
+    *into = g_string_free(line, TRUE);
+    /*@=mustfreefresh*/
+    /*@=usereleased@*/
     return -1;
 }
 
@@ -120,9 +126,8 @@ cp_canonical_path(const char *path, GError **error) {
     char *result = NULL;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(g_utf8_validate(path, -1, NULL));
 
-    path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
+    path_enc = g_filename_from_utf8(path, (gssize)-1, NULL, NULL, error);
     if (path_enc == NULL) {
         goto ENC_ERR;
     }
@@ -143,7 +148,7 @@ cp_canonical_path(const char *path, GError **error) {
         goto FS_ERR;
     }
 
-    result = g_filename_to_utf8(result_enc, -1, NULL, NULL, error);
+    result = g_filename_to_utf8(result_enc, (gssize)-1, NULL, NULL, error);
 
 FS_ERR:
     free(result_enc);
@@ -159,9 +164,8 @@ cp_read_file(const char *path, char **data, size_t *len, GError **error) {
     gboolean result;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(g_utf8_validate(path, -1, NULL));
 
-    path_enc = g_filename_from_utf8(path, -1, NULL, NULL, error);
+    path_enc = g_filename_from_utf8(path, (gssize)-1, NULL, NULL, error);
     result = path_enc != NULL && g_file_get_contents(path_enc, data, len, error);
 
     g_free(path_enc);
@@ -183,6 +187,8 @@ cp_read_lines(const char *path, const gboolean ignore_comments, GError **error) 
         goto ERR;
     }
 
+    g_assert(data != NULL);
+
     if (!cp_utf8_validate(data, path, error)) {
         goto ERR;
     }
@@ -194,7 +200,7 @@ cp_read_lines(const char *path, const gboolean ignore_comments, GError **error) 
         size_t j = 0;
         result = g_new(char *, g_strv_length(lines) + 1);
         while ((line = lines[i++]) != NULL) {
-            char *comment = g_utf8_strchr(line, -1, '#');
+            char *comment = g_utf8_strchr(line, (gssize)-1, (gunichar)'#');
             if (comment != NULL) {
                 *comment = '\0';
             }

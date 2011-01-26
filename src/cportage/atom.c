@@ -39,11 +39,6 @@ struct CPAtom {
     /*@only@*/ char *slot;
 };
 
-typedef struct AtomRegex {
-  /*@only@*/ GRegex *regex;
-  int op_idx, star_idx, simple_idx, slot_idx, use_idx;
-} *AtomRegex;
-
 /*
     2.1.1 A category name may contain any of the characters [A-Za-z0-9+_.-].
     It must not begin with a hyphen or a dot.
@@ -75,8 +70,12 @@ typedef struct AtomRegex {
 #define CPV CP "-" VER
 #define ATOM "^(?:(?:" OP CPV ")|(?P<star>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
 
-static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
+/*@-checkpost@*/
+static /*@nullterminated@*/ /*@only@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+safe_fetch(
+    const GMatchInfo *match_info,
+    int match_num
+) /*@*/ /*@ensures maxRead(result) >= 1@*/ {
     char *result = g_match_info_fetch(match_info, match_num);
 
     /*
@@ -95,9 +94,10 @@ safe_fetch(const GMatchInfo *match_info, int match_num) /*@*/ {
     g_assert(result != NULL);
     return result;
 }
+/*@=checkpost@*/
 
 CPAtom
-cp_atom_new(const char *str, GError **error) {
+cp_atom_new(const char *value, GError **error) {
     static struct {
         /*@only@*/ GRegex *regex;
         int op_idx, star_idx, simple_idx, slot_idx, use_idx;
@@ -108,7 +108,6 @@ cp_atom_new(const char *str, GError **error) {
     char *invalid_version;
 
     g_assert(error == NULL || *error == NULL);
-    g_assert(g_utf8_validate(str, -1, NULL));
 
     if (atom_re.regex == NULL) {
         /*@-mustfreeonly@*/
@@ -131,7 +130,7 @@ cp_atom_new(const char *str, GError **error) {
         g_assert(atom_re.use_idx != -1);
     }
 
-    if (g_regex_match_full(atom_re.regex, str, -1, 0, 0, &match, error)) {
+    if (g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, error)) {
         char *op_match = NULL;
         char *star_match = NULL;
         char *simple_match = NULL;
@@ -202,7 +201,9 @@ cp_atom_new(const char *str, GError **error) {
 CPAtom
 cp_atom_ref(CPAtom self) {
     ++self->refs;
+    /*@-refcounttrans@*/
     return self;
+    /*@=refcounttrans@*/
 }
 
 void

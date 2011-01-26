@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define CP_SETTINGS_ERROR cp_settings_error_quark()
 
 GQuark
-cp_settings_error_quark(void);
+cp_settings_error_quark(void) /*@*/;
 
 /**
  * Errors raised by #CPSettings.
@@ -64,7 +64,8 @@ cp_settings_new(
     const char *config_root,
     const char *target_root,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,*stderr,errno@*/ /*@globals fileSystem@*/;
 
 /**
  * Increases reference count of \a self by 1.
@@ -127,7 +128,7 @@ cp_settings_get(
 CPRepository
 cp_settings_get_main_repository(
     const CPSettings self
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;
 
 /**
  * \return readonly NULL-terminated list of repositories (including main repo)

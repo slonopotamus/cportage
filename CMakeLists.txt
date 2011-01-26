@@ -98,10 +98,6 @@ if(HAVE_UNISTD_H)
     check_symbol_exists(execlp unistd.h HAVE_EXECLP)
 endif()
 
-if(NOT HAVE_EXECLP)
-    message(FATAL_ERROR "Your system doesn't have execlp() function")
-endif()
-
 check_include_file(sys/resource.h HAVE_RESOURCE_H)
 if(HAVE_RESOURCE_H)
     check_symbol_exists(getpriority sys/resource.h HAVE_GETPRIORITY)

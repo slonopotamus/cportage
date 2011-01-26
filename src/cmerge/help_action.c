@@ -17,18 +17,24 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
+
+#if HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 
 #include "actions.h"
 
 int
 cmerge_help_action(
-    CPSettings settings G_GNUC_UNUSED,
-    const CMergeOptions options G_GNUC_UNUSED,
+    /*@unused@*/ CPSettings settings G_GNUC_UNUSED,
+    /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
+#if HAVE_EXECLP
     int retval;
     int save_errno;
 
@@ -46,4 +52,10 @@ cmerge_help_action(
         _("Can't run '%s': %s"), "man", g_strerror(save_errno));
 
     return retval;
+#else
+    g_assert(error == NULL || *error == NULL);
+
+    g_print("See `man cmerge` for documentation");
+    return EXIT_SUCCESS;
+#endif
 }

@@ -30,8 +30,10 @@ struct CPRepository {
 };
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-read_repo_name(const char *repo_path) {
-    char *result;
+read_repo_name(
+    const char *repo_path
+) /*@modifies *stderr,errno@*/ /*@globals fileSystem@*/ {
+    /*@only@*/ char *result = NULL;
     char *path = g_build_filename(repo_path, "profiles", "repo_name", NULL);
     FILE *f = cp_fopen(path, "r", NULL);
 
@@ -43,11 +45,12 @@ read_repo_name(const char *repo_path) {
         g_warning(_("Repository '%s' is missing 'profiles/repo_name' file,"
           " using '%s' as repository name"), repo_path, result);
     } else {
-        g_strstrip(result);
+        g_assert(result != NULL);
+        (void)g_strstrip(result);
     }
 
     if (f != NULL) {
-        fclose(f);
+        (void)fclose(f);
     }
 
     g_free(path);
@@ -60,7 +63,9 @@ cp_repository_new(const char *path) {
 
     self = g_new0(struct CPRepository, 1);
     self->refs = 1;
+    g_assert(self->path == NULL);
     self->path = g_strdup(path);
+    g_assert(self->name == NULL);
     self->name = read_repo_name(path);
 
     return self;
@@ -69,7 +74,9 @@ cp_repository_new(const char *path) {
 CPRepository
 cp_repository_ref(CPRepository self) {
     ++self->refs;
+    /*@-refcounttrans@*/
     return self;
+    /*@=refcounttrans@*/
 }
 
 void
@@ -101,7 +108,7 @@ cp_repository_sync(const CPRepository self, GError **error) {
     sync_cmd = g_strsplit("git pull", " ", 0);
     g_message(">>> Starting git pull in %s...", self->path);
     /** TODO: path encoding */
-    result = g_spawn_sync(self->path, sync_cmd, NULL, G_SPAWN_SEARCH_PATH,
+    result = g_spawn_sync(self->path, sync_cmd, NULL, (gint)G_SPAWN_SEARCH_PATH,
         NULL, NULL, NULL, NULL, &exit_status, error);
     g_strfreev(sync_cmd);
 

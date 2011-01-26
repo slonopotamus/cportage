@@ -39,14 +39,14 @@ cmerge_help_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
-);
+) /*@modifies *error,*stdout,errno@*/;
 
 int
 cmerge_info_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
-) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout,*error@*/;
+) /*@modifies settings,*error,*stdout,errno@*/ /*@globals fileSystem@*/;
 
 int
 cmerge_install_action(
@@ -60,13 +60,13 @@ cmerge_sync_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
-) /*@modifies *error@*/;
+) /*@modifies *error,*stdout,*stderr,errno,fileSystem@*/;
 
 int
 cmerge_version_action(
     CPSettings settings,
     const CMergeOptions options,
     /*@null@*/ GError **error
-);
+) /*@modifies *stdout,errno@*/;
 
 #endif

@@ -42,10 +42,10 @@ typedef /*@refcounted@*/ struct CPAtom *CPAtom;
  */
 /*@newref@*/ /*@null@*/ CPAtom
 cp_atom_new(
-    const char *str,
+    const char *value,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-    /*@modifies *error@*/;
+/*@modifies *error@*/;
 
 /**
  * Increases reference count of \a self by 1.

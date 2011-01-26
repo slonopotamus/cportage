@@ -43,19 +43,21 @@ G_BEGIN_DECLS
  * \param mode  open mode (see fopen() for possible values)
  * \return      a %FILE pointer or %NULL if an error occured
  */
-/*@null@*/ FILE *
+/*@dependent@*/ /*@null@*/ FILE *
 cp_fopen(
     const char *path,
     const char *mode,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno,fileSystem@*/
+/*@globals fileSystem@*/;
 
 /**
  * Reads a single line of input (including line separator if it was encountered).
  * Line is checked to be valid UTF8.
  *
- * \param stream      a %FILE pointer
- * \param stream_desc human-readable description of stream (filename, url, etc)
+ * \param file      a %FILE pointer
+ * \param file_desc human-readable description of stream (filename, url, etc)
  *                    in UTF-8 encoding
  * \param into        return location for read line, free it using g_free().
  *                    Only modified on successful read.
@@ -65,12 +67,15 @@ cp_fopen(
  */
 int
 cp_getline(
-    FILE *stream,
-    const char *stream_desc,
+    FILE *file,
+    const char *file_desc,
     /*@out@*/ char **into,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *file,*into,*error,errno@*/
+/*@globals fileSystem@*/;
 
+/*@-globuse@*/
 /**
  * GLib-style realpath() wrapper.
  *
@@ -84,7 +89,9 @@ cp_canonical_path(
     const char *path,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-    /*@modifies *error,errno@*/;
+/*@modifies *error,errno@*/
+/*@globals errno,fileSystem@*/;
+/*@=globuse@*/
 
 /**
  * Same as g_file_get_contents() but expects UTF8-encoded filename.
@@ -99,9 +106,11 @@ gboolean
 cp_read_file(
     const char *path,
     /*@out@*/ char **data,
-    /*@out@*/ size_t *len,
+    /*@null@*/ size_t *len,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *data,*len,*error,errno@*/
+/*@globals fileSystem@*/;
 
 /**
  * Fully reads text file and splits it at line endings.
@@ -115,12 +124,14 @@ cp_read_file(
  *                        or %NULL if an error occurred,
  *                        free it using g_strfreev()
  */
-/*@null@*/ char **
+/*@null@*/ /*@only@*/ char **
 cp_read_lines(
     const char *path,
     const gboolean ignore_comments,
     /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno@*/
+/*@globals fileSystem@*/;
 
 #pragma GCC visibility pop
 

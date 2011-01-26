@@ -34,10 +34,14 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-/*@iter CP_STRV_ITER(sef char **arr, yield char *elem)@*/
+/*@iter CP_STRV_ITER(char **arr, yield char *elem)@*/
 
-#define CP_STRV_ITER(arr, m_elem) CP_ITER(char *, arr, m_elem)
-#define end_CP_STRV_ITER end_CP_ITER
+#define CP_STRV_ITER(arr, m_elem) { \
+    char **m_iter; \
+    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
+        char *m_elem = *m_iter;
+
+#define end_CP_STRV_ITER }}
 
 /**
  * Splits given string at whitespace. Empty elements are filtered out.
@@ -65,7 +69,10 @@ cp_strings_sort(char **str_array) /*@modifies *str_array@*/;
  *         %TRUE otherwise
  */
 gboolean
-cp_string_is_true(/*@null@*/ const char *str) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_string_is_true(
+    /*@null@*/ const char *str
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *stderr,errno@*/;
 
 #pragma GCC visibility pop
 

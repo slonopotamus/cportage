@@ -21,7 +21,7 @@
 #include <cportage/strings.h>
 
 static gboolean
-cp_eapi_supported(const char *eapi) {
+cp_eapi_supported(const char *eapi) /*@*/ {
     return eapi[0] >= '0' && eapi[0] <= '4' && eapi[1] == '\0';
 }
 
@@ -32,7 +32,7 @@ cp_eapi_check(const char *eapi, const char *file, GError **error) {
     if (cp_eapi_supported(eapi)) {
         return TRUE;
     }
-    g_set_error(error, CP_EAPI_ERROR, CP_EAPI_ERROR_UNSUPPORTED,
+    g_set_error(error, CP_EAPI_ERROR, (gint)CP_EAPI_ERROR_UNSUPPORTED,
         _("Unsupported EAPI '%s' in '%s'"), eapi, file);
     return FALSE;
 }

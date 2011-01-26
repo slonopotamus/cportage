@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 #define CP_SHELLCONFIG_ERROR cp_shellconfig_error_quark()
 
 GQuark
-cp_shellconfig_error_quark(void);
+cp_shellconfig_error_quark(void) /*@*/;
 
 /**
  * TODO: documentation.
@@ -62,7 +62,8 @@ cp_read_shellconfig(
     const char *path,
     gboolean allow_source,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *into,*error,errno@*/;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/;
 
 /** TODO: documentation */
 /*@null@*/ char *

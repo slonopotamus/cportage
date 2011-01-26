@@ -33,6 +33,7 @@ cp_strings_pysplit(const char *str) {
         GError *error = NULL;
         regex = g_regex_new("\\s+", 0, 0, &error);
         g_assert_no_error(error);
+        g_assert(regex != NULL);
     }
 
     /* strdup/trim can be avoided if regex will find tokens, not separators */
@@ -50,14 +51,19 @@ cmpstrp(const void *p1, const void *p2) /*@*/ {
 
 void
 cp_strings_sort(char **str_array) {
-    const size_t len = g_strv_length(str_array);
+    const size_t len = (size_t)g_strv_length(str_array);
+    /*@-mods@*/
+    /*@-globs@*/
     qsort(str_array, len, sizeof(*str_array), cmpstrp);
+    /*@=globs@*/
+    /*@=mods@*/
 }
 
-static const char * const trues[] = {"true", "t", "yes", "y", "1", "on"};
-static const char * const falses[] = {"false", "f", "no", "n", "0", "off"};
+static const char *trues[] = {"true", "t", "yes", "y", "1", "on"};
+static const char *falses[] = {"false", "f", "no", "n", "0", "off"};
 
-gboolean cp_string_is_true(const char *str) {
+gboolean 
+cp_string_is_true(const char *str) {
     size_t i;
 
     if (str == NULL) {

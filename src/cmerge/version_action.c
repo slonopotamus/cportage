@@ -24,8 +24,8 @@
 
 int
 cmerge_version_action(
-    CPSettings settings G_GNUC_UNUSED,
-    const CMergeOptions options G_GNUC_UNUSED,
+    /*@unused@*/ CPSettings settings G_GNUC_UNUSED,
+    /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
     g_assert(error == NULL || *error == NULL);

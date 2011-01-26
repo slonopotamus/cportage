@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include <glib.h>
 #include <glib-object.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -42,19 +43,19 @@ typedef int (*CMergeAction) (
     /*@null@*/ GError **error
 );
 
-typedef struct ActionDesc {
+typedef const struct ActionDesc {
     CMergeAction func;
-} ActionDesc;
+} *ActionDesc;
 
-static const ActionDesc actions[] = {
+static const struct ActionDesc actions[] = {
     { cmerge_help_action },
     { cmerge_info_action },
     { cmerge_install_action },
     { cmerge_sync_action },
     { cmerge_version_action },
 };
-static const ActionDesc *default_action = &actions[2];
-static const ActionDesc *action = NULL;
+static const ActionDesc default_action = &actions[2];
+/*@null@*/ static ActionDesc action = NULL;
 
 typedef enum {
     VERBOSITY_QUIET = -1,
@@ -62,12 +63,12 @@ typedef enum {
     VERBOSITY_VERBOSE = 1
 } VerbosityLevel;
 
-static int verbosity = VERBOSITY_NORMAL;
+static VerbosityLevel verbosity = VERBOSITY_NORMAL;
 
-static const char *config_root = "/";
-static const char *target_root = "/";
+/*@observer@*/ static const char *config_root = "/";
+/*@observer@*/ static const char *target_root = "/";
 
-/*@unchecked@*/ static struct CMergeOptions opts = { NULL, FALSE, FALSE };
+static struct CMergeOptions opts = { NULL, FALSE, FALSE };
 
 static gboolean
 verbosity_cb(
@@ -75,42 +76,46 @@ verbosity_cb(
     /*@unused@*/ const char *value G_GNUC_UNUSED,
     /*@unused@*/ void *data G_GNUC_UNUSED,
     /*@unused@*/ GError **error G_GNUC_UNUSED
-) /*@modifies opts@*/ {
+) /*@modifies verbosity@*/ {
     const gboolean verbose = g_strcmp0(option_name, "--verbose") == 0
-        || g_strcmp0(option_name, "-v");
+        || g_strcmp0(option_name, "-v") == 0;
     verbosity = verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
     return TRUE;
 }
 
 static gboolean
-action_cb(const char *option_name, const char *value, void *data, GError **error);
+action_cb(
+    const char *option_name,
+    const char *value,
+    void *data,
+    GError **error
+) /*@modifies action@*/ /*@globals actions,options@*/;
 
 /* Know how to compile this without G_GNUC_EXTENSION? Tell me */
-/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry
+G_GNUC_EXTENSION static const GOptionEntry
 options[] = {
 
     /* Actions */
-    {"help", 'h', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
-    {"info", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
-    {"install", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
-    {"sync", '\0', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
-    {"version", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, action_cb, NULL, NULL},
+    {"help", 'h', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)action_cb, NULL, NULL},
+    {"info", '\0', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)action_cb, NULL, NULL},
+    {"install", '\0', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)action_cb, NULL, NULL},
+    {"sync", '\0', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)action_cb, NULL, NULL},
+    {"version", 'V', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)action_cb, NULL, NULL},
 
     /* Global options */
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &opts.args, NULL, NULL},
     {"config-root", '\0', 0, G_OPTION_ARG_STRING, &config_root, NULL, NULL},
     {"target-root", '\0', 0, G_OPTION_ARG_STRING, &target_root, NULL, NULL},
-    /*@-type@*/
-    {"quiet", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbosity_cb, NULL, NULL},
-    {"verbose", 'v', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, verbosity_cb, NULL, NULL},
+    {"quiet", 'q', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
+    {"verbose", 'v', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
 
     /* Merge options */
     {"pretend", 'p', 0, G_OPTION_ARG_NONE, &opts.pretend, NULL, NULL},
     {"update", 'u', 0, G_OPTION_ARG_NONE, &opts.update, NULL, NULL},
 
-    /*@-nullassign@*/ /*@-type@*/
+    /*@-nullassign@*/
     {NULL, '\0', 0, 0, NULL, NULL, NULL}
-    /*@=type@*/ /*@=nullassign@*/
+    /*@=nullassign@*/
 };
 
 static gboolean
@@ -149,8 +154,10 @@ action_cb(
 }
 
 static void
-adjust_niceness(const CPSettings settings) {
-    static const char *key = "PORTAGE_NICENESS";
+adjust_niceness(
+    const CPSettings settings
+) /*@modifies *stderr,errno,internalState@*/ /*@globals fileSystem@*/ {
+    /*@observer@*/ static const char *key = "PORTAGE_NICENESS";
     const char *value = cp_settings_get(settings, key);
     int inc;
 
@@ -178,15 +185,18 @@ adjust_niceness(const CPSettings settings) {
         " nor getpriority()/setpriority() functions"), key);
 #endif
 
-    if (errno) {
+    if (errno != 0) {
         int save_errno = errno;
         g_warning(_("Can't change nice value to '%s': %s"),
             value, g_strerror(save_errno));
     }
 }
 
-static void adjust_ionice(const CPSettings settings) {
-    static const char *key = "PORTAGE_IONICE_COMMAND";
+static void
+adjust_ionice(
+    const CPSettings settings
+) /*@modifies *stderr,errno,internalState@*/ /*@globals fileSystem@*/ {
+    /*@observer@*/ static const char *key = "PORTAGE_IONICE_COMMAND";
     const char *raw_value = cp_settings_get(settings, key);
 
     if (raw_value == NULL) {
@@ -195,7 +205,9 @@ static void adjust_ionice(const CPSettings settings) {
 
 #if HAVE_GETPID
     {
+#ifndef S_SPLINT_S
         G_STATIC_ASSERT(sizeof(pid_t) <= sizeof(long));
+#endif
         GError *error = NULL;
         GHashTable *vars = NULL;
         char *cmd = NULL;
@@ -219,12 +231,12 @@ static void adjust_ionice(const CPSettings settings) {
 ERR:
         if (error != NULL) {
             g_warning(_("Can't run '%s': %s"), cmd, error->message);
+            g_error_free(error);
         }
         g_free(cmd);
         if (vars != NULL) {
             g_hash_table_destroy(vars);
         }
-        g_error_free(error);
     }
 #else
     g_warning(_("%s is specified but system doesn't have getpid() function"), key);
@@ -232,14 +244,16 @@ ERR:
 }
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[])
+/*@modifies *stdout,*stderr,action,errno,internalState,fileSystem@*/
+/*@globals opts,options,config_root,target_root,default_action@*/ {
     GOptionContext *ctx;
     GError *error = NULL;
     CPSettings settings = NULL;
     int retval;
 
 #if HAVE_SETLOCALE
-    setlocale(LC_ALL, "");
+    (void)setlocale(LC_ALL, "");
 #endif
     g_type_init();
 

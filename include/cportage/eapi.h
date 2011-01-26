@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define CP_EAPI_ERROR cp_eapi_error_quark()
 
 GQuark
-cp_eapi_error_quark(void);
+cp_eapi_error_quark(void) /*@*/;
 
 /**
  * TODO: documentation.
