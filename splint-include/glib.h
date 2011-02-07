@@ -238,7 +238,7 @@ g_build_filename(const gchar *first_element, ...) /*@*/;
 /*@only@*/ gchar *
 g_strdup(const gchar *str) /*@*/;
 
-/*@only@*/ gchar *
+/*@printflike@*/ /*@only@*/ gchar *
 g_strdup_printf(const gchar *format, ...) /*@*/;
 
 /*@dependent@*/ gchar *
@@ -265,7 +265,7 @@ g_strsplit(
 g_strjoinv(const gchar *separator, gchar **str_array) /*@*/;
 
 gint
-g_ascii_strcasecmp(const gchar *s1, const gchar *s2) /*@*/;
+g_ascii_strcasecmp(const gchar *s1,  const gchar *s2) /*@*/;
 
 /*@only@*/ gchar *
 g_strconcat(const gchar *string1, ...) /*@*/;
@@ -428,7 +428,7 @@ g_spawn_command_line_sync(
     /*@null@*/ /*@out@*/ gchar **standard_error,
     /*@null@*/ /*@out@*/ gint *exit_status,
     /*@null@*/ GError **error
-) /*@modifies *standard_output,*standard_error,*error,errno,fileSystem@*/;
+) /*@modifies *standard_output,*standard_error,*error,*stdout,*stderr,errno,fileSystem@*/;
 
 /* gregex.h */
 
@@ -534,7 +534,7 @@ struct _GOptionEntry {
     gint         flags;
 
     GOptionArg   arg;
-    /*@dependent@*/ /*@null@*/ gpointer     arg_data;
+    /*@null@*/ /*@observer@*/ gpointer     arg_data;
 
     /*@null@*/ /*@observer@*/ const gchar *description;
     /*@null@*/ /*@observer@*/ const gchar *arg_description;

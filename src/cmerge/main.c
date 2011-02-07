@@ -19,23 +19,16 @@
 
 #include "config.h"
 
-#include <glib.h>
 #include <glib-object.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <cportage/shellconfig.h>
 
 #if HAVE_LOCALE_H
 #   include <locale.h>
 #endif
 
-#if HAVE_UNISTD_H
-#   include <unistd.h>
-#elif HAVE_RESOURCE_H
-#   include <sys/resource.h>
-#endif
-
 #include "actions.h"
+#include "nice.h"
 
 typedef int (*CMergeAction) (
     CPSettings settings,
@@ -89,10 +82,10 @@ action_cb(
     const char *value,
     void *data,
     GError **error
-) /*@modifies action@*/ /*@globals actions,options@*/;
+) /*@modifies action@*/ /*@globals actions@*/;
 
 /* Know how to compile this without G_GNUC_EXTENSION? Tell me */
-G_GNUC_EXTENSION static const GOptionEntry
+/*@unchecked@*/ G_GNUC_EXTENSION static const GOptionEntry
 options[] = {
 
     /* Actions */
@@ -114,7 +107,7 @@ options[] = {
     {"update", 'u', 0, G_OPTION_ARG_NONE, &opts.update, NULL, NULL},
 
     /*@-nullassign@*/
-    {NULL, '\0', 0, 0, NULL, NULL, NULL}
+    {NULL, '\0', 0, (GOptionArg)0, NULL, NULL, NULL}
     /*@=nullassign@*/
 };
 
@@ -153,100 +146,10 @@ action_cb(
     return FALSE;
 }
 
-static void
-adjust_niceness(
-    const CPSettings settings
-) /*@modifies *stderr,errno,internalState@*/ /*@globals fileSystem@*/ {
-    /*@observer@*/ static const char *key = "PORTAGE_NICENESS";
-    const char *value = cp_settings_get(settings, key);
-    int inc;
-
-    if (value == NULL) {
-        return;
-    }
-    inc = atoi(value);
-    if (inc == 0) {
-        return;
-    }
-    errno = 0;
-
-#if HAVE_NICE
-    inc = nice(inc);
-#elif HAVE_GETPRIORITY && HAVE_SETPRIORITY
-    inc += getpriority(PRIO_PROCESS, 0);
-    if (errno) {
-        int save_errno = ernno;
-        g_warning(_("Can't get current process priority: %s"), g_strerror(save_errno));
-        return;
-    }
-    setpriority(PRIO_PROCESS, 0, inc);
-#else
-    g_warning(_("%s is specified but system doesn't have neither nice()"
-        " nor getpriority()/setpriority() functions"), key);
-#endif
-
-    if (errno != 0) {
-        int save_errno = errno;
-        g_warning(_("Can't change nice value to '%s': %s"),
-            value, g_strerror(save_errno));
-    }
-}
-
-static void
-adjust_ionice(
-    const CPSettings settings
-) /*@modifies *stderr,errno,internalState@*/ /*@globals fileSystem@*/ {
-    /*@observer@*/ static const char *key = "PORTAGE_IONICE_COMMAND";
-    const char *raw_value = cp_settings_get(settings, key);
-
-    if (raw_value == NULL) {
-        return;
-    }
-
-#if HAVE_GETPID
-    {
-#ifndef S_SPLINT_S
-        G_STATIC_ASSERT(sizeof(pid_t) <= sizeof(long));
-#endif
-        GError *error = NULL;
-        GHashTable *vars = NULL;
-        char *cmd = NULL;
-        int retval;
-        vars = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(vars,
-            g_strdup("PID"),
-            g_strdup_printf("%ld", (long)getpid()));
-        cmd = cp_varexpand(raw_value, vars, &error);
-        if (cmd == NULL) {
-            goto ERR;
-        }
-        if (!g_spawn_command_line_sync(cmd, NULL, NULL, &retval, &error)) {
-            goto ERR;
-        }
-        if (retval != EXIT_SUCCESS) {
-            g_warning(_("Command '%s' returned %d"), cmd, retval);
-		        g_warning(_("See the make.conf(5) man page for %s usage instructions."), key);
-        }
-
-ERR:
-        if (error != NULL) {
-            g_warning(_("Can't run '%s': %s"), cmd, error->message);
-            g_error_free(error);
-        }
-        g_free(cmd);
-        if (vars != NULL) {
-            g_hash_table_destroy(vars);
-        }
-    }
-#else
-    g_warning(_("%s is specified but system doesn't have getpid() function"), key);
-#endif
-}
-
 int
 main(int argc, char *argv[])
-/*@modifies *stdout,*stderr,action,errno,internalState,fileSystem@*/
-/*@globals opts,options,config_root,target_root,default_action@*/ {
+/*@modifies argc,argv,*stdout,*stderr,action,errno,internalState,fileSystem@*/
+/*@globals opts,config_root,target_root,default_action@*/ {
     GOptionContext *ctx;
     GError *error = NULL;
     CPSettings settings = NULL;

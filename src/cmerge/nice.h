@@ -17,16 +17,19 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <glib.h>
+#ifndef CMERGE_NICE_H
+#define CMERGE_NICE_H
 
-/*@-fielduse@*/
+#include <cportage/settings.h>
 
-typedef struct cp_shellconfig_ctx_t {
-    yyscan_t yyscanner;
-    const char *filename;
-    GHashTable *entries;
-    char *expanded;
-    GError **error;
-    int magic;
-    gboolean allow_source;
-} cp_shellconfig_ctx;
+void
+adjust_niceness(
+    const CPSettings settings
+) /*@modifies *stderr,errno,internalState@*/;
+
+void
+adjust_ionice(
+    const CPSettings settings
+) /*@modifies *stderr,errno@*/ /*@globals fileSystem@*/;
+
+#endif

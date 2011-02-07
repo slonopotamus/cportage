@@ -16,14 +16,14 @@ set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 ##################
 
 set(CMAKE_REQUIRED_DEFINITIONS
-    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500
+    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=700 -D_FILE_OFFSET_BITS=64
     -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="${CMAKE_PROJECT_NAME}"
     -DGETTEXT_PACKAGE="${CMAKE_PROJECT_NAME}"
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 
 set(CMAKE_REQUIRED_FLAGS
-    -pedantic -ansi -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
-    -fdiagnostics-show-option -ffast-math -O -Wabi
+    -ansi -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
+    -fdiagnostics-show-option -O -Wabi
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
     -fstrict-overflow -Wstrict-overflow=5 -Wfloat-equal -Wsync-nand
@@ -67,6 +67,8 @@ check_symbol_exists(realpath stdlib.h HAVE_REALPATH)
 if(NOT HAVE_REALPATH)
     message(FATAL_ERROR "Your system doesn't have realpath() function")
 endif()
+
+check_symbol_exists(fileno stdio.h HAVE_FILENO)
 
 check_c_source_runs(
     "#include <stdlib.h>\n int main(void) {return realpath(\".\", NULL) == NULL;}"

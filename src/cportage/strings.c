@@ -59,11 +59,11 @@ cp_strings_sort(char **str_array) {
     /*@=mods@*/
 }
 
-static const char *trues[] = {"true", "t", "yes", "y", "1", "on"};
-static const char *falses[] = {"false", "f", "no", "n", "0", "off"};
+/*@observer@*/ static const char *trues[] = {"true", "t", "yes", "y", "1", "on"};
+/*@observer@*/ static const char *falses[] = {"false", "f", "no", "n", "0", "off"};
 
-gboolean 
-cp_string_is_true(const char *str) {
+gboolean
+cp_string_is_true(const char *str) /*@globals trues,falses@*/ {
     size_t i;
 
     if (str == NULL) {

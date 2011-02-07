@@ -80,12 +80,14 @@ cp_getline(FILE *file, const char *file_desc, char **into, GError **error) {
 
     line = g_string_new("");
 
+    /*@-modfilesys@*/
     while ((c = fgetc(file)) != EOF) {
         line = g_string_append_c(line, (gchar)(unsigned char)c);
-        if (c == '\n') {
+        if (c == (int)'\n') {
             break;
         }
     }
+    /*@=modfilesys@*/
 
     if (ferror(file) != 0) {
         int save_errno = errno;

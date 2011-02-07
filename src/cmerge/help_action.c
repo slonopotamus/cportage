@@ -41,14 +41,16 @@ cmerge_help_action(
     g_assert(error == NULL || *error == NULL);
 
     /* TODO: use glib function instead? */
+    /*@-moduncon@*/
     retval = execlp("man", "man", "cmerge", NULL);
+    /*@=moduncon@*/
 
     save_errno = errno;
     /*
       We could use own error type but it isn't worth it
       since no sensible handling can be done in calling code anyway.
      */
-    g_set_error(error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
+    g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
         _("Can't run '%s': %s"), "man", g_strerror(save_errno));
 
     return retval;

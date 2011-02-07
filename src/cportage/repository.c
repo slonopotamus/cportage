@@ -35,7 +35,9 @@ read_repo_name(
 ) /*@modifies *stderr,errno@*/ /*@globals fileSystem@*/ {
     /*@only@*/ char *result = NULL;
     char *path = g_build_filename(repo_path, "profiles", "repo_name", NULL);
+    /*@-modfilesys@*/
     FILE *f = cp_fopen(path, "r", NULL);
+    /*@=modfilesys@*/
 
     /* TODO: validate repo name */
     if (f == NULL || cp_getline(f, path, &result, NULL) <= 0) {
@@ -50,7 +52,9 @@ read_repo_name(
     }
 
     if (f != NULL) {
+        /*@-modfilesys@*/
         (void)fclose(f);
+        /*@=modfilesys@*/
     }
 
     g_free(path);

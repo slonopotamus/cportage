@@ -72,7 +72,7 @@ gboolean
 cp_string_is_true(
     /*@null@*/ const char *str
 ) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *stderr,errno@*/;
+/*@modifies *stderr,errno@*/ /*@globals internalState@*/;
 
 #pragma GCC visibility pop
 

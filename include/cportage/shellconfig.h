@@ -29,6 +29,7 @@
 #include <glib.h>
 
 /*@-exportany@*/
+/*@-declundef@*/
 
 G_BEGIN_DECLS
 

@@ -3,7 +3,7 @@ bison_target(ShellParser
     "${CMAKE_CURRENT_BINARY_DIR}/shellparser.c"
     COMPILE_FLAGS "-Wall -Werror --report=all")
 
-if(HAVE_READ)
+if(HAVE_READ AND HAVE_FILENO)
     set(flex_mode "--fast")
 else()
     set(flex_mode "--nounistd")

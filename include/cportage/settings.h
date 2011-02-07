@@ -125,7 +125,7 @@ cp_settings_get(
 /**
  * \return 'main' repository in \a self
  */
-CPRepository
+/*@newref@*/ CPRepository
 cp_settings_get_main_repository(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;

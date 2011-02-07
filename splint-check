@@ -2,10 +2,12 @@
 
 set -e
 
-find src -name \*.c | \
-	xargs splint +strict +posixstrictlib \
-	-sys-dir-errors -proto-param-name -warn-missing-globs \
-	-sizeof-type -bounds-read -bounds-write \
-	-DGETTEXT_PACKAGE=\"cportage\" -DCPORTAGE_COMPILATION \
-	-Iinclude -Ibuild/src/cmerge -Ibuild/src/cportage \
-	-I../glib -I../glib/glib -sys-dirs /usr/include:../glib:../glib/glib
+cd "$(dirname $0)"
+
+find src -name \*.[ch] -print0 \
+    | xargs -0 splint -Iinclude -Isplint-include -I build \
+        -DCPORTAGE_COMPILATION -DGETTEXT_PACKAGE=\"cportage\" \
+        -Dyyscan_t=gpointer \
+        -warnposix -strict -nullstate -exportlocal -protoparamname -sizeoftype \
+        -sysdirs src/cmerge:splint-include:/usr -sysdirerrors -warnmissingglobs \
+        -boundsread -boundswrite -exportiter -fcnuse -enummemuse -typeuse 2>&1

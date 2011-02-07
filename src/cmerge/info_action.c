@@ -75,19 +75,23 @@ print_version(
 static void
 print_porttree_timestamp(
     const char *portdir
-) /*@globals stdout@*/ /*@modifies fileSystem,errno,*stdout@*/ {
+) /*@modifies errno,*stdout@*/ /*@globals stdout,fileSystem@*/ {
     char *path = g_build_filename(portdir, "metadata", "timestamp.chk", NULL);
     GError *error = NULL;
     FILE *f;
     char *timestamp = NULL;
 
+    /*@-modfilesys@*/
     f = cp_fopen(path, "r", &error);
+    /*@=modfilesys@*/
     if (f == NULL || cp_getline(f, path, &timestamp, &error) < 1) {
         timestamp = g_strdup("Unknown");
     }
     g_assert(timestamp != NULL);
     if (f != NULL) {
+        /*@-modfilesys@*/
         (void)fclose(f);
+        /*@=modfilesys@*/
     }
     g_free(path);
 
@@ -190,7 +194,9 @@ cmerge_info_action(
     g_assert(error == NULL || *error == NULL);
 
     /*@-compdef@*/
+    /*@-moduncon@*/
     rc = uname(&utsname);
+    /*@=moduncon@*/
     /*@=compdef@*/
     g_assert(rc == 0);
 

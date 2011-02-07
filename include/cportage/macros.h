@@ -33,7 +33,11 @@
 G_BEGIN_DECLS
 
 /*@-namechecks@*/
-#define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+#ifdef S_SPLINT_S
+#   define _(String) String
+#else
+#   define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+#endif
 /*@=namechecks@*/
 
 G_END_DECLS

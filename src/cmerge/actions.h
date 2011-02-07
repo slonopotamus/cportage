@@ -20,8 +20,6 @@
 #ifndef CMERGE_ACTIONS_H
 #define CMERGE_ACTIONS_H
 
-#include <glib.h>
-
 #include <cportage/settings.h>
 
 /*@-exportany@*/
@@ -29,7 +27,7 @@
 /* Global options */
 typedef struct CMergeOptions {
     /* Leftover args */
-    /*@null@*/ char **args;
+    /*@null@*/ /*@observer@*/ char **args;
     gboolean pretend;
     gboolean update;
 } *CMergeOptions;
