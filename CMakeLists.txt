@@ -22,7 +22,7 @@ set(CMAKE_REQUIRED_DEFINITIONS
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 
 set(CMAKE_REQUIRED_FLAGS
-    -ansi -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
+    -std=c89 -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
     -fdiagnostics-show-option -O -Wabi
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
