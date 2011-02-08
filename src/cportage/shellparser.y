@@ -140,7 +140,7 @@ file:
   Credits to Timofey Basanov a.k.a. ripos for this.
  */
 stmt_list:
-    stmt
+    stmt_with_blank
   | EOL { g_free($1); }
   | EOL stmt_with_blank { g_free($1); }
   | stmt_list EOL { g_free($2); }
