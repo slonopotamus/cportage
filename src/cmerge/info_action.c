@@ -181,7 +181,7 @@ cmerge_info_action(
 ) {
 #if HAVE_UNAME
     struct utsname utsname;
-    /* TODO: read cpu name from /proc/cpuinfo */
+    /* TODO: read cpu name from `uname -p` */
     const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
     /* TODO: read system name from /etc/gentoo-release */
     const char *sys_version = "gentoo-1.12.11.1";
