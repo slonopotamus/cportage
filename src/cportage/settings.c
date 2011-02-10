@@ -47,7 +47,7 @@ struct CPSettings {
  * \return            %TRUE on success, %FALSE if an error occurred
  */
 static gboolean
-cp_settings_add_profile(
+add_profile(
     CPSettings self,
     const char *profile_dir,
     /*@null@*/ GError **error
@@ -64,7 +64,7 @@ cp_settings_add_profile(
  * \return             %TRUE on success, %FALSE if an error occurred
  */
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-cp_settings_add_parent_profiles(
+add_parent_profiles(
     CPSettings self,
     const char *parents_file,
     /*@null@*/ GError **error
@@ -87,7 +87,7 @@ cp_settings_add_parent_profiles(
             ? g_strdup(parent)
             : g_build_filename(basedir, parent, NULL);
         /* TODO: protect against loop? */
-        result = cp_settings_add_profile(self, parent_path, error);
+        result = add_profile(self, parent_path, error);
         g_free(parent_path);
         if (!result) {
             break;
@@ -101,11 +101,7 @@ cp_settings_add_parent_profiles(
 
 /** See declaration above. */
 static gboolean
-cp_settings_add_profile(
-    CPSettings self,
-    const char *profile_dir,
-    GError **error
-) {
+add_profile(CPSettings self, const char *profile_dir, GError **error) {
     char *config_file;
     gboolean result = TRUE;
 
@@ -140,7 +136,7 @@ cp_settings_add_profile(
     /* Load parents */
     config_file = g_build_filename(profile_dir, "parent", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        result = cp_settings_add_parent_profiles(self, config_file, error);
+        result = add_parent_profiles(self, config_file, error);
     }
     g_free(config_file);
     if (!result) {
@@ -168,7 +164,7 @@ cp_settings_add_profile(
  * \return             %TRUE on success, %FALSE if an error occurred
  */
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-cp_settings_load_etc_config(
+load_etc_config(
     CPSettings self,
     const char *name,
     gboolean allow_source,
@@ -193,7 +189,7 @@ cp_settings_load_etc_config(
  *                     %NULL if an error occurred
  */
 static /*@null@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-cp_settings_build_profile_path(
+build_profile_path(
     const char *config_root,
     /*@null@*/ GError **error
 ) /*@modifies *error,errno@*/ /*@globals fileSystem@*/ {
@@ -212,7 +208,7 @@ cp_settings_build_profile_path(
  * TODO: documentation.
  */
 static void
-cp_settings_init_cbuild(CPSettings self) /*@modifies *self@*/ {
+init_cbuild(CPSettings self) /*@modifies *self@*/ {
     /*@observer@*/ static const char *key = "CBUILD";
     const char *chost;
     if (cp_settings_get(self, key) != NULL) {
@@ -231,7 +227,7 @@ cp_settings_init_cbuild(CPSettings self) /*@modifies *self@*/ {
  * \param self a #CPSettings structure
  */
 static void
-cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
+init_features(CPSettings self) /*@modifies *self@*/ {
     /*@observer@*/ static const char *key = "FEATURES";
     g_assert(self->features == NULL);
     self->features = cp_strings_pysplit(cp_settings_get_default(self, key, ""));
@@ -243,7 +239,7 @@ cp_settings_init_features(CPSettings self) /*@modifies *self@*/ {
 
 /** TODO: documentation */
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-cp_settings_init_main_repo(
+init_main_repo(
     CPSettings self,
     /*@null@*/ GError **error
 ) /*@modifies *self,*error,*stderr,errno@*/ /*@globals fileSystem@*/ {
@@ -270,26 +266,77 @@ cp_settings_init_main_repo(
 }
 
 static void
-cp_settings_init_repos(const CPSettings self) /*@modifies *self@*/ {
-    int i = 0;
-    GString *overlays;
+init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
+    const char *main_repo_name;
+    const char *path_str;
+    char **paths;
+    /*@owned@*/ GList/*<CPRepository>*/ *repo_list = NULL;
+    GHashTable/*<char *,CPRepository>*/ *name2repo;
+    int repo_num = 1;
+    GString *overlay_str;
 
     g_assert(self->repos == NULL);
-    self->repos = g_new0(CPRepository, 2);
-    self->repos[0] = cp_repository_ref(self->main_repo);
+    g_assert(self->main_repo != NULL);
 
-    overlays = g_string_new("");
-    CP_REPOSITORY_ITER(self->repos, repo) {
-        if (repo != self->main_repo) {
-            g_string_append_printf(overlays,
-                "%s%s", i++ > 0 ? " " : "", cp_repository_get_path(repo));
+    main_repo_name = cp_repository_get_name(self->main_repo);
+    path_str = cp_settings_get_default(self, "PORTDIR_OVERLAY", "");
+
+    paths = cp_strings_pysplit(path_str);
+    name2repo = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    overlay_str = g_string_new("");
+
+    /*
+      Settings object references main_repo through both self->main_repo and
+      self->repos. So, in order to simplify settings destruction, we increment
+      refcount to 2 here.
+     */
+    /*@-mustfreefresh@*/
+    repo_list = g_list_append(repo_list, cp_repository_ref(self->main_repo));
+    /*@=mustfreefresh@*/
+    /*@-refcounttrans@*/
+    g_hash_table_insert(name2repo, g_strdup(main_repo_name), self->main_repo);
+    /*@=refcounttrans@*/
+
+    CP_STRV_ITER(paths, path) {
+        /* TODO: check that path is a directory */
+        /* TODO: canonicalize path? */
+        CPRepository repo = cp_repository_new(path);
+        const char *name = cp_repository_get_name(repo);
+        CPRepository duplicate = g_hash_table_lookup(name2repo, name);
+        if (duplicate == NULL) {
+            g_hash_table_insert(name2repo, g_strdup(name), repo);
+            /*@-kepttrans@*/
+            repo_list = g_list_append(repo_list, repo);
+            /*@=kepttrans@*/
+            g_string_append_printf(overlay_str,
+                    "%s%s", repo_num++ > 1 ? " " : "", path);
+        } else {
+            /* TODO: print warning */
+            cp_repository_unref(repo);
         }
-    } end_CP_REPOSITORY_ITER
+    } end_CP_STRV_ITER
+
+    g_hash_table_destroy(name2repo);
+    g_strfreev(paths);
 
     g_hash_table_insert(self->config,
         g_strdup("PORTDIR_OVERLAY"),
-        g_string_free(overlays, FALSE)
+        g_string_free(overlay_str, FALSE)
     );
+
+    self->repos = g_new(CPRepository, repo_num + 1);
+    self->repos[repo_num] = NULL;
+    CP_GLIST_ITER(repo_list, repo) {
+        g_assert(repo != NULL);
+
+        /*
+          self->repos is in reverse order so that packages from repositories
+          defined _later_ in PORTDIR_OVERLAY appear _earlier_.
+         */
+        self->repos[--repo_num] = repo;
+    } end_CP_GLIST_ITER
+
+    g_list_free(repo_list);
 }
 
 CPSettings
@@ -317,7 +364,7 @@ cp_settings_new(
         goto ERR;
     }
     g_assert(self->profile == NULL);
-    self->profile = cp_settings_build_profile_path(self->config_root, error);
+    self->profile = build_profile_path(self->config_root, error);
     if (self->profile == NULL) {
         goto ERR;
     }
@@ -327,16 +374,16 @@ cp_settings_new(
     self->config = g_hash_table_new_full(
         g_str_hash, g_str_equal, g_free, g_free
     );
-    if (!cp_settings_load_etc_config(self, "profile.env", FALSE, error)) {
+    if (!load_etc_config(self, "profile.env", FALSE, error)) {
         goto ERR;
     }
-    if (!cp_settings_load_etc_config(self, "make.globals", FALSE, error)) {
+    if (!load_etc_config(self, "make.globals", FALSE, error)) {
         goto ERR;
     }
-    if (!cp_settings_add_profile(self, self->profile, error)) {
+    if (!add_profile(self, self->profile, error)) {
         goto ERR;
     }
-    if (!cp_settings_load_etc_config(self, "make.conf", TRUE, error)) {
+    if (!load_etc_config(self, "make.conf", TRUE, error)) {
         goto ERR;
     }
     /*
@@ -353,14 +400,14 @@ cp_settings_new(
     );
 
     /* init repositories */
-    if (!cp_settings_init_main_repo(self, error)) {
+    if (!init_main_repo(self, error)) {
         goto ERR;
     }
-    cp_settings_init_repos(self);
+    init_repos(self);
 
     /* init misc stuff */
-    cp_settings_init_cbuild(self);
-    cp_settings_init_features(self);
+    init_cbuild(self);
+    init_features(self);
 
     return self;
 

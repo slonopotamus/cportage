@@ -40,6 +40,17 @@ G_BEGIN_DECLS
 #endif
 /*@=namechecks@*/
 
+/*@iter CP_GLIST_ITER(GList *list, yield gpointer elem)@*/
+
+#define CP_GLIST_ITER(list, m_elem) { \
+    /*@null@*/ GList *m_iter; \
+    for (m_iter = (list); m_iter != NULL; m_iter = m_iter->next) { \
+        /*@-incondefs@*/ \
+        /*@dependent@*/ /*@null@*/ gpointer m_elem = m_iter->data; \
+        /*@=incondefs@*/
+
+#define end_CP_GLIST_ITER }}
+
 G_END_DECLS
 
 #endif

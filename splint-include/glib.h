@@ -339,8 +339,8 @@ typedef struct _GHashTable GHashTable;
 g_hash_table_new_full(
     GHashFunc hash_func,
     GEqualFunc key_equal_func,
-    GDestroyNotify key_destroy_func,
-    GDestroyNotify value_destroy_func
+    /*@null@*/ GDestroyNotify key_destroy_func,
+    /*@null@*/ GDestroyNotify value_destroy_func
 ) /*@*/;
 
 void
@@ -429,6 +429,27 @@ g_spawn_command_line_sync(
     /*@null@*/ /*@out@*/ gint *exit_status,
     /*@null@*/ GError **error
 ) /*@modifies *standard_output,*standard_error,*error,*stdout,*stderr,errno,fileSystem@*/;
+
+/* glist.h */
+
+typedef struct _GList GList;
+
+struct _GList {
+  /*@dependent@*/ /*@null@*/ gpointer data;
+  /*@dependent@*/ /*@null@*/ GList *next;
+  /*@dependent@*/ /*@null@*/ GList *prev;
+};
+
+/*@only@*/ GList *
+g_list_append(
+    /*@keep@*/ /*@null@*/ GList *list,
+    /*@keep@*/ /*@null@*/ gpointer data
+) /*@modifies *list@*/;
+
+void
+g_list_free(
+    /*@null@*/ /*@only@*/ GList *list
+) /*@modifies list@*/;
 
 /* gregex.h */
 
