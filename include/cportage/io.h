@@ -49,8 +49,7 @@ cp_io_fopen(
     const char *mode,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error,errno,fileSystem@*/
-/*@globals fileSystem@*/;
+/*@modifies *error,errno,fileSystem@*/ /*@globals fileSystem@*/;
 
 /**
  * Reads a single line of input (including line separator if it was encountered).
@@ -70,8 +69,7 @@ cp_io_getline(
     /*@out@*/ char **into,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *file,*into,*error,errno@*/
-/*@globals fileSystem@*/;
+/*@modifies *file,*into,*error,errno@*/ /*@globals fileSystem@*/;
 
 /*@-globuse@*/
 /**
@@ -87,8 +85,7 @@ cp_io_realpath(
     const char *path,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error,errno@*/
-/*@globals errno,fileSystem@*/;
+/*@modifies *error,errno@*/ /*@globals errno,fileSystem@*/;
 /*@=globuse@*/
 
 /**
@@ -108,8 +105,7 @@ cp_io_getlines(
     const gboolean ignore_comments,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error,errno@*/
-/*@globals fileSystem@*/;
+/*@modifies *error,errno@*/ /*@globals fileSystem@*/;
 
 #pragma GCC visibility pop
 

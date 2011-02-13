@@ -219,7 +219,7 @@ typedef enum {
 gboolean
 g_file_test(const gchar *filename, GFileTest test) /*@*/;
 
-GFileError
+GFileError /*@alt gint@*/
 g_file_error_from_errno(gint err_no) /*@*/;
 
 gboolean
