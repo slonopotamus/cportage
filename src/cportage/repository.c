@@ -36,11 +36,11 @@ read_repo_name(
     /*@only@*/ char *result = NULL;
     char *path = g_build_filename(repo_path, "profiles", "repo_name", NULL);
     /*@-modfilesys@*/
-    FILE *f = cp_fopen(path, "r", NULL);
+    FILE *f = cp_io_fopen(path, "r", NULL);
     /*@=modfilesys@*/
 
     /* TODO: validate repo name */
-    if (f == NULL || cp_getline(f, path, &result, NULL) <= 0) {
+    if (f == NULL || cp_io_getline(f, path, &result, NULL) <= 0) {
         char *basename = g_path_get_basename(repo_path);
         result = g_strconcat("x-", basename, NULL);
         g_free(basename);
@@ -111,7 +111,6 @@ cp_repository_sync(const CPRepository self, GError **error) {
 
     sync_cmd = g_strsplit("git pull", " ", 0);
     g_message(">>> Starting git pull in %s...", self->path);
-    /** TODO: path encoding */
     result = g_spawn_sync(self->path, sync_cmd, NULL, (gint)G_SPAWN_SEARCH_PATH,
         NULL, NULL, NULL, NULL, &exit_status, error);
     g_strfreev(sync_cmd);

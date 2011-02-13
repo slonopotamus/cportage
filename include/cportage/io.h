@@ -38,13 +38,13 @@ G_BEGIN_DECLS
 /**
  * GLib-style fopen() wrapper.
  *
- * \param path  UTF8-encoded filename
+ * \param path  a pathname in the GLib file name encoding
  * \param error return location for a %GError, or %NULL
  * \param mode  open mode (see fopen() for possible values)
  * \return      a %FILE pointer or %NULL if an error occured
  */
 /*@dependent@*/ /*@null@*/ FILE *
-cp_fopen(
+cp_io_fopen(
     const char *path,
     const char *mode,
     /*@null@*/ GError **error
@@ -54,19 +54,17 @@ cp_fopen(
 
 /**
  * Reads a single line of input (including line separator if it was encountered).
- * Line is checked to be valid UTF8.
  *
  * \param file      a %FILE pointer
  * \param file_desc human-readable description of stream (filename, url, etc)
- *                    in UTF-8 encoding
- * \param into        return location for read line, free it using g_free().
- *                    Only modified on successful read.
- * \param error       return location for a %GError, or %NULL
- * \return            negative number on error, 0 if EOF was reached,
- *                    positive number on successful read
+ * \param into      return location for read line, free it using g_free().
+ *                  Only modified on successful read.
+ * \param error     return location for a %GError, or %NULL
+ * \return          negative number on error, 0 if EOF was reached,
+ *                  positive number on successful read
  */
 int
-cp_getline(
+cp_io_getline(
     FILE *file,
     const char *file_desc,
     /*@out@*/ char **into,
@@ -79,13 +77,13 @@ cp_getline(
 /**
  * GLib-style realpath() wrapper.
  *
- * \param path  UTF8-encoded filename
+ * \param path  a pathname in the GLib file name encoding
  * \param error return location for a %GError, or %NULL
- * \return      UTF8-encoded path or %NULL if an error occured,
- *              free it using g_free()
+ * \return      a pathname in the GLib file name encoding
+ *              or %NULL if an error occured, free it using g_free()
  */
 /*@null@*/ char *
-cp_canonical_path(
+cp_io_realpath(
     const char *path,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
@@ -94,29 +92,9 @@ cp_canonical_path(
 /*@=globuse@*/
 
 /**
- * Same as g_file_get_contents() but expects UTF8-encoded filename.
+ * Fully reads text file and splits it at line endings. Skips empty lines.
  *
- * \param path  UTF8-encoded filename.
- * \param data  location to store an allocated string, free it using g_free()
- * \param len   location to store length in bytes of the contents, or %NULL
- * \param error return location for a %GError, or %NULL
- * \return      %TRUE on success, %FALSE if an error occurred
- */
-gboolean
-cp_read_file(
-    const char *path,
-    /*@out@*/ char **data,
-    /*@null@*/ size_t *len,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *data,*len,*error,errno@*/
-/*@globals fileSystem@*/;
-
-/**
- * Fully reads text file and splits it at line endings.
- * File contents is checked to be valid UTF8. Skips empty lines.
- *
- * \param path            UTF8-encoded filename
+ * \param path            a pathname in the GLib file name encoding
  * \param ignore_comments if %TRUE, comments starting with \c '#' will be
  *                        excluded
  * \param error           return location for a %GError, or %NULL
@@ -125,7 +103,7 @@ cp_read_file(
  *                        free it using g_strfreev()
  */
 /*@null@*/ /*@only@*/ char **
-cp_read_lines(
+cp_io_getlines(
     const char *path,
     const gboolean ignore_comments,
     /*@null@*/ GError **error

@@ -75,7 +75,7 @@ add_parent_profiles(
 
     g_assert(error == NULL || *error == NULL);
 
-    parents = cp_read_lines(parents_file, TRUE, error);
+    parents = cp_io_getlines(parents_file, TRUE, error);
     if (parents == NULL) {
         return FALSE;
     }
@@ -111,7 +111,7 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
     config_file = g_build_filename(profile_dir, "eapi", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         char *data;
-        result = cp_read_file(config_file, &data, NULL, error);
+        result = g_file_get_contents(config_file, &data, NULL, error);
         if (result) {
             result = cp_eapi_check(g_strstrip(data), config_file, error);
         }
@@ -198,7 +198,7 @@ build_profile_path(
 
     g_assert(error == NULL || *error == NULL);
     profile = g_build_filename(config_root, "etc", "make.profile", NULL);
-    result = cp_canonical_path(profile, error);
+    result = cp_io_realpath(profile, error);
     g_free(profile);
     return result;
 }
@@ -253,7 +253,7 @@ init_main_repo(
         return FALSE;
     }
 
-    canonical = cp_canonical_path(portdir, error);
+    canonical = cp_io_realpath(portdir, error);
     if (canonical == NULL) {
         return FALSE;
     }
@@ -354,12 +354,12 @@ cp_settings_new(
     /* init basic things */
     self->refs = 1;
     g_assert(self->config_root == NULL);
-    self->config_root = cp_canonical_path(config_root, error);
+    self->config_root = cp_io_realpath(config_root, error);
     if (self->config_root == NULL) {
         goto ERR;
     }
     g_assert(self->target_root == NULL);
-    self->target_root = cp_canonical_path(target_root, error);
+    self->target_root = cp_io_realpath(target_root, error);
     if (self->target_root == NULL) {
         goto ERR;
     }

@@ -39,7 +39,6 @@ build_profile_str(
 ) /*@modifies errno@*/ {
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cp_settings_get_profile(settings);
-    /* TODO: encoding */
     GFile *profiles_dir_file = g_file_new_for_path(profiles_dir);
     GFile *profile_file = g_file_new_for_path(profile);
 
@@ -82,9 +81,9 @@ print_porttree_timestamp(
     char *timestamp = NULL;
 
     /*@-modfilesys@*/
-    f = cp_fopen(path, "r", &error);
+    f = cp_io_fopen(path, "r", &error);
     /*@=modfilesys@*/
-    if (f == NULL || cp_getline(f, path, &timestamp, &error) < 1) {
+    if (f == NULL || cp_io_getline(f, path, &timestamp, &error) < 1) {
         timestamp = g_strdup("Unknown");
     }
     g_assert(timestamp != NULL);
@@ -108,7 +107,7 @@ print_packages(
     const char *portdir
 ) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
-    char **data = cp_read_lines(path, TRUE, NULL);
+    char **data = cp_io_getlines(path, TRUE, NULL);
 
     if (data != NULL) {
         cp_strings_sort(data);
@@ -145,7 +144,7 @@ print_settings(
     const char *portdir
 ) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
-    char **data = cp_read_lines(path, TRUE, NULL);
+    char **data = cp_io_getlines(path, TRUE, NULL);
 
     if (data != NULL) {
         GString *unset = NULL;

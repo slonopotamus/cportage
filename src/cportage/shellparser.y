@@ -312,7 +312,7 @@ cp_read_shellconfig(
 
     g_assert(error == NULL || *error == NULL);
 
-    f = cp_fopen(path, "r", error);
+    f = cp_io_fopen(path, "r", error);
     if (f == NULL) {
         return FALSE;
     }
