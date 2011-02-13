@@ -298,22 +298,31 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     /*@=refcounttrans@*/
 
     CP_STRV_ITER(paths, path) {
-        /* TODO: check that path is a directory */
-        /* TODO: canonicalize path? */
-        CPRepository repo = cp_repository_new(path);
-        const char *name = cp_repository_get_name(repo);
-        CPRepository duplicate = g_hash_table_lookup(name2repo, name);
-        if (duplicate == NULL) {
-            g_hash_table_insert(name2repo, g_strdup(name), repo);
-            /*@-kepttrans@*/
-            repo_list = g_list_append(repo_list, repo);
-            /*@=kepttrans@*/
-            g_string_append_printf(overlay_str,
-                    "%s%s", repo_num++ > 1 ? " " : "", path);
-        } else {
-            /* TODO: print warning */
-            cp_repository_unref(repo);
+        CPRepository repo;
+        const char *name;
+
+        if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+            g_warning("PORTDIR_OVERLAY contains '%s' which is not a directory",
+                path);
+            continue;
         }
+
+        /* TODO: canonicalize path? */
+        repo = cp_repository_new(path);
+        name = cp_repository_get_name(repo);
+
+        if (g_hash_table_lookup(name2repo, name) != NULL) {
+            /* TODO: print warning (duplicate repo) */
+            cp_repository_unref(repo);
+            continue;
+        }
+
+        g_hash_table_insert(name2repo, g_strdup(name), repo);
+        /*@-kepttrans@*/
+        repo_list = g_list_append(repo_list, repo);
+        /*@=kepttrans@*/
+        g_string_append_printf(overlay_str,
+            "%s%s", repo_num++ > 1 ? " " : "", path);
     } end_CP_STRV_ITER
 
     g_hash_table_destroy(name2repo);
