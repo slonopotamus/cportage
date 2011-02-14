@@ -516,13 +516,7 @@ cp_settings_get_profile(const CPSettings self) {
 gboolean
 cp_settings_has_feature_enabled(const CPSettings self, const char *feature) {
     /* Could be replaced with bsearch since features are sorted */
-    CP_STRV_ITER(self->features, f) {
-        if (g_strcmp0(f, feature) == 0) {
-            return TRUE;
-        }
-    } end_CP_STRV_ITER
-
-    return FALSE;
+    return cp_strv_contains(self->features, feature);
 }
 
 GQuark

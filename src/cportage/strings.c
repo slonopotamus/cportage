@@ -85,3 +85,15 @@ cp_string_is_true(const char *str) /*@globals trues,falses@*/ {
     g_warning("Unknown boolean value '%s', assuming true", str);
     return TRUE;
 }
+
+gboolean
+cp_strv_contains(char **haystack, const char *needle) {
+
+    CP_STRV_ITER(haystack, elem) {
+        if (g_strcmp0(elem, needle) == 0) {
+            return TRUE;
+        }
+    } end_CP_STRV_ITER
+
+    return FALSE;
+}

@@ -74,6 +74,9 @@ cp_string_is_true(
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *stderr,errno@*/ /*@globals internalState@*/;
 
+gboolean
+cp_strv_contains(char **haystack, const char *needle) /*@*/;
+
 #pragma GCC visibility pop
 
 G_END_DECLS
