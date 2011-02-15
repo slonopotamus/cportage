@@ -101,7 +101,7 @@ cp_repository_unref(CPRepository self) {
     }
 }
 
-gboolean
+int
 cp_repository_sync(const CPRepository self, GError **error) {
     gboolean result;
     char **sync_cmd;
@@ -110,19 +110,23 @@ cp_repository_sync(const CPRepository self, GError **error) {
     g_assert(error == NULL || *error == NULL);
 
     sync_cmd = g_strsplit("git pull", " ", 0);
-    g_message(">>> Starting git pull in %s...", self->path);
+    g_message("Starting git pull in %s...", self->path);
     result = g_spawn_sync(self->path, sync_cmd, NULL, (gint)G_SPAWN_SEARCH_PATH,
         NULL, NULL, NULL, NULL, &exit_status, error);
     g_strfreev(sync_cmd);
 
-    if (result && exit_status == EXIT_SUCCESS) {
-        g_message(">>> git pull in %s successful", self->path);
-    } else {
-        g_message("!!! git pull error in %s", self->path);
-        /** TODO: set error if result == TRUE */
+    if (!result) {
+        return EXIT_FAILURE;
     }
 
-    return result;
+    if (exit_status != EXIT_SUCCESS) {
+        g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
+            "git pull error in %s", self->path);
+        return exit_status;
+    }
+
+    g_message("git pull in %s successful", self->path);
+    return EXIT_SUCCESS;
 }
 
 const char *

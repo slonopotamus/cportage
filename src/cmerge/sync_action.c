@@ -30,8 +30,9 @@ cmerge_sync_action(
     g_assert(error == NULL || *error == NULL);
 
     CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo) {
-        if (!cp_repository_sync(repo, error)) {
-            return EXIT_FAILURE;
+        int retval = cp_repository_sync(repo, error);
+        if (retval != EXIT_SUCCESS) {
+            return retval;
         }
     } end_CP_REPOSITORY_ITER
 

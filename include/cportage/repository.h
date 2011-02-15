@@ -89,7 +89,7 @@ cp_repository_get_name(
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /** TODO: documentation */
-gboolean
+int
 cp_repository_sync(
     const CPRepository self,
     /*@null@*/ GError **error

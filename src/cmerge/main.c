@@ -193,7 +193,7 @@ ERR:
     }
 
     g_assert(error != NULL);
-    g_critical("%s: %s", argv[0], error->message);
+    g_critical("%s", error->message);
     g_error_free(error);
 
     return retval;
