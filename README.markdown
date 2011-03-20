@@ -7,14 +7,14 @@ Dependencies
 ------------
 Build time only:
 
- -  CMake >= 2.8 (tested with 2.8.1)
+ -  CMake >= 2.8 (tested with 2.8.4)
  -  bison (tested with 2.4.3)
  -  flex (tested with 2.5.35)
- -  GCC (tested with 4.4.3)
+ -  GCC (tested with 4.4.5)
 
 Both build and runtime:
 
- -  GLib >= 2.20 (tested with 2.22.5)
+ -  GLib >= 2.20 (tested with 2.26.1)
 
 Compiling
 ---------
