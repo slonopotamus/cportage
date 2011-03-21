@@ -337,7 +337,10 @@ cp_atom_slot_validate(const char *slot, GError **error) {
 gboolean
 cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
     static GRegex *regex = NULL;
+
+    gboolean result = TRUE;
     GMatchInfo *match = NULL;
+    char *invalid_version = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -354,15 +357,18 @@ cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
         return FALSE;
     }
 
-    if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
+    if ((invalid_version = safe_fetch(match, 2))[0] != '\0') {
+        result = FALSE;
         /* Pkg name ends with version string, that's disallowed */
         /* TODO: set error */
-        goto ERR;
+        goto OUT;
     }
 
     *name = safe_fetch(match, 1);
     *version = safe_fetch(match, 7);
 
+OUT:
+    g_free(invalid_version);
     g_match_info_free(match);
     return TRUE;
 }
