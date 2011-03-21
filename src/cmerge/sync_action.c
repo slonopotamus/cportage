@@ -23,13 +23,13 @@
 
 int
 cmerge_sync_action(
-    CPSettings settings,
+    CPContext ctx,
     /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
     g_assert(error == NULL || *error == NULL);
 
-    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo) {
+    CP_REPOSITORY_ITER(cp_settings_repositories(ctx->settings), repo) {
         int retval = cp_repository_sync(repo, error);
         if (retval != EXIT_SUCCESS) {
             return retval;

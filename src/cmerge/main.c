@@ -31,7 +31,7 @@
 #include "nice.h"
 
 typedef int (*CMergeAction) (
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 );
@@ -58,8 +58,7 @@ typedef enum {
 
 static VerbosityLevel verbosity = VERBOSITY_NORMAL;
 
-/*@observer@*/ static const char *config_root = "/";
-/*@observer@*/ static const char *target_root = "/";
+/*@observer@*/ static const char *root = "/";
 
 static struct CMergeOptions opts = { NULL, FALSE, FALSE };
 
@@ -97,8 +96,7 @@ options[] = {
 
     /* Global options */
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &opts.args, NULL, NULL},
-    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &config_root, NULL, NULL},
-    {"target-root", '\0', 0, G_OPTION_ARG_STRING, &target_root, NULL, NULL},
+    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &root, NULL, NULL},
     {"quiet", 'q', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
     {"verbose", 'v', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
 
@@ -149,10 +147,10 @@ action_cb(
 int
 main(int argc, char *argv[])
 /*@modifies argc,argv,*stdout,*stderr,action,errno,internalState,fileSystem@*/
-/*@globals opts,config_root,target_root,default_action@*/ {
-    GOptionContext *ctx;
+/*@globals opts,root,default_action@*/ {
+    GOptionContext *opt_ctx;
     GError *error = NULL;
-    CPSettings settings = NULL;
+    struct CPContext ctx = { NULL, NULL };
     int retval;
 
 #if HAVE_SETLOCALE
@@ -160,11 +158,11 @@ main(int argc, char *argv[])
 #endif
     g_type_init();
 
-    ctx = g_option_context_new(NULL);
-    g_option_context_add_main_entries(ctx, options, NULL);
-    g_option_context_set_help_enabled(ctx, FALSE);
+    opt_ctx = g_option_context_new(NULL);
+    g_option_context_add_main_entries(opt_ctx, options, NULL);
+    g_option_context_set_help_enabled(opt_ctx, FALSE);
 
-    if (!g_option_context_parse(ctx, &argc, &argv, &error)) {
+    if (!g_option_context_parse(opt_ctx, &argc, &argv, &error)) {
         retval = EXIT_FAILURE;
         goto ERR;
     }
@@ -173,20 +171,27 @@ main(int argc, char *argv[])
         action = default_action;
     }
 
-    settings = cp_settings_new(config_root, target_root, &error);
-    if (settings == NULL) {
+    ctx.settings = cp_settings_new(root, &error);
+    if (ctx.settings == NULL) {
         retval = EXIT_FAILURE;
         goto ERR;
     }
 
-    adjust_niceness(settings);
-    adjust_ionice(settings);
+    adjust_niceness(ctx.settings);
+    adjust_ionice(ctx.settings);
 
-    retval = action->func(settings, &opts, &error);
+    ctx.vartree = cp_vartree_new(ctx.settings, &error);
+    if (ctx.vartree == NULL) {
+        retval = EXIT_FAILURE;
+        goto ERR;
+    }
+
+    retval = action->func(&ctx, &opts, &error);
 
 ERR:
-    cp_settings_unref(settings);
-    g_option_context_free(ctx);
+    cp_vartree_unref(ctx.vartree);
+    cp_settings_unref(ctx.settings);
+    g_option_context_free(opt_ctx);
 
     if (retval == EXIT_SUCCESS) {
         return retval;

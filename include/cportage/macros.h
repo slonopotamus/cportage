@@ -46,10 +46,18 @@ G_BEGIN_DECLS
     /*@null@*/ GList *m_iter; \
     for (m_iter = (list); m_iter != NULL; m_iter = m_iter->next) { \
         /*@-incondefs@*/ \
-        /*@dependent@*/ /*@null@*/ gpointer m_elem = m_iter->data; \
+        /*@dependent@*/ /*@null@*/ void *m_elem = m_iter->data; \
         /*@=incondefs@*/
 
 #define end_CP_GLIST_ITER }}
+
+/*@iter CP_GDIR_ITER(GDir *dir, yield const char *elem)@*/
+
+#define CP_GDIR_ITER(dir, m_elem) { \
+    const char *m_elem; \
+    while ((m_elem = g_dir_read_name(dir)) != NULL) {
+
+#define end_CP_GDIR_ITER }}
 
 G_END_DECLS
 

@@ -54,15 +54,13 @@ typedef /*@refcounted@*/ struct CPSettings *CPSettings;
  * Reads global and profile configuration data
  * and stores it in a #CPSettings immutable structure.
  *
- * \param config_root path to configuration files root dir (typically "/")
- * \param target_root path to installation root dir (typically "/")
- * \param error       return location for a %GError, or %NULL
- * \return            a #CPSettings structure, free it using cp_settings_unref()
+ * \param root  path to configuration root dir (typically "/")
+ * \param error return location for a %GError, or %NULL
+ * \return      a #CPSettings structure, free it using cp_settings_unref()
  */
 /*@newref@*/ /*@null@*/ CPSettings
 cp_settings_new(
-    const char *config_root,
-    const char *target_root,
+    const char *root,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,*stderr,errno@*/ /*@globals fileSystem@*/;
@@ -74,9 +72,7 @@ cp_settings_new(
  * \return \a self
  */
 /*@newref@*/ CPSettings
-cp_settings_ref(
-    CPSettings self
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+cp_settings_ref(CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 /**
  * Decreases reference count of \a self by 1. When reference count drops
@@ -85,9 +81,7 @@ cp_settings_ref(
  * \param self a #CPSettings
  */
 void
-cp_settings_unref(
-    /*@killref@*/ /*@null@*/ CPSettings self
-) /*@modifies self@*/;
+cp_settings_unref(/*@killref@*/ /*@null@*/ CPSettings self) /*@modifies self@*/;
 
 /**
  * \return readonly value of \a key variable
@@ -126,7 +120,7 @@ cp_settings_get(
  * \return 'main' repository in \a self
  */
 /*@newref@*/ CPRepository
-cp_settings_get_main_repository(
+cp_settings_main_repository(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;
 
@@ -135,7 +129,7 @@ cp_settings_get_main_repository(
  *         in \a self, ordered by their priority, ascending
  */
 /*@observer@*/ CPRepository *
-cp_settings_get_repositories(
+cp_settings_repositories(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
@@ -143,14 +137,20 @@ cp_settings_get_repositories(
  * \return readonly canonical path to profile directory
  */
 /*@observer@*/ const char *
-cp_settings_get_profile(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_settings_profile(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * \return readonly canonical path to settings root
+ */
+/*@observer@*/ const char *
+cp_settings_root(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * \return %TRUE if \a feature is enabled in \c FEATURES variable,
  *         %FALSE otherwise
  */
 gboolean
-cp_settings_has_feature_enabled(
+cp_settings_feature_enabled(
     const CPSettings self,
     const char *feature
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;

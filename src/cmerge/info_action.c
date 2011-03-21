@@ -38,7 +38,7 @@ build_profile_str(
     const char *portdir
 ) /*@modifies errno@*/ {
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
-    const char *profile = cp_settings_get_profile(settings);
+    const char *profile = cp_settings_profile(settings);
     GFile *profiles_dir_file = g_file_new_for_path(profiles_dir);
     GFile *profile_file = g_file_new_for_path(profile);
 
@@ -102,38 +102,86 @@ print_porttree_timestamp(
     }
 }
 
-static void
-print_packages(
-    const char *portdir
-) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
-    char *path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
-    char **data = cp_io_getlines(path, TRUE, NULL);
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+print_atom_matches(
+    CPVartree vartree,
+    const CPAtom atom,
+    char *atom_label,
+    GError **error
+) /*@modifies vartree,*error,*stdout,errno@*/ {
+    GList *match;
+    int i = 0;
 
-    if (data != NULL) {
-        cp_strings_sort(data);
-
-        CP_STRV_ITER(data, s) {
-            CPAtom atom = cp_atom_new(s, NULL);
-            char *atom_label = g_strconcat(s, ":", NULL);
-            if (atom == NULL) {
-                g_print("%-20s [NOT VALID]\n", atom_label);
-            } else {
-                /* TODO: read version from vdb */
-                g_print("%-20s %s\n", atom_label, "3.2_p39");
-            }
-            g_free(atom_label);
-            cp_atom_unref(atom);
-        } end_CP_STRV_ITER
+    if (!cp_vartree_find_packages(vartree, atom, &match, error)) {
+        /* Error happened */
+        return FALSE;
     }
+
+    if (match == NULL) {
+        /* No package matching atom is installed */
+        return TRUE;
+    }
+
+    g_print("%-20s ", atom_label);
+    CP_GLIST_ITER(match, pkg) {
+        g_print("%s%s", i++ == 0 ? "" : ", ", cp_package_version(pkg));
+    } end_CP_GLIST_ITER
+    g_print("\n");
+
+    cp_package_list_free(match);
+
+    return TRUE;
+}
+
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+print_packages(
+    const char *portdir,
+    CPVartree vartree,
+    GError **error
+) /*@modifies vatree,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
+    char *path;
+    char **data;
+    gboolean result = TRUE;
+
+    g_assert(error == NULL || *error == NULL);
+
+    path = g_build_filename(portdir, "profiles", "info_pkgs", NULL);
+    data = cp_io_getlines(path, TRUE, NULL);
+    if (data == NULL) {
+        goto OUT;
+    }
+
+    cp_strings_sort(data);
+
+    CP_STRV_ITER(data, s) {
+        CPAtom atom = cp_atom_new(s, NULL);
+        char *atom_label = g_strconcat(s, ":", NULL);
+
+        if (atom == NULL) {
+            g_print("%-20s [NOT VALID]\n", atom_label);
+        } else {
+            result = print_atom_matches(vartree, atom, atom_label, error);
+        }
+
+        g_free(atom_label);
+        cp_atom_unref(atom);
+        if (!result) {
+            break;
+        }
+    } end_CP_STRV_ITER
+
+OUT:
     g_free(path);
     g_strfreev(data);
+
+    return result;
 }
 
 static void
 print_repositories(const CPSettings settings) /*@modifies *stdout,errno@*/ {
     g_print("Repositories:");
-    CP_REPOSITORY_ITER(cp_settings_get_repositories(settings), repo) {
-        g_print(" %s", cp_repository_get_name(repo));
+    CP_REPOSITORY_ITER(cp_settings_repositories(settings), repo) {
+        g_print(" %s", cp_repository_name(repo));
     } end_CP_REPOSITORY_ITER
     g_print("\n");
 }
@@ -174,7 +222,7 @@ print_settings(
 
 int
 cmerge_info_action(
-    CPSettings settings,
+    CPContext ctx,
     /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
@@ -199,12 +247,12 @@ cmerge_info_action(
     /*@=compdef@*/
     g_assert(rc == 0);
 
-    main_repo = cp_settings_get_main_repository(settings);
-    portdir = cp_repository_get_path(main_repo);
+    main_repo = cp_settings_main_repository(ctx->settings);
+    portdir = cp_repository_path(main_repo);
     cp_repository_unref(main_repo);
 
     /*@-compdef@*/
-    print_version(settings, &utsname, portdir);
+    print_version(ctx->settings, &utsname, portdir);
     /*@=compdef@*/
 
 #if HAVE_UNAME
@@ -219,9 +267,11 @@ cmerge_info_action(
 #endif
 
     print_porttree_timestamp(portdir);
-    print_packages(portdir);
-    print_repositories(settings);
-    print_settings(settings, portdir);
+    if (!print_packages(portdir, ctx->vartree, error)) {
+        return EXIT_FAILURE;
+    }
+    print_repositories(ctx->settings);
+    print_settings(ctx->settings, portdir);
 
     return EXIT_SUCCESS;
 }

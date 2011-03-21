@@ -41,10 +41,7 @@ Output cportage version
 .SH "GLOBAL OPTIONS"
 .TP
 .BR "\fB--config-root\fR=\fIpath\fR"
-Set configuration files rot directory. "/" by default.
-.TP
-.BR "\fB--target-root\fR=\fIpath\fR"
-TODO: documentation. "/" by default.
+Set configuration files root directory. "/" by default.
 .TP
 .BR "\fB--verbose\fR | \fB-v\fR | \fB--quiet\fR | \fB-q\fR"
 Controls output verbosity

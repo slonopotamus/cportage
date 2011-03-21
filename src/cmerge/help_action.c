@@ -30,7 +30,7 @@
 
 int
 cmerge_help_action(
-    /*@unused@*/ CPSettings settings G_GNUC_UNUSED,
+    /*@unused@*/ CPContext ctx G_GNUC_UNUSED,
     /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {

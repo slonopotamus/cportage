@@ -20,11 +20,11 @@
 #ifndef CMERGE_ACTIONS_H
 #define CMERGE_ACTIONS_H
 
-#include <cportage/settings.h>
+#include <cportage/vartree.h>
 
 /*@-exportany@*/
 
-/* Global options */
+/* Commandline options */
 typedef struct CMergeOptions {
     /* Leftover args */
     /*@null@*/ /*@observer@*/ char **args;
@@ -32,37 +32,42 @@ typedef struct CMergeOptions {
     gboolean update;
 } *CMergeOptions;
 
+typedef struct CPContext {
+    CPSettings settings;
+    CPVartree vartree;
+} *CPContext;
+
 int
 cmerge_help_action(
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies *error,*stdout,errno@*/;
 
 int
 cmerge_info_action(
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies settings,*error,*stdout,errno@*/ /*@globals fileSystem@*/;
 
 int
 cmerge_install_action(
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 );
 
 int
 cmerge_sync_action(
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies *error,*stdout,*stderr,errno,fileSystem@*/;
 
 int
 cmerge_version_action(
-    CPSettings settings,
+    CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
 ) /*@modifies *stdout,errno@*/;

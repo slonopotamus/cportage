@@ -37,6 +37,25 @@ cp_eapi_check(const char *eapi, const char *file, GError **error) {
     return FALSE;
 }
 
+gboolean
+cp_eapi_check_file(const char *file, GError **error) {
+    char *data;
+    gboolean result;
+
+    if (!g_file_test(file, G_FILE_TEST_EXISTS)) {
+        return TRUE;
+    }
+
+    if (!g_file_get_contents(file, &data, NULL, error)) {
+        return FALSE;
+    }
+
+    result = cp_eapi_check(g_strstrip(data), file, error);
+
+    g_free(data);
+    return result;
+}
+
 GQuark
 cp_eapi_error_quark(void) {
   return g_quark_from_static_string("cp-eapi-error-quark");

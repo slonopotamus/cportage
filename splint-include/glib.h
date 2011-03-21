@@ -69,6 +69,10 @@ typedef void            (*GFreeFunc)            (gpointer       data);
 
 #define G_N_ELEMENTS(arr) (sizeof (arr) / sizeof (arr)[0])
 
+#define G_CONST_RETURN const
+
+#define GLIB_CHECK_VERSION(major,minor,micro) 0
+
 /* gquark.h */
 
 GQuark
@@ -232,6 +236,23 @@ g_file_get_contents(
 
 /*@only@*/ gchar *
 g_build_filename(const gchar *first_element, ...) /*@*/;
+
+/* gdir.h */
+
+typedef struct _GDir GDir;
+
+/*@null@*/ /*@only@*/ GDir *
+g_dir_open(
+    const gchar *path,
+    guint flags,
+    /*@null@*/ GError **error
+) /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
+
+G_CONST_RETURN gchar *
+g_dir_read_name(GDir *dir) /*@modifies *dir@*/;
+
+void
+g_dir_close(/*@only@*/ GDir *dir) /*@modifies dir@*/;
 
 /* gstrfuncs.h */
 
@@ -446,10 +467,23 @@ g_list_append(
     /*@keep@*/ /*@null@*/ gpointer data
 ) /*@modifies *list@*/;
 
+/*@only@*/ GList *
+g_list_prepend(
+    /*@keep@*/ /*@null@*/ GList *list,
+    /*@keep@*/ /*@null@*/ gpointer data
+) /*@modifies *list@*/;
+
 void
 g_list_free(
     /*@null@*/ /*@only@*/ GList *list
 ) /*@modifies list@*/;
+
+void
+g_list_foreach(
+    /*@null@*/ GList *list,
+    GFunc func,
+    /*@null@*/ gpointer user_data
+) /*@modifies *list,user_data@*/;
 
 /* gregex.h */
 

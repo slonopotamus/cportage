@@ -24,8 +24,7 @@
 #include <cportage/strings.h>
 
 struct CPSettings {
-    /*@only@*/ char *config_root;
-    /*@only@*/ char *target_root;
+    /*@only@*/ char *root;
     /*@only@*/ char *profile;
 
     /*@only@*/ GHashTable/*<char *,char *>*/ *config;
@@ -109,14 +108,7 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
 
     /* Check eapi */
     config_file = g_build_filename(profile_dir, "eapi", NULL);
-    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        char *data;
-        result = g_file_get_contents(config_file, &data, NULL, error);
-        if (result) {
-            result = cp_eapi_check(g_strstrip(data), config_file, error);
-        }
-        g_free(data);
-    }
+    result = cp_eapi_check_file(config_file, error);
     g_free(config_file);
     if (!result) {
         return FALSE;
@@ -129,9 +121,6 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
         /* TODO: read and print deprecation reason from file */
     }
     g_free(config_file);
-    if (!result) {
-        return FALSE;
-    }
 
     /* Load parents */
     config_file = g_build_filename(profile_dir, "parent", NULL);
@@ -174,7 +163,7 @@ load_etc_config(
     gboolean result;
 
     g_assert(error == NULL || *error == NULL);
-    path = g_build_filename(self->config_root, "etc", name, NULL);
+    path = g_build_filename(self->root, "etc", name, NULL);
     result = cp_read_shellconfig(self->config, path, allow_source, error);
     g_free(path);
     return result;
@@ -183,21 +172,21 @@ load_etc_config(
 /**
  * Constructs root profile path and checks its existence.
  *
- * \param config_root  root dir for config files
- * \param error        return location for a %GError, or %NULL
- * \return             canonical profile path on success,
- *                     %NULL if an error occurred
+ * \param root  root dir for config files
+ * \param error return location for a %GError, or %NULL
+ * \return      canonical profile path on success,
+ *              %NULL if an error occurred
  */
 static /*@null@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 build_profile_path(
-    const char *config_root,
+    const char *root,
     /*@null@*/ GError **error
 ) /*@modifies *error,errno@*/ /*@globals fileSystem@*/ {
     char *profile;
     char *result;
 
     g_assert(error == NULL || *error == NULL);
-    profile = g_build_filename(config_root, "etc", "make.profile", NULL);
+    profile = g_build_filename(root, "etc", "make.profile", NULL);
     result = cp_io_realpath(profile, error);
     g_free(profile);
     return result;
@@ -278,7 +267,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     g_assert(self->repos == NULL);
     g_assert(self->main_repo != NULL);
 
-    main_repo_name = cp_repository_get_name(self->main_repo);
+    main_repo_name = cp_repository_name(self->main_repo);
     path_str = cp_settings_get_default(self, "PORTDIR_OVERLAY", "");
 
     paths = cp_strings_pysplit(path_str);
@@ -286,12 +275,12 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     overlay_str = g_string_new("");
 
     /*
-      Settings object references main_repo through both self->main_repo and
+      Settings object references main_repo both through self->main_repo and
       self->repos. So, in order to simplify settings destruction, we increment
-      refcount to 2 here.
+      refcount here.
      */
     /*@-mustfreefresh@*/
-    repo_list = g_list_append(repo_list, cp_repository_ref(self->main_repo));
+    repo_list = g_list_prepend(repo_list, cp_repository_ref(self->main_repo));
     /*@=mustfreefresh@*/
     /*@-refcounttrans@*/
     g_hash_table_insert(name2repo, g_strdup(main_repo_name), self->main_repo);
@@ -309,9 +298,9 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
 
         /* TODO: canonicalize path? */
         repo = cp_repository_new(path);
-        name = cp_repository_get_name(repo);
+        name = cp_repository_name(repo);
 
-        if (g_hash_table_lookup(name2repo, name) != NULL) {
+        if (g_hash_table_lookup_extended(name2repo, name, NULL, NULL)) {
             /* TODO: print warning (duplicate repo) */
             cp_repository_unref(repo);
             continue;
@@ -349,11 +338,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
 }
 
 CPSettings
-cp_settings_new(
-    const char *config_root,
-    const char *target_root,
-    GError **error
-) {
+cp_settings_new(const char *root, GError **error) {
     CPSettings self;
 
     g_assert(error == NULL || *error == NULL);
@@ -362,18 +347,14 @@ cp_settings_new(
 
     /* init basic things */
     self->refs = 1;
-    g_assert(self->config_root == NULL);
-    self->config_root = cp_io_realpath(config_root, error);
-    if (self->config_root == NULL) {
+    g_assert(self->root == NULL);
+    self->root = cp_io_realpath(root, error);
+    if (self->root == NULL) {
         goto ERR;
     }
-    g_assert(self->target_root == NULL);
-    self->target_root = cp_io_realpath(target_root, error);
-    if (self->target_root == NULL) {
-        goto ERR;
-    }
+
     g_assert(self->profile == NULL);
-    self->profile = build_profile_path(self->config_root, error);
+    self->profile = build_profile_path(self->root, error);
     if (self->profile == NULL) {
         goto ERR;
     }
@@ -398,14 +379,15 @@ cp_settings_new(
     /*
         We do not support CONFIGROOT and ROOT overriding. Actually,
         we do not need these variables at all, but let's act like portage.
+        At least savedconfig.eclass depends on this.
      */
     g_hash_table_insert(self->config,
         g_strdup("PORTAGE_CONFIGROOT"),
-        g_strdup(self->config_root)
+        g_strdup(self->root)
     );
     g_hash_table_insert(self->config,
         g_strdup("ROOT"),
-        g_strdup(self->target_root)
+        g_strdup(self->root)
     );
 
     /* init repositories */
@@ -444,8 +426,7 @@ cp_settings_unref(CPSettings self) {
     }
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
-        g_free(self->config_root);
-        g_free(self->target_root);
+        g_free(self->root);
         g_free(self->profile);
         if (self->config != NULL) {
             g_hash_table_destroy(self->config);
@@ -466,12 +447,12 @@ cp_settings_unref(CPSettings self) {
 }
 
 CPRepository
-cp_settings_get_main_repository(const CPSettings self) {
+cp_settings_main_repository(const CPSettings self) {
     return cp_repository_ref(self->main_repo);
 }
 
 CPRepository*
-cp_settings_get_repositories(const CPSettings self) {
+cp_settings_repositories(const CPSettings self) {
     return self->repos;
 }
 
@@ -509,12 +490,17 @@ cp_settings_get_required(
 }
 
 const char *
-cp_settings_get_profile(const CPSettings self) {
+cp_settings_profile(const CPSettings self) {
     return self->profile;
 }
 
+const char *
+cp_settings_root(const CPSettings self) {
+    return self->root;
+}
+
 gboolean
-cp_settings_has_feature_enabled(const CPSettings self, const char *feature) {
+cp_settings_feature_enabled(const CPSettings self, const char *feature) {
     /* Could be replaced with bsearch since features are sorted */
     return cp_strv_contains(self->features, feature);
 }

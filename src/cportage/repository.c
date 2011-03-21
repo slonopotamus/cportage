@@ -130,11 +130,11 @@ cp_repository_sync(const CPRepository self, GError **error) {
 }
 
 const char *
-cp_repository_get_name(const CPRepository self) {
+cp_repository_name(const CPRepository self) {
     return self->name;
 }
 
 const char *
-cp_repository_get_path(const CPRepository self) {
+cp_repository_path(const CPRepository self) {
     return self->path;
 }

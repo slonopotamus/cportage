@@ -21,10 +21,10 @@
 #error "Only <cportage.h> can be included directly."
 #endif
 
-#ifndef CP_ATOM_H
-#define CP_ATOM_H
+#ifndef CP_PACKAGE_H
+#define CP_PACKAGE_H
 
-#include <cportage/package.h>
+#include <glib.h>
 
 /*@-exportany@*/
 
@@ -35,70 +35,63 @@ G_BEGIN_DECLS
 /**
  * TODO: documentation.
  */
-typedef /*@refcounted@*/ struct CPAtom *CPAtom;
+typedef /*@refcounted@*/ struct CPPackage *CPPackage;
 
 /**
  * TODO: documentation.
  */
-/*@newref@*/ /*@null@*/ CPAtom
-cp_atom_new(
-    const char *value,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error@*/;
+/*@newref@*/ /*@*/ CPPackage
+cp_package_new(
+    const char *category,
+    const char *name,
+    const char *version,
+    const char *slot
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * Increases reference count of \a self by 1.
  *
- * \param self a #CPAtom
+ * \param self a #CPPackage structure
  * \return \a self
  */
-/*@newref@*/ CPAtom
-cp_atom_ref(CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+/*@newref@*/ CPPackage
+cp_package_ref(CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 /**
  * Decreases reference count of \a self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * \param self a #CPAtom
+ * \param self a #CPPackage
  */
 void
-cp_atom_unref(/*@killref@*/ /*@null@*/ CPAtom self) /*@modifies self@*/;
+cp_package_unref(/*@killref@*/ /*@null@*/ CPPackage self) /*@modifies self@*/;
 
+void
+cp_package_list_free(/*@null@*/ /*@only@*/ GList *list) /*@modifies list@*/;
+
+/**
+ * TODO: documentation.
+ */
 /*@observer@*/ const char *
-cp_atom_category(const CPAtom self) /*@*/;
+cp_package_category(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * TODO: documentation.
+ */
 /*@observer@*/ const char *
-cp_atom_package(const CPAtom self) /*@*/;
+cp_package_name(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
-/*@null@*/ /*@observer@*/ const char *
-cp_atom_version(const CPAtom self) /*@*/;
+/**
+ * TODO: documentation.
+ */
+/*@observer@*/ const char *
+cp_package_version(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
-gboolean
-cp_atom_matches(
-    const CPAtom self,
-    const CPPackage package
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-gboolean
-cp_atom_category_validate(
-    const char *category,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-gboolean
-cp_atom_slot_validate(
-    const char *slot,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-gboolean
-cp_atom_pv_split(
-    const char *pv,
-    /*@out@*/ char **name,
-    /*@out@*/ char **version,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *name,*version,*error@*/;
+/**
+ * TODO: documentation.
+ */
+/*@observer@*/ const char *
+cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 #pragma GCC visibility pop
 

@@ -21,10 +21,11 @@
 #error "Only <cportage.h> can be included directly."
 #endif
 
-#ifndef CP_EAPI_H
-#define CP_EAPI_H
+#ifndef CP_VARTREE_H
+#define CP_VARTREE_H
 
-#include <glib.h>
+#include <cportage/atom.h>
+#include <cportage/settings.h>
 
 /*@-exportany@*/
 
@@ -32,37 +33,48 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-#define CP_EAPI_ERROR cp_eapi_error_quark()
-
-GQuark
-cp_eapi_error_quark(void) /*@*/;
+/**
+ * Installed packages tree.
+ */
+typedef /*@refcounted@*/ struct CPVartree *CPVartree;
 
 /**
  * TODO: documentation.
  */
-typedef enum {
-    /* Unsupported EAPI version was encountered. */
-    CP_EAPI_ERROR_UNSUPPORTED
-} CPEAPIError;
+/*@newref@*/ /*@null@*/ CPVartree
+cp_vartree_new(
+    CPSettings settings,
+    GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies settings,*error@*/;
+
+/**
+ * Increases reference count of \a self by 1.
+ *
+ * \param self a #CPVartree structure
+ * \return \a self
+ */
+/*@newref@*/ CPVartree
+cp_vartree_ref(CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+
+/**
+ * Decreases reference count of \a self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * \param self a #CPVartree
+ */
+void
+cp_vartree_unref(/*@killref@*/ /*@null@*/ CPVartree self) /*@modifies self@*/;
 
 /**
  * TODO: documentation.
  */
 gboolean
-cp_eapi_check(
-    const char *eapi,
-    const char *file,
+cp_vartree_find_packages(
+    CPVartree self,
+    const CPAtom atom,
+    /*@out@*/ GList/*<CPPackage>*/ **match,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-/**
- * TODO: documentation.
- */
-gboolean
-cp_eapi_check_file(
-    const char *file,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies self,*match,*error@*/;
 
 #pragma GCC visibility pop
 

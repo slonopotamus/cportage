@@ -33,9 +33,12 @@ typedef enum OP_TYPE {
 struct CPAtom {
     /*@refs@*/ int refs;
     OpType op;
+
     /*@only@*/ char *category;
     /*@only@*/ char *package;
+
     /* Nullable */
+    /*@only@*/ char *version;
     /*@only@*/ char *slot;
 };
 
@@ -66,7 +69,10 @@ struct CPAtom {
 #define OP "(?P<op>[=~]|[><]=?)"
 #define USE_ITEM "(?:!?" USE_NAME "[=?]|-?" USE_NAME ")"
 #define USE "(?P<use>\\[" USE_ITEM "(?:," USE_ITEM ")*\\])?"
-#define CP "(" CAT "/" PKG "(-" VER ")\?\?)"
+#define PKG_FULL PKG "(-" VER ")\?\?"
+#define CP "(" CAT "/" PKG_FULL ")"
+#define PV PKG_FULL "-(" VER ")"
+
 #define CPV CP "-" VER
 #define ATOM "^(?:(?:" OP CPV ")|(?P<star>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
 
@@ -96,6 +102,7 @@ safe_fetch(
 }
 /*@=checkpost@*/
 
+/* TODO: add caching */
 CPAtom
 cp_atom_new(const char *value, GError **error) {
     static struct {
@@ -103,9 +110,15 @@ cp_atom_new(const char *value, GError **error) {
         int op_idx, star_idx, simple_idx, slot_idx, use_idx;
     } atom_re;
 
-    CPAtom atom;
+    CPAtom self = NULL;
     GMatchInfo *match;
-    char *invalid_version;
+    char *invalid_version = NULL;
+
+    char *op_match = NULL;
+    char *star_match = NULL;
+    char *simple_match = NULL;
+    OpType op;
+    int cat_idx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -114,7 +127,7 @@ cp_atom_new(const char *value, GError **error) {
         atom_re.regex = g_regex_new(ATOM, (int)G_REGEX_OPTIMIZE, 0, error);
         /*@=mustfreeonly@*/
         if (atom_re.regex == NULL) {
-            return NULL;
+            g_assert_not_reached();
         }
 
         atom_re.op_idx = g_regex_get_string_number(atom_re.regex, "op");
@@ -123,79 +136,72 @@ cp_atom_new(const char *value, GError **error) {
         atom_re.slot_idx = g_regex_get_string_number(atom_re.regex, "slot");
         atom_re.use_idx = g_regex_get_string_number(atom_re.regex, "use");
 
-        g_assert(atom_re.op_idx != -1);
-        g_assert(atom_re.star_idx != -1);
-        g_assert(atom_re.simple_idx != -1);
-        g_assert(atom_re.slot_idx != -1);
-        g_assert(atom_re.use_idx != -1);
+        g_assert(atom_re.op_idx > 0);
+        g_assert(atom_re.star_idx > 0);
+        g_assert(atom_re.simple_idx > 0);
+        g_assert(atom_re.slot_idx > 0);
+        g_assert(atom_re.use_idx > 0);
     }
 
-    if (g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, error)) {
-        char *op_match = NULL;
-        char *star_match = NULL;
-        char *simple_match = NULL;
-        OpType op;
-        int cat_idx;
+    if (!g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, error)) {
+        goto ERR;
+    }
 
-        if ((op_match = safe_fetch(match, atom_re.op_idx))[0] != '\0') {
-            cat_idx = atom_re.op_idx + 2;
-            if (g_utf8_collate(op_match, "<") == 0) {
-                op = OP_LT;
-            } else if (g_utf8_collate(op_match, "<=") == 0) {
-                op = OP_LE;
-            } else if (g_utf8_collate(op_match, "=") == 0) {
-                op = OP_EQ;
-            } else if (g_utf8_collate(op_match, ">=") == 0) {
-                op = OP_GE;
-            } else if (g_utf8_collate(op_match, ">") == 0) {
-                op = OP_GT;
-            } else if (g_utf8_collate(op_match, "~") == 0) {
-                op = OP_TILDE;
-            } else {
-                /*@-type@*/
-                op = -1;
-                /*@=type@*/
-                g_assert_not_reached();
-            }
-        } else if ((star_match = safe_fetch(match, atom_re.star_idx))[0] != '\0') {
-            cat_idx = atom_re.star_idx + 2;
-            op = OP_STAR;
-        } else if ((simple_match = safe_fetch(match, atom_re.simple_idx))[0] != '\0') {
-            cat_idx = atom_re.simple_idx + 2;
-            op = OP_NONE;
+    if ((op_match = safe_fetch(match, atom_re.op_idx))[0] != '\0') {
+        cat_idx = atom_re.op_idx + 2;
+        if (g_utf8_collate(op_match, "<") == 0) {
+            op = OP_LT;
+        } else if (g_utf8_collate(op_match, "<=") == 0) {
+            op = OP_LE;
+        } else if (g_utf8_collate(op_match, "=") == 0) {
+            op = OP_EQ;
+        } else if (g_utf8_collate(op_match, ">=") == 0) {
+            op = OP_GE;
+        } else if (g_utf8_collate(op_match, ">") == 0) {
+            op = OP_GT;
+        } else if (g_utf8_collate(op_match, "~") == 0) {
+            op = OP_TILDE;
         } else {
-            /* Getting here means we have a bug in atom regex */
-            /*@-type@*/
-            op = cat_idx = -1;
-            /*@=type@*/
             g_assert_not_reached();
+            goto ERR;
         }
-        g_free(op_match);
-        g_free(star_match);
-        g_free(simple_match);
-
-        if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
-            /* Pkg name ends with version string, that's disallowed */
-            g_free(invalid_version);
-            return NULL;
-        }
-        g_free(invalid_version);
-
-        atom = g_new(struct CPAtom, 1);
-        atom->refs = 1;
-        atom->op = op;
-        /*@-mustfreeonly@*/
-        atom->category = safe_fetch(match, cat_idx);
-        atom->package = safe_fetch(match, cat_idx + 1);
-        atom->slot = safe_fetch(match, atom_re.slot_idx);
-        /*@=mustfreeonly@*/
-
-        /* TODO: store version and useflags */
+    } else if ((star_match = safe_fetch(match, atom_re.star_idx))[0] != '\0') {
+        cat_idx = atom_re.star_idx + 2;
+        op = OP_STAR;
+    } else if ((simple_match = safe_fetch(match, atom_re.simple_idx))[0] != '\0') {
+        cat_idx = atom_re.simple_idx + 2;
+        op = OP_NONE;
     } else {
-        atom = NULL;
+        /* Getting here means we have a bug in atom regex */
+        g_assert_not_reached();
+        goto ERR;
     }
+    g_free(op_match);
+    g_free(star_match);
+    g_free(simple_match);
+
+    if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
+        /* Pkg name ends with version string, that's disallowed */
+        /* TODO: set error */
+        goto ERR;
+    }
+
+    self = g_new0(struct CPAtom, 1);
+    self->refs = 1;
+    self->op = op;
+    g_assert(self->category == NULL);
+    self->category = safe_fetch(match, cat_idx);
+    g_assert(self->package == NULL);
+    self->package = safe_fetch(match, cat_idx + 1);
+    g_assert(self->slot == NULL);
+    self->slot = safe_fetch(match, atom_re.slot_idx);
+
+    /* TODO: store version and useflags */
+
+ERR:
+    g_free(invalid_version);
     g_match_info_free(match);
-    return atom;
+    return self;
 }
 
 CPAtom
@@ -217,9 +223,146 @@ cp_atom_unref(CPAtom self) {
     if (--self->refs == 0) {
         g_free(self->category);
         g_free(self->package);
+        g_free(self->version);
         g_free(self->slot);
+
         /*@-refcounttrans@*/
         g_free(self);
         /*@=refcounttrans@*/
     }
+}
+
+const char *
+cp_atom_category(const CPAtom self) {
+    return self->category;
+}
+
+const char *
+cp_atom_package(const CPAtom self) {
+    return self->package;
+}
+
+const char *
+cp_atom_version(const CPAtom self) {
+    return self->version;
+}
+
+static int
+cp_version_cmp(const char *first, const char *second) /*@*/ {
+    /* TODO: implement */
+    return g_strcmp0(first, second);
+}
+
+gboolean
+cp_atom_matches(const CPAtom self, const CPPackage package) {
+    const char *pkg_version = cp_package_version(package);
+
+    if (g_strcmp0(self->category, cp_package_category(package)) != 0) {
+        return FALSE;
+    }
+    if (g_strcmp0(self->package, cp_package_name(package)) != 0) {
+        return FALSE;
+    }
+    if (self->slot[0] != '\0' && g_strcmp0(self->slot, cp_package_slot(package)) != 0) {
+        return FALSE;
+    }
+
+    switch (self->op) {
+        case OP_NONE:
+            return TRUE;
+        case OP_LT:
+            return cp_version_cmp(self->version, pkg_version) < 0;
+        case OP_LE:
+            return cp_version_cmp(self->version, pkg_version) <= 0;
+        case OP_EQ:
+            return cp_version_cmp(self->version, pkg_version) == 0;
+        case OP_GE:
+            return cp_version_cmp(self->version, pkg_version) >= 0;
+        case OP_GT:
+            return cp_version_cmp(self->version, pkg_version) > 0;
+        case OP_TILDE:
+            /* TODO: implement */
+        case OP_STAR:
+            /* TODO: implement */
+        default:
+            g_assert_not_reached();
+    }
+}
+
+gboolean
+cp_atom_category_validate(const char *category, GError **error) {
+    static GRegex *regex = NULL;
+
+    g_assert(error == NULL || *error == NULL);
+
+    if (regex == NULL) {
+        /*@-mustfreeonly@*/
+        regex = g_regex_new("^" CAT "$", (int)G_REGEX_OPTIMIZE, 0, error);
+        /*@=mustfreeonly@*/
+        if (regex == NULL) {
+            g_assert_not_reached();
+        }
+    }
+
+    if (!g_regex_match_full(regex, category, (gssize)-1, 0, 0, NULL, error)) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+gboolean
+cp_atom_slot_validate(const char *slot, GError **error) {
+    static GRegex *regex = NULL;
+
+    g_assert(error == NULL || *error == NULL);
+
+    if (regex == NULL) {
+        /*@-mustfreeonly@*/
+        regex = g_regex_new("^" SLOT "$", (int)G_REGEX_OPTIMIZE, 0, error);
+        /*@=mustfreeonly@*/
+        if (regex == NULL) {
+            g_assert_not_reached();
+        }
+    }
+
+    if (!g_regex_match_full(regex, slot, (gssize)-1, 0, 0, NULL, error)) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
+    static GRegex *regex = NULL;
+    GMatchInfo *match = NULL;
+
+    g_assert(error == NULL || *error == NULL);
+
+    if (regex == NULL) {
+        /*@-mustfreeonly@*/
+        regex = g_regex_new("^" PV "$", (int)G_REGEX_OPTIMIZE, 0, error);
+        /*@=mustfreeonly@*/
+        if (regex == NULL) {
+            g_assert_not_reached();
+        }
+    }
+
+    if (!g_regex_match_full(regex, pv, (gssize)-1, 0, 0, &match, error)) {
+        return FALSE;
+    }
+
+    if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
+        /* Pkg name ends with version string, that's disallowed */
+        /* TODO: set error */
+        goto ERR;
+    }
+
+    *name = safe_fetch(match, 1);
+    *version = safe_fetch(match, 7);
+
+    g_match_info_free(match);
+    return TRUE;
 }

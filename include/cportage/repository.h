@@ -79,14 +79,10 @@ cp_repository_unref(
  * \return readonly canonical path to \a self directory
  */
 /*@observer@*/ const char *
-cp_repository_get_path(
-    const CPRepository self
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_repository_path(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /*@observer@*/ const char *
-cp_repository_get_name(
-    const CPRepository self
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_repository_name(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /** TODO: documentation */
 int
