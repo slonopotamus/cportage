@@ -248,7 +248,7 @@ g_dir_open(
     /*@null@*/ GError **error
 ) /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
 
-G_CONST_RETURN gchar *
+/*@observer@*/ G_CONST_RETURN gchar *
 g_dir_read_name(GDir *dir) /*@modifies *dir@*/;
 
 void
@@ -376,8 +376,22 @@ g_hash_table_insert(
     /*@keep@*/ /*@null@*/ gpointer value
 ) /*@modifies *hash_table@*/;
 
-/*@null@*/ /*@observer@*/ gpointer
+/*@null@*/ /*@dependent@*/ gpointer
 g_hash_table_lookup(GHashTable *hash_table, gconstpointer key) /*@*/;
+
+gboolean
+g_hash_table_lookup_extended(
+    GHashTable *hash_table,
+    gconstpointer lookup_key,
+    /*@null@*/ /*@out@*/ gpointer *orig_key,
+    /*@null@*/ /*@out@*/ gpointer *value
+) /*@modifies *orig_key,*value@*/;
+
+gboolean
+g_hash_table_steal(
+    GHashTable *hash_table,
+    gconstpointer key
+) /*@modifies *hash_table@*/;
 
 gboolean
 g_str_equal(gconstpointer v1, gconstpointer v2) /*@*/;
@@ -532,7 +546,7 @@ g_regex_match_full(
     gssize string_len,
     gint start_position,
     gint match_options,
-    /*@out@*/ GMatchInfo **match_info,
+    /*@null@*/ /*@out@*/ GMatchInfo **match_info,
     /*@null@*/ GError **error
 ) /*@modifies *match_info,*error@*/;
 

@@ -40,7 +40,7 @@ typedef /*@refcounted@*/ struct CPPackage *CPPackage;
 /**
  * TODO: documentation.
  */
-/*@newref@*/ /*@*/ CPPackage
+/*@newref@*/ CPPackage
 cp_package_new(
     const char *category,
     const char *name,

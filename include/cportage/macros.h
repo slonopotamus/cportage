@@ -54,8 +54,12 @@ G_BEGIN_DECLS
 /*@iter CP_GDIR_ITER(GDir *dir, yield const char *elem)@*/
 
 #define CP_GDIR_ITER(dir, m_elem) { \
-    const char *m_elem; \
-    while ((m_elem = g_dir_read_name(dir)) != NULL) {
+    /*@-incondefs@*/ \
+    /*@dependent@*/ /*@observer@*/ const char *m_elem; \
+    /*@=incondefs@*/ \
+    /*@-modnomods@*/ \
+    while ((m_elem = g_dir_read_name(dir)) != NULL) { \
+    /*@=modnomods@*/
 
 #define end_CP_GDIR_ITER }}
 

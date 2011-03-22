@@ -41,11 +41,10 @@ typedef /*@refcounted@*/ struct CPVartree *CPVartree;
 /**
  * TODO: documentation.
  */
-/*@newref@*/ /*@null@*/ CPVartree
+/*@newref@*/ CPVartree
 cp_vartree_new(
-    CPSettings settings,
-    GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies settings,*error@*/;
+    const CPSettings settings
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * Increases reference count of \a self by 1.
@@ -74,7 +73,8 @@ cp_vartree_find_packages(
     const CPAtom atom,
     /*@out@*/ GList/*<CPPackage>*/ **match,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies self,*match,*error@*/;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies self,*match,*error@*/ /*@globals fileSystem@*/;
 
 #pragma GCC visibility pop
 

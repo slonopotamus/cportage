@@ -137,8 +137,8 @@ static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_packages(
     const char *portdir,
     CPVartree vartree,
-    GError **error
-) /*@modifies vatree,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
+    /*@null@*/ GError **error
+) /*@modifies vartree,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path;
     char **data;
     gboolean result = TRUE;

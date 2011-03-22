@@ -102,6 +102,28 @@ safe_fetch(
 }
 /*@=checkpost@*/
 
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+check_invalid_version(
+    const GMatchInfo *match,
+    int index,
+    /*@null@*/ GError **error
+) /*@modifies *error@*/ {
+    char *invalid_version;
+    gboolean result;
+
+    g_assert(error == NULL || *error == NULL);
+
+    invalid_version = safe_fetch(match, index);
+    result = invalid_version[0] == '\0';
+    if (!result) {
+        /* Package name ends with version string, that's disallowed */
+        /* TODO: set error */
+    }
+    g_free(invalid_version);
+
+    return result;
+}
+
 /* TODO: add caching */
 CPAtom
 cp_atom_new(const char *value, GError **error) {
@@ -112,7 +134,6 @@ cp_atom_new(const char *value, GError **error) {
 
     CPAtom self = NULL;
     GMatchInfo *match;
-    char *invalid_version = NULL;
 
     char *op_match = NULL;
     char *star_match = NULL;
@@ -144,7 +165,7 @@ cp_atom_new(const char *value, GError **error) {
     }
 
     if (!g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, error)) {
-        goto ERR;
+        goto OUT;
     }
 
     if ((op_match = safe_fetch(match, atom_re.op_idx))[0] != '\0') {
@@ -163,7 +184,6 @@ cp_atom_new(const char *value, GError **error) {
             op = OP_TILDE;
         } else {
             g_assert_not_reached();
-            goto ERR;
         }
     } else if ((star_match = safe_fetch(match, atom_re.star_idx))[0] != '\0') {
         cat_idx = atom_re.star_idx + 2;
@@ -174,16 +194,13 @@ cp_atom_new(const char *value, GError **error) {
     } else {
         /* Getting here means we have a bug in atom regex */
         g_assert_not_reached();
-        goto ERR;
     }
     g_free(op_match);
     g_free(star_match);
     g_free(simple_match);
 
-    if ((invalid_version = safe_fetch(match, cat_idx + 2))[0] != '\0') {
-        /* Pkg name ends with version string, that's disallowed */
-        /* TODO: set error */
-        goto ERR;
+    if (!check_invalid_version(match, cat_idx + 2, error)) {
+        goto OUT;
     }
 
     self = g_new0(struct CPAtom, 1);
@@ -198,8 +215,7 @@ cp_atom_new(const char *value, GError **error) {
 
     /* TODO: store version and useflags */
 
-ERR:
-    g_free(invalid_version);
+OUT:
     g_match_info_free(match);
     return self;
 }
@@ -291,7 +307,7 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
 
 gboolean
 cp_atom_category_validate(const char *category, GError **error) {
-    static GRegex *regex = NULL;
+    /*@only@*/ static GRegex *regex = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -311,10 +327,9 @@ cp_atom_category_validate(const char *category, GError **error) {
     return TRUE;
 }
 
-
 gboolean
 cp_atom_slot_validate(const char *slot, GError **error) {
-    static GRegex *regex = NULL;
+    /*@only@*/ static GRegex *regex = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -336,11 +351,10 @@ cp_atom_slot_validate(const char *slot, GError **error) {
 
 gboolean
 cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
-    static GRegex *regex = NULL;
+    /*@only@*/ static GRegex *regex = NULL;
 
-    gboolean result = TRUE;
+    gboolean result;
     GMatchInfo *match = NULL;
-    char *invalid_version = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -353,14 +367,13 @@ cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
         }
     }
 
-    if (!g_regex_match_full(regex, pv, (gssize)-1, 0, 0, &match, error)) {
-        return FALSE;
+    result = g_regex_match_full(regex, pv, (gssize)-1, 0, 0, &match, error);
+    if (!result) {
+        goto OUT;
     }
 
-    if ((invalid_version = safe_fetch(match, 2))[0] != '\0') {
-        result = FALSE;
-        /* Pkg name ends with version string, that's disallowed */
-        /* TODO: set error */
+    result = check_invalid_version(match, 2, error);
+    if (!result) {
         goto OUT;
     }
 
@@ -368,7 +381,6 @@ cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
     *version = safe_fetch(match, 7);
 
 OUT:
-    g_free(invalid_version);
     g_match_info_free(match);
-    return TRUE;
+    return result;
 }

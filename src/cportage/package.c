@@ -41,9 +41,13 @@ cp_package_new(
     self->refs = 1;
 
     /* TODO: validate args */
+    g_assert(self->category == NULL);
     self->category = g_strdup(category);
+    g_assert(self->name == NULL);
     self->name = g_strdup(name);
+    g_assert(self->version == NULL);
     self->version = g_strdup(version);
+    g_assert(self->slot == NULL);
     self->slot = g_strdup(slot);
 
     return self;

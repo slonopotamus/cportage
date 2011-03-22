@@ -21,7 +21,6 @@
 #include <cportage/vartree.h>
 
 struct CPVartree {
-    CPSettings settings;
     char *root;
     /** Lazily populated category->packagename->packages cache. */
     /*@owned@*/ GHashTable *cache;
@@ -31,7 +30,7 @@ struct CPVartree {
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 try_load_package(
-    const char *root,
+    const CPVartree self,
     const char *category,
     const char *pv,
     /*@out@*/ CPPackage *into,
@@ -49,14 +48,14 @@ try_load_package(
         goto OUT;
     }
 
-    config_file = g_build_filename(root, category, pv, "EAPI", NULL);
+    config_file = g_build_filename(self->root, category, pv, "EAPI", NULL);
     result = cp_eapi_check_file(config_file, error);
     g_free(config_file);
     if (!result) {
         goto OUT;
     }
 
-    config_file = g_build_filename(root, category, pv, "SLOT", NULL);
+    config_file = g_build_filename(self->root, category, pv, "SLOT", NULL);
     result = g_file_get_contents(config_file, &slot, NULL, error);
     g_free(config_file);
     if (!result) {
@@ -82,17 +81,20 @@ insert_package(
     CPPackage package
 ) /*@modifies *name2pkg@*/ {
     const char *name = cp_package_name(package);
-    void *key;
+    /*@only@*/ void *key = NULL;
     GList *list = NULL;
 
     if (g_hash_table_lookup_extended(name2pkg, name, &key, (void **)&list)) {
         gboolean stolen = g_hash_table_steal(name2pkg, name);
         g_assert(stolen);
     } else {
+        g_assert(key == NULL);
         key = g_strdup(name);
     }
 
+    /*@-refcounttrans@*/
     list = g_list_prepend(list, package);
+    /*@=refcounttrans@*/
     g_hash_table_insert(name2pkg, key, list);
 }
 
@@ -127,7 +129,7 @@ populate_cache(
     CP_GDIR_ITER(cat_dir, pv) {
         CPPackage package = NULL;
 
-        result = try_load_package(self->root, category, pv, &package, error);
+        result = try_load_package(self, category, pv, &package, error);
 
         if (!result) {
             break;
@@ -161,26 +163,25 @@ get_packages(
             g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_package_list_free
         );
         if (!populate_cache(self, name2pkg, category, error)) {
+            *result = NULL;
             g_hash_table_destroy(name2pkg);
             return FALSE;
         }
         g_hash_table_insert(self->cache, g_strdup(category), name2pkg);
     }
 
+    /*@-dependenttrans@*/
     *result = g_hash_table_lookup(name2pkg, package);
+    /*@=dependenttrans@*/
     return TRUE;
 }
 
 CPVartree
-cp_vartree_new(CPSettings settings, GError **error) {
+cp_vartree_new(const CPSettings settings) {
     CPVartree self;
-
-    g_assert(error == NULL || *error == NULL);
 
     self = g_new0(struct CPVartree, 1);
     self->refs = 1;
-    g_assert(self->settings == NULL);
-    self->settings = cp_settings_ref(settings);
     g_assert(self->root == NULL);
     self->root = g_build_filename(cp_settings_root(settings),
                                   "var", "db", "pkg", NULL);
@@ -209,8 +210,7 @@ cp_vartree_unref(CPVartree self) {
     }
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
-       cp_settings_unref(self->settings);
-       g_free(self->root);
+        g_free(self->root);
         if (self->cache != NULL) {
             g_hash_table_destroy(self->cache);
         }
@@ -234,14 +234,17 @@ cp_vartree_find_packages(
 
     g_assert(error == NULL || *error == NULL);
 
+    *match = NULL;
+
     if (!get_packages(self, category, package, &pkgs, error)) {
         return FALSE;
     }
 
-    *match = NULL;
     CP_GLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {
+            /*@-mustfreefresh@*/
             *match = g_list_prepend(*match, cp_package_ref(pkg));
+            /*@=mustfreefresh@*/
         }
     } end_CP_GLIST_ITER
 
