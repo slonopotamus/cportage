@@ -26,10 +26,12 @@
 #include <cportage/eapi.h>
 #include <cportage/io.h>
 #include <cportage/macros.h>
+#include <cportage/package.h>
 #include <cportage/repository.h>
 #include <cportage/settings.h>
 #include <cportage/shellconfig.h>
 #include <cportage/strings.h>
+#include <cportage/version.h>
 
 #undef CPORTAGE_H_INSIDE
 

@@ -18,6 +18,7 @@
 */
 
 #include <cportage/atom.h>
+#include <cportage/version.h>
 
 typedef enum OP_TYPE {
     OP_NONE,
@@ -27,19 +28,18 @@ typedef enum OP_TYPE {
     OP_GE,
     OP_GT,
     OP_TILDE,
-    OP_STAR
+    OP_GLOB
 } OpType;
 
 struct CPAtom {
-    /*@refs@*/ int refs;
-    OpType op;
-
     /*@only@*/ char *category;
     /*@only@*/ char *package;
 
-    /* Nullable */
-    /*@only@*/ char *version;
+    /*@null@*/ CPVersion version;
     /*@only@*/ char *slot;
+
+    /*@refs@*/ int refs;
+    OpType op;
 };
 
 /*
@@ -74,7 +74,7 @@ struct CPAtom {
 #define PV PKG_FULL "-(" VER ")"
 
 #define CPV CP "-" VER
-#define ATOM "^(?:(?:" OP CPV ")|(?P<star>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
+#define ATOM "^(?:(?:" OP CPV ")|(?P<glob>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
 
 /*@-checkpost@*/
 static /*@nullterminated@*/ /*@only@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
@@ -129,14 +129,14 @@ CPAtom
 cp_atom_new(const char *value, GError **error) {
     static struct {
         /*@only@*/ GRegex *regex;
-        int op_idx, star_idx, simple_idx, slot_idx, use_idx;
+        int op_idx, glob_idx, simple_idx, slot_idx, use_idx;
     } atom_re;
 
     CPAtom self = NULL;
     GMatchInfo *match;
 
     char *op_match = NULL;
-    char *star_match = NULL;
+    char *glob_match = NULL;
     char *simple_match = NULL;
     OpType op;
     int cat_idx;
@@ -152,13 +152,13 @@ cp_atom_new(const char *value, GError **error) {
         }
 
         atom_re.op_idx = g_regex_get_string_number(atom_re.regex, "op");
-        atom_re.star_idx = g_regex_get_string_number(atom_re.regex, "star");
+        atom_re.glob_idx = g_regex_get_string_number(atom_re.regex, "glob");
         atom_re.simple_idx = g_regex_get_string_number(atom_re.regex, "simple");
         atom_re.slot_idx = g_regex_get_string_number(atom_re.regex, "slot");
         atom_re.use_idx = g_regex_get_string_number(atom_re.regex, "use");
 
         g_assert(atom_re.op_idx > 0);
-        g_assert(atom_re.star_idx > 0);
+        g_assert(atom_re.glob_idx > 0);
         g_assert(atom_re.simple_idx > 0);
         g_assert(atom_re.slot_idx > 0);
         g_assert(atom_re.use_idx > 0);
@@ -185,9 +185,9 @@ cp_atom_new(const char *value, GError **error) {
         } else {
             g_assert_not_reached();
         }
-    } else if ((star_match = safe_fetch(match, atom_re.star_idx))[0] != '\0') {
-        cat_idx = atom_re.star_idx + 2;
-        op = OP_STAR;
+    } else if ((glob_match = safe_fetch(match, atom_re.glob_idx))[0] != '\0') {
+        cat_idx = atom_re.glob_idx + 2;
+        op = OP_GLOB;
     } else if ((simple_match = safe_fetch(match, atom_re.simple_idx))[0] != '\0') {
         cat_idx = atom_re.simple_idx + 2;
         op = OP_NONE;
@@ -196,7 +196,7 @@ cp_atom_new(const char *value, GError **error) {
         g_assert_not_reached();
     }
     g_free(op_match);
-    g_free(star_match);
+    g_free(glob_match);
     g_free(simple_match);
 
     if (!check_invalid_version(match, cat_idx + 2, error)) {
@@ -239,7 +239,7 @@ cp_atom_unref(CPAtom self) {
     if (--self->refs == 0) {
         g_free(self->category);
         g_free(self->package);
-        g_free(self->version);
+        cp_version_unref(self->version);
         g_free(self->slot);
 
         /*@-refcounttrans@*/
@@ -258,20 +258,10 @@ cp_atom_package(const CPAtom self) {
     return self->package;
 }
 
-const char *
-cp_atom_version(const CPAtom self) {
-    return self->version;
-}
-
-static int
-cp_version_cmp(const char *first, const char *second) /*@*/ {
-    /* TODO: implement */
-    return g_strcmp0(first, second);
-}
-
 gboolean
 cp_atom_matches(const CPAtom self, const CPPackage package) {
-    const char *pkg_version = cp_package_version(package);
+    gboolean result;
+    CPVersion pkg_version;
 
     if (g_strcmp0(self->category, cp_package_category(package)) != 0) {
         return FALSE;
@@ -283,26 +273,49 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
         return FALSE;
     }
 
+    /* TODO: check repo */
+
+    pkg_version = cp_package_version(package);
     switch (self->op) {
         case OP_NONE:
-            return TRUE;
+            result = TRUE;
+            break;
         case OP_LT:
-            return cp_version_cmp(self->version, pkg_version) < 0;
+            g_assert(self->version != NULL);
+            result = cp_version_cmp(self->version, pkg_version) < 0;
+            break;
         case OP_LE:
-            return cp_version_cmp(self->version, pkg_version) <= 0;
+            g_assert(self->version != NULL);
+            result = cp_version_cmp(self->version, pkg_version) <= 0;
+            break;
         case OP_EQ:
-            return cp_version_cmp(self->version, pkg_version) == 0;
+            g_assert(self->version != NULL);
+            result = cp_version_cmp(self->version, pkg_version) == 0;
+            break;
         case OP_GE:
-            return cp_version_cmp(self->version, pkg_version) >= 0;
+            g_assert(self->version != NULL);
+            result = cp_version_cmp(self->version, pkg_version) >= 0;
+            break;
         case OP_GT:
-            return cp_version_cmp(self->version, pkg_version) > 0;
+            g_assert(self->version != NULL);
+            result = cp_version_cmp(self->version, pkg_version) > 0;
+            break;
         case OP_TILDE:
-            /* TODO: implement */
-        case OP_STAR:
-            /* TODO: implement */
+            g_assert(self->version != NULL);
+            result = cp_version_any_revision_match(self->version, pkg_version);
+            break;
+        case OP_GLOB:
+            g_assert(self->version != NULL);
+            result = cp_version_glob_match(self->version, pkg_version);
+            break;
         default:
             g_assert_not_reached();
     }
+    cp_version_unref(pkg_version);
+
+    /* TODO: check useflags */
+
+    return result;
 }
 
 gboolean
@@ -350,11 +363,12 @@ cp_atom_slot_validate(const char *slot, GError **error) {
 }
 
 gboolean
-cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
+cp_atom_pv_split(const char *pv, char **name, CPVersion *version, GError **error) {
     /*@only@*/ static GRegex *regex = NULL;
 
     gboolean result;
     GMatchInfo *match = NULL;
+    char *ver_str = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -377,10 +391,16 @@ cp_atom_pv_split(const char *pv, char **name, char **version, GError **error) {
         goto OUT;
     }
 
+    ver_str = safe_fetch(match, 7);
+    *version = cp_version_new(ver_str, error);
+    if (*version == NULL) {
+        goto OUT;
+    }
+
     *name = safe_fetch(match, 1);
-    *version = safe_fetch(match, 7);
 
 OUT:
+    g_free(ver_str);
     g_match_info_free(match);
     return result;
 }

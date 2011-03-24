@@ -124,7 +124,9 @@ print_atom_matches(
 
     g_print("%-20s ", atom_label);
     CP_GLIST_ITER(match, pkg) {
-        g_print("%s%s", i++ == 0 ? "" : ", ", cp_package_version(pkg));
+        CPVersion version = cp_package_version(pkg);
+        g_print("%s%s", i++ == 0 ? "" : ", ", cp_version_str(version));
+        cp_version_unref(version);
     } end_CP_GLIST_ITER
     g_print("\n");
 

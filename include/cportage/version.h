@@ -21,10 +21,10 @@
 #error "Only <cportage.h> can be included directly."
 #endif
 
-#ifndef CP_PACKAGE_H
-#define CP_PACKAGE_H
+#ifndef CP_VERSION_H
+#define CP_VERSION_H
 
-#include <cportage/version.h>
+#include <glib.h>
 
 /*@-exportany@*/
 
@@ -35,79 +35,66 @@ G_BEGIN_DECLS
 /**
  * TODO: documentation.
  */
-typedef /*@refcounted@*/ struct CPPackage *CPPackage;
+typedef /*@refcounted@*/ struct CPVersion *CPVersion;
 
 /**
  * TODO: documentation.
  */
-/*@newref@*/ CPPackage
-cp_package_new(
-    const char *category,
-    const char *name,
-    CPVersion version,
-    const char *slot
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies version@*/;
+/*@newref@*/ /*@null@*/ CPVersion
+cp_version_new(
+    const char *version,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 /**
  * Increases reference count of \a self by 1.
  *
- * \param self a #CPPackage structure
+ * \param self a #CPVersion structure
  * \return \a self
  */
-/*@newref@*/ CPPackage
-cp_package_ref(CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+/*@newref@*/ CPVersion
+cp_version_ref(CPVersion self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 /**
  * Decreases reference count of \a self by 1. When reference count drops
  * to zero, it frees all the memory associated with the structure.
  *
- * \param self a #CPPackage
+ * \param self a #CPVersion
  */
 void
-cp_package_unref(/*@killref@*/ /*@null@*/ CPPackage self) /*@modifies self@*/;
-
-/**
- * TODO: documentation.
- */
-void
-cp_package_list_free(/*@null@*/ /*@only@*/ GList *list) /*@modifies list@*/;
-
-/**
- * TODO: documentation.
- */
-/*@observer@*/ const char *
-cp_package_category(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-/**
- * TODO: documentation.
- */
-/*@observer@*/ const char *
-cp_package_name(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-/**
- * TODO: documentation.
- */
-/*@newref@*/ CPVersion
-cp_package_version(
-    const CPPackage self
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;
-
-/**
- * TODO: documentation.
- */
-/*@observer@*/ const char *
-cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_version_unref(/*@killref@*/ /*@null@*/ CPVersion self) /*@modifies self@*/;
 
 /**
  * TODO: documentation.
  */
 int
-cp_package_cmp(
-    const CPPackage first,
-    const CPPackage second
+cp_version_cmp(
+    const CPVersion first,
+    const CPVersion second
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/*@observer@*/ const char *
+cp_version_str(const CPVersion self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
 #pragma GCC visibility pop
+
+/**
+ * TODO: documentation.
+ */
+gboolean
+cp_version_any_revision_match(
+    const CPVersion first,
+    const CPVersion second
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * TODO: documentation.
+ */
+gboolean
+cp_version_glob_match(
+    const CPVersion first, 
+    const CPVersion second
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 G_END_DECLS
 

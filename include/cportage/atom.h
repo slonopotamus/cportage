@@ -66,19 +66,16 @@ void
 cp_atom_unref(/*@killref@*/ /*@null@*/ CPAtom self) /*@modifies self@*/;
 
 /*@observer@*/ const char *
-cp_atom_category(const CPAtom self) /*@*/;
+cp_atom_category(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /*@observer@*/ const char *
-cp_atom_package(const CPAtom self) /*@*/;
-
-/*@null@*/ /*@observer@*/ const char *
-cp_atom_version(const CPAtom self) /*@*/;
+cp_atom_package(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 gboolean
 cp_atom_matches(
     const CPAtom self,
     const CPPackage package
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies package@*/;
 
 gboolean
 cp_atom_category_validate(
@@ -96,7 +93,7 @@ gboolean
 cp_atom_pv_split(
     const char *pv,
     /*@out@*/ char **name,
-    /*@out@*/ char **version,
+    /*@out@*/ CPVersion *version,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *name,*version,*error@*/;
 

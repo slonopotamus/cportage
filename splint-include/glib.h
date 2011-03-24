@@ -499,6 +499,13 @@ g_list_foreach(
     /*@null@*/ gpointer user_data
 ) /*@modifies *list,user_data@*/;
 
+/*@only@*/ GList *
+g_list_insert_sorted(
+    /*@null@*/ GList *list,
+    /*@null@*/ gpointer data,
+    GCompareFunc func
+) /*@modifies *list@*/;
+
 /* gregex.h */
 
 typedef enum {

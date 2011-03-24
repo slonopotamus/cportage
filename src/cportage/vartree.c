@@ -38,7 +38,7 @@ try_load_package(
 ) /*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/ {
     gboolean result = TRUE;
     char *name = NULL;
-    char *version = NULL;
+    CPVersion version = NULL;
     char *config_file = NULL;
     char *slot;
 
@@ -71,7 +71,7 @@ try_load_package(
 
 OUT:
     g_free(name);
-    g_free(version);
+    cp_version_unref(version);
     return result;
 }
 
@@ -243,7 +243,10 @@ cp_vartree_find_packages(
     CP_GLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {
             /*@-mustfreefresh@*/
-            *match = g_list_prepend(*match, cp_package_ref(pkg));
+            *match = g_list_insert_sorted(
+                *match,
+                cp_package_ref(pkg),
+                (GCompareFunc)cp_package_cmp);
             /*@=mustfreefresh@*/
         }
     } end_CP_GLIST_ITER

@@ -18,11 +18,12 @@
 */
 
 #include <cportage/package.h>
+#include <cportage/version.h>
 
 struct CPPackage {
     char *category;
     char *name;
-    char *version;
+    CPVersion version;
     char *slot;
 
     /*@refs@*/ int refs;
@@ -32,7 +33,7 @@ CPPackage
 cp_package_new(
     const char *category,
     const char *name,
-    const char *version,
+    CPVersion version,
     const char *slot
 ) {
     CPPackage self;
@@ -46,7 +47,7 @@ cp_package_new(
     g_assert(self->name == NULL);
     self->name = g_strdup(name);
     g_assert(self->version == NULL);
-    self->version = g_strdup(version);
+    self->version = cp_version_ref(version);
     g_assert(self->slot == NULL);
     self->slot = g_strdup(slot);
 
@@ -72,7 +73,7 @@ cp_package_unref(CPPackage self) {
     if (--self->refs == 0) {
         g_free(self->category);
         g_free(self->name);
-        g_free(self->version);
+        cp_version_unref(self->version);
         g_free(self->slot);
 
         /*@-refcounttrans@*/
@@ -100,12 +101,29 @@ cp_package_name(const CPPackage self) {
     return self->name;
 }
 
-const char *
+CPVersion
 cp_package_version(const CPPackage self) {
-    return self->version;
+    return cp_version_ref(self->version);
 }
 
 const char *
 cp_package_slot(const CPPackage self) {
     return self->slot;
+}
+
+int
+cp_package_cmp(const CPPackage first, const CPPackage second) {
+    int result;
+
+    result = g_strcmp0(first->category, second->category);
+    if (result != 0) {
+        return result;
+    }
+
+    result = g_strcmp0(first->name, second->name);
+    if (result != 0) {
+        return result;
+    }
+
+    return cp_version_cmp(first->version, second->version);
 }
