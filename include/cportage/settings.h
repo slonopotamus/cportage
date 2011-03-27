@@ -32,19 +32,6 @@ G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-#define CP_SETTINGS_ERROR cp_settings_error_quark()
-
-GQuark
-cp_settings_error_quark(void) /*@*/;
-
-/**
- * Errors raised by #CPSettings.
- */
-typedef enum {
-    /** Required config entry was not found */
-    CP_SETTINGS_ERROR_REQUIRED
-} CPSettingsError;
-
 /**
  * Central immutable storage of cportage configuration.
  */

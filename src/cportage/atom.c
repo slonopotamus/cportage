@@ -18,6 +18,8 @@
 */
 
 #include <cportage/atom.h>
+#include <cportage/error.h>
+#include <cportage/macros.h>
 #include <cportage/version.h>
 
 typedef enum OP_TYPE {
@@ -116,8 +118,9 @@ check_invalid_version(
     invalid_version = safe_fetch(match, index);
     result = invalid_version[0] == '\0';
     if (!result) {
-        /* Package name ends with version string, that's disallowed */
-        /* TODO: set error */
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+            _("'%s' contains version in package name"),
+            g_match_info_get_string(match));
     }
     g_free(invalid_version);
 
@@ -134,6 +137,7 @@ cp_atom_new(const char *value, GError **error) {
 
     CPAtom self = NULL;
     GMatchInfo *match;
+    GError *tmp_error = NULL;
 
     char *op_match = NULL;
     char *glob_match = NULL;
@@ -164,7 +168,10 @@ cp_atom_new(const char *value, GError **error) {
         g_assert(atom_re.use_idx > 0);
     }
 
-    if (!g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, error)) {
+    if (!g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, &tmp_error)) {
+        g_assert_no_error(tmp_error);
+        g_set_error(error, CP_ERROR, CP_ERROR_ATOM_SYNTAX,
+            _("'%s': invalid atom"), value);
         goto OUT;
     }
 
@@ -322,6 +329,8 @@ gboolean
 cp_atom_category_validate(const char *category, GError **error) {
     /*@only@*/ static GRegex *regex = NULL;
 
+    GError *tmp_error = NULL;
+
     g_assert(error == NULL || *error == NULL);
 
     if (regex == NULL) {
@@ -333,8 +342,10 @@ cp_atom_category_validate(const char *category, GError **error) {
         }
     }
 
-    if (!g_regex_match_full(regex, category, (gssize)-1, 0, 0, NULL, error)) {
-        return FALSE;
+    if (!g_regex_match_full(regex, category, (gssize)-1, 0, 0, NULL, &tmp_error)) {
+        g_assert_no_error(tmp_error);
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+            _("'%s' isn't valid category name"), category);
     }
 
     return TRUE;
@@ -344,18 +355,24 @@ gboolean
 cp_atom_slot_validate(const char *slot, GError **error) {
     /*@only@*/ static GRegex *regex = NULL;
 
+    GError *tmp_error = NULL;
+
     g_assert(error == NULL || *error == NULL);
 
     if (regex == NULL) {
         /*@-mustfreeonly@*/
-        regex = g_regex_new("^" SLOT "$", (int)G_REGEX_OPTIMIZE, 0, error);
+        regex = g_regex_new("^" SLOT "$", (int)G_REGEX_OPTIMIZE, 0, &tmp_error);
         /*@=mustfreeonly@*/
+        g_assert_no_error(tmp_error);
         if (regex == NULL) {
             g_assert_not_reached();
         }
     }
 
-    if (!g_regex_match_full(regex, slot, (gssize)-1, 0, 0, NULL, error)) {
+    if (!g_regex_match_full(regex, slot, (gssize)-1, 0, 0, NULL, &tmp_error)) {
+        g_assert_no_error(tmp_error);
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+            _("'%s' isn't valid slot"), slot);
         return FALSE;
     }
 
@@ -366,6 +383,8 @@ gboolean
 cp_atom_pv_split(const char *pv, char **name, CPVersion *version, GError **error) {
     /*@only@*/ static GRegex *regex = NULL;
 
+    GError *tmp_error = NULL;
+
     gboolean result;
     GMatchInfo *match = NULL;
     char *ver_str = NULL;
@@ -374,15 +393,19 @@ cp_atom_pv_split(const char *pv, char **name, CPVersion *version, GError **error
 
     if (regex == NULL) {
         /*@-mustfreeonly@*/
-        regex = g_regex_new("^" PV "$", (int)G_REGEX_OPTIMIZE, 0, error);
+        regex = g_regex_new("^" PV "$", (int)G_REGEX_OPTIMIZE, 0, &tmp_error);
         /*@=mustfreeonly@*/
+        g_assert_no_error(tmp_error);
         if (regex == NULL) {
             g_assert_not_reached();
         }
     }
 
-    result = g_regex_match_full(regex, pv, (gssize)-1, 0, 0, &match, error);
+    result = g_regex_match_full(regex, pv, (gssize)-1, 0, 0, &match, &tmp_error);
     if (!result) {
+        g_assert_no_error(tmp_error);
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+            _("'%s' isn't valid package-version"), pv);
         goto OUT;
     }
 

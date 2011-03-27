@@ -18,6 +18,7 @@
 */
 
 #include <cportage/eapi.h>
+#include <cportage/error.h>
 #include <cportage/io.h>
 #include <cportage/settings.h>
 #include <cportage/shellconfig.h>
@@ -483,7 +484,7 @@ cp_settings_get_required(
 
     result = cp_settings_get(self, key);
     if (result == NULL) {
-        g_set_error(error, CP_SETTINGS_ERROR, (gint)CP_SETTINGS_ERROR_REQUIRED,
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_SETTINGS_REQUIRED_MISSING,
             _("Required config variable '%s' not found"), key);
     }
     return result;
@@ -503,9 +504,4 @@ gboolean
 cp_settings_feature_enabled(const CPSettings self, const char *feature) {
     /* Could be replaced with bsearch since features are sorted */
     return cp_strv_contains(self->features, feature);
-}
-
-GQuark
-cp_settings_error_quark(void) {
-  return g_quark_from_static_string("cp-settings-error-quark");
 }

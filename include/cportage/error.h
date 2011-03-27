@@ -21,45 +21,32 @@
 #error "Only <cportage.h> can be included directly."
 #endif
 
-/** I/O utility functions. */
-
-#ifndef CP_SHELLCONFIG_H
-#define CP_SHELLCONFIG_H
+#ifndef CP_ERROR_H
+#define CP_ERROR_H
 
 #include <glib.h>
 
 /*@-exportany@*/
-/*@-declundef@*/
 
 G_BEGIN_DECLS
 
 #pragma GCC visibility push(default)
 
-/**
- * Reads shell-like config file into a %GHashTable.
- *
- * \param path         UTF8-encoded filename
- * \param into         a %GHashTable to collect config entries into
- * \param allow_source if %TRUE, \c source statements are handled
- * \param error        return location for a %GError, or %NULL
- * \return             %TRUE on success, %FALSE if an error occurred
- */
-gboolean
-cp_read_shellconfig(
-    GHashTable *into,
-    const char *path,
-    gboolean allow_source,
-    /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/;
+#define CP_ERROR cp_error_quark()
 
-/** TODO: documentation */
-/*@null@*/ char *
-cp_varexpand(
-    const char *str,
-    GHashTable *vars,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+GQuark
+cp_error_quark(void) /*@*/;
+
+/**
+ * TODO: documentation.
+ */
+typedef enum {
+    CP_ERROR_EAPI_UNSUPPORTED,
+    CP_ERROR_ATOM_SYNTAX,
+    CP_ERROR_SHELLCONFIG_SOURCE_DISABLED,
+    CP_ERROR_SHELLCONFIG_SYNTAX,
+    CP_ERROR_SETTINGS_REQUIRED_MISSING
+} CPError;
 
 #pragma GCC visibility pop
 

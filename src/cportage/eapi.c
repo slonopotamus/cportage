@@ -18,6 +18,7 @@
 */
 
 #include <cportage/eapi.h>
+#include <cportage/error.h>
 #include <cportage/strings.h>
 
 static gboolean
@@ -32,7 +33,7 @@ cp_eapi_check(const char *eapi, const char *file, GError **error) {
     if (cp_eapi_supported(eapi)) {
         return TRUE;
     }
-    g_set_error(error, CP_EAPI_ERROR, (gint)CP_EAPI_ERROR_UNSUPPORTED,
+    g_set_error(error, CP_ERROR, (gint)CP_ERROR_EAPI_UNSUPPORTED,
         _("Unsupported EAPI '%s' in '%s'"), eapi, file);
     return FALSE;
 }
@@ -54,9 +55,4 @@ cp_eapi_check_file(const char *file, GError **error) {
 
     g_free(data);
     return result;
-}
-
-GQuark
-cp_eapi_error_quark(void) {
-  return g_quark_from_static_string("cp-eapi-error-quark");
 }

@@ -120,11 +120,17 @@ int main(void) {
     while (i < G_N_ELEMENTS(data)) {
         const char *s = data[i].str;
         const char *msg = data[i].valid ? "valid" : "invalid";
-        void *atom = cp_atom_new(s, NULL);
+        GError *error = NULL;
+        CPAtom atom = cp_atom_new(s, &error);
         if (data[i].valid == (atom == NULL)) {
             g_error("'%s' must be %s, but it isn't\n", s, msg);
         }
+        if (data[i].valid != (error == NULL)) {
+            g_error("Expected %s error for '%s' but got: %s",
+                data[i].valid ? "no" : "an", s, error ? error->message : "NULL");
+        }
         cp_atom_unref(atom);
+        g_clear_error(&error);
         ++i;
     }
 

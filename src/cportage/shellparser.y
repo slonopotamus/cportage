@@ -36,6 +36,7 @@
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #pragma GCC diagnostic ignored "-Wunreachable-code"
 
+#include <cportage/error.h>
 #include <cportage/io.h>
 #include <cportage/shellconfig.h>
 #include <cportage/strings.h>
@@ -75,14 +76,14 @@ cp_shellconfig_error(
     }
 
     if (locp->first_line) {
-        g_set_error(ctx->error, CP_SHELLCONFIG_ERROR, CP_SHELLCONFIG_ERROR_SYNTAX,
+        g_set_error(ctx->error, CP_ERROR, CP_ERROR_SHELLCONFIG_SYNTAX,
             _("Could not parse '%s' at %d.%d-%d.%d: %s"),
             ctx->filename,
             locp->first_line, locp->first_column,
             locp->last_line, locp->last_column,
             err);
     } else {
-        g_set_error(ctx->error, CP_SHELLCONFIG_ERROR, CP_SHELLCONFIG_ERROR_SYNTAX,
+        g_set_error(ctx->error, CP_ERROR, CP_ERROR_SHELLCONFIG_SYNTAX,
             _("Could not parse %s: %s"), ctx->filename, err);
     }
 }
@@ -267,11 +268,6 @@ blank:
   | blank BLANK { $$ = DOCONCAT2($1, $2); }
 
 %%
-
-GQuark
-cp_shellconfig_error_quark(void) {
-  return g_quark_from_static_string("cp-shellconfig-error-quark");
-}
 
 static gboolean
 doparse(

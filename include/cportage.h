@@ -24,6 +24,7 @@
 
 #include <cportage/atom.h>
 #include <cportage/eapi.h>
+#include <cportage/error.h>
 #include <cportage/io.h>
 #include <cportage/macros.h>
 #include <cportage/package.h>
