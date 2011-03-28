@@ -170,7 +170,7 @@ cp_atom_new(const char *value, GError **error) {
 
     if (!g_regex_match_full(atom_re.regex, value, (gssize)-1, 0, 0, &match, &tmp_error)) {
         g_assert_no_error(tmp_error);
-        g_set_error(error, CP_ERROR, CP_ERROR_ATOM_SYNTAX,
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s': invalid atom"), value);
         goto OUT;
     }

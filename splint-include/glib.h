@@ -570,6 +570,9 @@ g_match_info_fetch(const GMatchInfo *match_info, gint match_num) /*@*/;
 /*@observer@*/ GRegex *
 g_match_info_get_regex(const GMatchInfo *match_info) /*@*/;
 
+/*@observer@*/ const gchar *
+g_match_info_get_string(const GMatchInfo *match_info) /*@*/;
+
 void
 g_match_info_free(/*@only@*/ GMatchInfo *match_info) /*@modifies match_info@*/;
 
