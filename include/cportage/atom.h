@@ -90,6 +90,12 @@ cp_atom_slot_validate(
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 gboolean
+cp_atom_repo_validate(
+    const char *repo,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+
+gboolean
 cp_atom_pv_split(
     const char *pv,
     /*@out@*/ char **name,

@@ -37,10 +37,12 @@ try_load_package(
     /*@null@*/ GError **error
 ) /*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/ {
     gboolean result = TRUE;
+    char *config_file = NULL;
+
     char *name = NULL;
     CPVersion version = NULL;
-    char *config_file = NULL;
-    char *slot;
+    char *slot = NULL;
+    char *repo = NULL;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -67,11 +69,26 @@ try_load_package(
         goto OUT;
     }
 
-    *into = cp_package_new(category, name, version, slot);
+    config_file = g_build_filename(self->root, category, pv, "repository", NULL);
+    result = g_file_get_contents(config_file, &repo, NULL, error);
+    g_free(config_file);
+    if (!result) {
+        goto OUT;
+    }
+
+    result = cp_atom_repo_validate(repo, error);
+    if (!result) {
+        goto OUT;
+    }
+
+    *into = cp_package_new(category, name, version, slot, repo);
 
 OUT:
     g_free(name);
     cp_version_unref(version);
+    g_free(slot);
+    g_free(repo);
+
     return result;
 }
 

@@ -21,10 +21,11 @@
 #include <cportage/version.h>
 
 struct CPPackage {
-    char *category;
-    char *name;
+    /*@only@*/ char *category;
+    /*@only@*/ char *name;
     CPVersion version;
-    char *slot;
+    /*@only@*/ char *slot;
+    /*@only@*/ char *repo;
 
     /*@refs@*/ int refs;
 };
@@ -34,14 +35,15 @@ cp_package_new(
     const char *category,
     const char *name,
     CPVersion version,
-    const char *slot
+    const char *slot,
+    const char *repo
 ) {
     CPPackage self;
 
     self = g_new0(struct CPPackage, 1);
     self->refs = 1;
 
-    /* TODO: validate args */
+    /* TODO: validate args or make function private */
     g_assert(self->category == NULL);
     self->category = g_strdup(category);
     g_assert(self->name == NULL);
@@ -50,6 +52,8 @@ cp_package_new(
     self->version = cp_version_ref(version);
     g_assert(self->slot == NULL);
     self->slot = g_strdup(slot);
+    g_assert(self->repo == NULL);
+    self->repo = g_strdup(repo);
 
     return self;
 }
@@ -75,6 +79,7 @@ cp_package_unref(CPPackage self) {
         g_free(self->name);
         cp_version_unref(self->version);
         g_free(self->slot);
+        g_free(self->repo);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -109,6 +114,11 @@ cp_package_version(const CPPackage self) {
 const char *
 cp_package_slot(const CPPackage self) {
     return self->slot;
+}
+
+const char *
+cp_package_repo(const CPPackage self) {
+    return self->repo;
 }
 
 int

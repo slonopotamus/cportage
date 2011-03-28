@@ -45,7 +45,8 @@ cp_package_new(
     const char *category,
     const char *name,
     CPVersion version,
-    const char *slot
+    const char *slot,
+    const char *repo
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies version@*/;
 
 /**
@@ -97,6 +98,12 @@ cp_package_version(
  */
 /*@observer@*/ const char *
 cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * TODO: documentation.
+ */
+/*@observer@*/ const char *
+cp_package_repo(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * TODO: documentation.

@@ -36,9 +36,9 @@ typedef enum OP_TYPE {
 struct CPAtom {
     /*@only@*/ char *category;
     /*@only@*/ char *package;
-
     /*@null@*/ CPVersion version;
     /*@only@*/ char *slot;
+    /*@only@*/ char *repo;
 
     /*@refs@*/ int refs;
     OpType op;
@@ -74,12 +74,17 @@ struct CPAtom {
 #define PKG_FULL PKG "(-" VER ")\?\?"
 #define CP "(" CAT "/" PKG_FULL ")"
 #define PV PKG_FULL "-(" VER ")"
+#define REPO "(?P<repo>[\\w][\\w-]*)"
 
 #define CPV CP "-" VER
-#define ATOM "^(?:(?:" OP CPV ")|(?P<glob>=" CPV "\\*)|(?P<simple>" CP "))(?::" SLOT")?" USE "$"
+#define ATOM "^(?:(?:" OP CPV ")|(?P<glob>=" CPV "\\*)|(?P<simple>" CP "))" \
+    "(?::" SLOT ")?" \
+    "(?:::" REPO ")?" \
+    USE "$"
 
 /*@-checkpost@*/
-static /*@nullterminated@*/ /*@only@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+static /*@nullterminated@*/ /*@only@*/ char *
+G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 safe_fetch(
     const GMatchInfo *match_info,
     int match_num
@@ -132,7 +137,7 @@ CPAtom
 cp_atom_new(const char *value, GError **error) {
     static struct {
         /*@only@*/ GRegex *regex;
-        int op_idx, glob_idx, simple_idx, slot_idx, use_idx;
+        int op_idx, glob_idx, simple_idx, slot_idx, repo_idx, use_idx;
     } atom_re;
 
     CPAtom self = NULL;
@@ -159,12 +164,14 @@ cp_atom_new(const char *value, GError **error) {
         atom_re.glob_idx = g_regex_get_string_number(atom_re.regex, "glob");
         atom_re.simple_idx = g_regex_get_string_number(atom_re.regex, "simple");
         atom_re.slot_idx = g_regex_get_string_number(atom_re.regex, "slot");
+        atom_re.repo_idx = g_regex_get_string_number(atom_re.regex, "repo");
         atom_re.use_idx = g_regex_get_string_number(atom_re.regex, "use");
 
         g_assert(atom_re.op_idx > 0);
         g_assert(atom_re.glob_idx > 0);
         g_assert(atom_re.simple_idx > 0);
         g_assert(atom_re.slot_idx > 0);
+        g_assert(atom_re.repo_idx > 0);
         g_assert(atom_re.use_idx > 0);
     }
 
@@ -219,6 +226,8 @@ cp_atom_new(const char *value, GError **error) {
     self->package = safe_fetch(match, cat_idx + 1);
     g_assert(self->slot == NULL);
     self->slot = safe_fetch(match, atom_re.slot_idx);
+    g_assert(self->repo == NULL);
+    self->repo = safe_fetch(match, atom_re.repo_idx);
 
     /* TODO: store version and useflags */
 
@@ -248,6 +257,7 @@ cp_atom_unref(CPAtom self) {
         g_free(self->package);
         cp_version_unref(self->version);
         g_free(self->slot);
+        g_free(self->repo);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -277,6 +287,9 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
         return FALSE;
     }
     if (self->slot[0] != '\0' && g_strcmp0(self->slot, cp_package_slot(package)) != 0) {
+        return FALSE;
+    }
+    if (self->repo[0] != '\0' && g_strcmp0(self->repo, cp_package_repo(package)) != 0) {
         return FALSE;
     }
 
@@ -373,6 +386,34 @@ cp_atom_slot_validate(const char *slot, GError **error) {
         g_assert_no_error(tmp_error);
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s' isn't valid slot"), slot);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+cp_atom_repo_validate(const char *repo, GError **error) {
+    /*@only@*/ static GRegex *regex = NULL;
+
+    GError *tmp_error = NULL;
+
+    g_assert(error == NULL || *error == NULL);
+
+    if (regex == NULL) {
+        /*@-mustfreeonly@*/
+        regex = g_regex_new("^" REPO "$", (int)G_REGEX_OPTIMIZE, 0, &tmp_error);
+        /*@=mustfreeonly@*/
+        g_assert_no_error(tmp_error);
+        if (regex == NULL) {
+            g_assert_not_reached();
+        }
+    }
+
+    if (!g_regex_match_full(regex, repo, (gssize)-1, 0, 0, NULL, &tmp_error)) {
+        g_assert_no_error(tmp_error);
+        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+            _("'%s' isn't valid repository"), repo);
         return FALSE;
     }
 
