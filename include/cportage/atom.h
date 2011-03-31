@@ -33,12 +33,15 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * TODO: documentation.
+ * Structure, describing a single atom.
  */
 typedef /*@refcounted@*/ struct CPAtom *CPAtom;
 
 /**
- * TODO: documentation.
+ * Creates a #CPAtom structure for \a value.
+ *
+ * \param error return location for a %GError, or %NULL
+ * \return      a #CPAtom, free it using cp_atom_unref()
  */
 /*@newref@*/ /*@null@*/ CPAtom
 cp_atom_new(
@@ -65,36 +68,68 @@ cp_atom_ref(CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 void
 cp_atom_unref(/*@killref@*/ /*@null@*/ CPAtom self) /*@modifies self@*/;
 
+/**
+ * \return readonly category name of \a self
+ */
 /*@observer@*/ const char *
 cp_atom_category(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * \return readonly package name of \a self
+ */
 /*@observer@*/ const char *
 cp_atom_package(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * \return %TRUE if \a self matches \a package
+ */
 gboolean
 cp_atom_matches(
     const CPAtom self,
     const CPPackage package
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies package@*/;
 
+/**
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE if \a category is a valid category name, %FALSE otherwise
+ */
 gboolean
 cp_atom_category_validate(
     const char *category,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
+/**
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE if \a slot is a valid slot name, %FALSE otherwise
+ */
 gboolean
 cp_atom_slot_validate(
     const char *slot,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
+/**
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE if \a repo is a valid repository name, %FALSE otherwise
+ */
 gboolean
 cp_atom_repo_validate(
     const char *repo,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
+/**
+ * Splits package-version string \a pv into \a name and \a version.
+ *
+ * \param name    return location for package name, set to %NULL on error.
+ *                Free it using g_free().
+ * \param version return location for package version, set to %NULL on error.
+ *                Free it using cp_version_unref().
+ * \param error   return location for a %GError, or %NULL
+ * \return        %TRUE if \a pv is a valid package-version string,
+ *                %FALSE otherwise
+ */
 gboolean
 cp_atom_pv_split(
     const char *pv,

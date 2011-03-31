@@ -33,12 +33,16 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * TODO: documentation.
+ * Structure, describing single package version.
  */
 typedef /*@refcounted@*/ struct CPVersion *CPVersion;
 
 /**
- * TODO: documentation.
+ * Creates new #CPVersion structure for \a version.
+ *
+ * \param version a version string
+ * \param error   return location for a %GError, or %NULL
+ * \return        a #CPVersion structure, free it using cp_version_unref()
  */
 /*@newref@*/ /*@null@*/ CPVersion
 cp_version_new(
@@ -65,7 +69,7 @@ void
 cp_version_unref(/*@killref@*/ /*@null@*/ CPVersion self) /*@modifies self@*/;
 
 /**
- * TODO: documentation.
+ * Comparator for #CPVersion.
  */
 int
 cp_version_cmp(
@@ -73,13 +77,19 @@ cp_version_cmp(
     const CPVersion second
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * \return readonly string representation of \a self
+ */
 /*@observer@*/ const char *
 cp_version_str(const CPVersion self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 #pragma GCC visibility pop
 
 /**
- * TODO: documentation.
+ * Performs matching of given versions ignoring revision.
+ * Used in '~foo/bar-1' atoms.
+ *
+ * \return %TRUE if \a first matches \a second, %FALSE otherwise
  */
 gboolean
 cp_version_any_revision_match(
@@ -88,7 +98,10 @@ cp_version_any_revision_match(
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * TODO: documentation.
+ * Performs glob matching of given versions.
+ * Used in '=foo/bar-1*' atoms.
+ *
+ * \return %TRUE if \a first matches \a second, %FALSE otherwise
  */
 gboolean
 cp_version_glob_match(

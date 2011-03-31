@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * A structure describing single repository.
+ * A structure describing a single repository.
  */
 typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 
@@ -46,7 +46,11 @@ typedef /*@refcounted@*/ struct CPRepository *CPRepository;
 
 #define end_CP_REPOSITORY_ITER }}
 
-/** TODO: documentation */
+/**
+ * Creates a #CPRepository with given path. Assumes path is absolute.
+ *
+ * \return a #CPRepository, free it using cp_repository_unref()
+ */
 /*@newref@*/ CPRepository
 cp_repository_new(
     const char *path
@@ -76,11 +80,14 @@ cp_repository_unref(
 ) /*@modifies self@*/;
 
 /**
- * \return readonly canonical path to \a self directory
+ * \return readonly canonical path to \a self root
  */
 /*@observer@*/ const char *
 cp_repository_path(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * \return readonly \a self name
+ */
 /*@observer@*/ const char *
 cp_repository_name(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 

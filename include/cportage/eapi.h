@@ -33,7 +33,11 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * TODO: documentation.
+ * \param eapi  EAPI string
+ * \param file  a pathname that contains \a eapi in the GLib file name encoding
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE if \a eapi is supported EAPI version string,
+ *              %FALSE otherwise
  */
 gboolean
 cp_eapi_check(
@@ -43,7 +47,10 @@ cp_eapi_check(
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
 /**
- * TODO: documentation.
+ * \param file  a pathname in the GLib file name encoding
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE if \a file contains supported EAPI version string,
+ *              %FALSE otherwise
  */
 gboolean
 cp_eapi_check_file(

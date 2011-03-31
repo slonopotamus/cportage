@@ -38,7 +38,7 @@ GQuark
 cp_error_quark(void) /*@*/;
 
 /**
- * TODO: documentation.
+ * Error codes for cportage library.
  */
 enum CPError {
     CP_ERROR_EAPI_UNSUPPORTED,

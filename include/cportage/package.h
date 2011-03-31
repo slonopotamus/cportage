@@ -33,12 +33,14 @@ G_BEGIN_DECLS
 #pragma GCC visibility push(default)
 
 /**
- * TODO: documentation.
+ * Structure, describing a single package.
  */
 typedef /*@refcounted@*/ struct CPPackage *CPPackage;
 
 /**
- * TODO: documentation.
+ * Creates a #CPPackage. Assumes all data was already validated.
+ *
+ * \return a #CPPackage, free it using cp_package_unref()
  */
 /*@newref@*/ CPPackage
 cp_package_new(
@@ -68,25 +70,25 @@ void
 cp_package_unref(/*@killref@*/ /*@null@*/ CPPackage self) /*@modifies self@*/;
 
 /**
- * TODO: documentation.
+ * Frees \a list of #CPackage instances.
  */
 void
 cp_package_list_free(/*@null@*/ /*@only@*/ GList *list) /*@modifies list@*/;
 
 /**
- * TODO: documentation.
+ * \return readonly category name of \a self
  */
 /*@observer@*/ const char *
 cp_package_category(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * TODO: documentation.
+ * \return readonly package name of \a self
  */
 /*@observer@*/ const char *
 cp_package_name(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * TODO: documentation.
+ * \return version of \a self. Free it using cp_version_unref().
  */
 /*@newref@*/ CPVersion
 cp_package_version(
@@ -94,19 +96,19 @@ cp_package_version(
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;
 
 /**
- * TODO: documentation.
+ * \return readonly slot name of \a self
  */
 /*@observer@*/ const char *
 cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * TODO: documentation.
+ * \return readonly repository name of \a self
  */
 /*@observer@*/ const char *
 cp_package_repo(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
- * TODO: documentation.
+ * Comparator for #CPPackage.
  */
 int
 cp_package_cmp(
