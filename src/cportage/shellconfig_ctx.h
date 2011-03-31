@@ -29,4 +29,4 @@ typedef struct cp_shellconfig_ctx_t {
     GError **error;
     int magic;
     gboolean allow_source;
-} cp_shellconfig_ctx;
+} /*@unused@*/ cp_shellconfig_ctx;

@@ -10,4 +10,4 @@ find src -name \*.[ch] -print0 \
         -Dyyscan_t=gpointer \
         -warnposix -strict -nullstate -exportlocal -protoparamname -sizeoftype \
         -sysdirs src/cmerge:splint-include:/usr -sysdirerrors -warnmissingglobs \
-        -boundsread -boundswrite -exportiter -fcnuse -enummemuse -typeuse -compmempass 2>&1
+        -boundsread -boundswrite -exportiter -fcnuse -compmempass 2>&1

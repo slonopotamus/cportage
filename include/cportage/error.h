@@ -40,13 +40,15 @@ cp_error_quark(void) /*@*/;
 /**
  * TODO: documentation.
  */
-typedef enum {
+enum CPError {
     CP_ERROR_EAPI_UNSUPPORTED,
     CP_ERROR_ATOM_SYNTAX,
+    /*@-enummemuse@*/
     CP_ERROR_SHELLCONFIG_SOURCE_DISABLED,
     CP_ERROR_SHELLCONFIG_SYNTAX,
+    /*@=enummemuse@*/
     CP_ERROR_SETTINGS_REQUIRED_MISSING
-} CPError;
+};
 
 #pragma GCC visibility pop
 
