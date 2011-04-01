@@ -262,7 +262,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     char **paths;
     /*@owned@*/ GList/*<CPRepository>*/ *repo_list = NULL;
     GHashTable/*<char *,CPRepository>*/ *name2repo;
-    int repo_num = 1;
+    size_t repo_num = 1;
     GString *overlay_str;
 
     g_assert(self->repos == NULL);

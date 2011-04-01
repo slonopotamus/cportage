@@ -23,7 +23,7 @@ set(CMAKE_REQUIRED_DEFINITIONS
 
 set(CMAKE_REQUIRED_FLAGS
     -std=c89 -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
-    -fdiagnostics-show-option -O -Wabi
+    -fdiagnostics-show-option -Wabi
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
     -fstrict-overflow -Wstrict-overflow=5 -Wfloat-equal -Wsync-nand
