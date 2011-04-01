@@ -51,7 +51,7 @@ cp_io_getline(FILE *file, const char *file_desc, char **into, GError **error) {
     line = g_string_new("");
 
     /*@-modfilesys@*/
-    while ((c = fgetc(file)) != EOF) {
+    while ((c = getc(file)) != EOF) {
         line = g_string_append_c(line, (gchar)(unsigned char)c);
         if (c == (int)'\n') {
             break;
