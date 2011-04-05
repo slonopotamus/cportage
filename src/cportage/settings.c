@@ -264,7 +264,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     char **paths;
     /*@owned@*/ GList/*<CPRepository>*/ *repo_list = NULL;
     GHashTable/*<char *,CPRepository>*/ *name2repo;
-    size_t repo_num = 1;
+    size_t repo_num = (size_t)1;
     GString *overlay_str;
 
     g_assert(self->repos == NULL);
@@ -314,7 +314,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         repo_list = g_list_append(repo_list, repo);
         /*@=kepttrans@*/
         g_string_append_printf(overlay_str,
-            "%s%s", repo_num++ > 1 ? " " : "", path);
+            "%s%s", repo_num++ > (size_t)1 ? " " : "", path);
     } end_CP_STRV_ITER
 
     g_hash_table_destroy(name2repo);
