@@ -19,7 +19,7 @@
 
 #include <stdlib.h>
 
-#include "cportage/atom.h"
+#include <cportage/atom.h>
 
 struct item {
     const char *str;

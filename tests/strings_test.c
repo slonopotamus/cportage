@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cportage/strings.h"
+#include <cportage/strings.h>
 
 static void
 strv_check(char **strv, ...) {

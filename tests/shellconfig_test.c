@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cportage/shellconfig.h"
+#include <cportage/shellconfig.h>
 
 static char *dir;
 

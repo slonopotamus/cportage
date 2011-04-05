@@ -158,14 +158,16 @@ load_etc_config(
     CPSettings self,
     const char *name,
     gboolean allow_source,
+    gboolean root_relative,
     /*@null@*/ GError **error
 ) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
     char *path;
     gboolean result;
 
     g_assert(error == NULL || *error == NULL);
-    path = g_build_filename(self->root, "etc", name, NULL);
-    result = cp_read_shellconfig(self->config, path, allow_source, error);
+    path = g_build_filename(root_relative? self->root : "/", "etc", name, NULL);
+    result = !g_file_test(path, G_FILE_TEST_EXISTS)
+        || cp_read_shellconfig(self->config, path, allow_source, error);
     g_free(path);
     return result;
 }
@@ -365,16 +367,16 @@ cp_settings_new(const char *root, GError **error) {
     self->config = g_hash_table_new_full(
         g_str_hash, g_str_equal, g_free, g_free
     );
-    if (!load_etc_config(self, "profile.env", FALSE, error)) {
+    if (!load_etc_config(self, "profile.env", FALSE, TRUE, error)) {
         goto ERR;
     }
-    if (!load_etc_config(self, "make.globals", FALSE, error)) {
+    if (!load_etc_config(self, "make.globals", FALSE, FALSE, error)) {
         goto ERR;
     }
     if (!add_profile(self, self->profile, error)) {
         goto ERR;
     }
-    if (!load_etc_config(self, "make.conf", TRUE, error)) {
+    if (!load_etc_config(self, "make.conf", TRUE, TRUE, error)) {
         goto ERR;
     }
     /*
