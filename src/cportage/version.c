@@ -70,12 +70,9 @@ cp_version_str(const CPVersion self) {
 }
 
 int
-cp_version_cmp(
-    /*@unused@*/ CPVersion first G_GNUC_UNUSED,
-    /*@unused@*/ CPVersion second G_GNUC_UNUSED
-) {
+cp_version_cmp(CPVersion first, CPVersion second) {
     /* TODO: implement */
-    return 0;
+    return g_strcmp0(first->raw, second->raw);
 }
 
 gboolean
