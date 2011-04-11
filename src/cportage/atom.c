@@ -293,8 +293,6 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
         return FALSE;
     }
 
-    /* TODO: check repo */
-
     pkg_version = cp_package_version(package);
     switch (self->op) {
         case OP_NONE:
