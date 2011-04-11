@@ -24,7 +24,7 @@ add_library(cportage SHARED
     ${sources}
     ${BISON_ShellParser_OUTPUTS}
     ${FLEX_ShellScanner_OUTPUTS})
-target_link_libraries(cportage ${GIO2_LIBRARIES})
+target_link_libraries(cportage ${GLIB2_LIBRARIES})
 set_target_properties(cportage PROPERTIES
   SOVERSION "${CP_VERSION_MAJOR}"
   VERSION "${CP_VERSION}")

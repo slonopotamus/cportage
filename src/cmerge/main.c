@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#include <glib-object.h>
 #include <errno.h>
 #include <stdlib.h>
 
@@ -156,7 +155,6 @@ main(int argc, char *argv[])
 #if HAVE_SETLOCALE
     (void)setlocale(LC_ALL, "");
 #endif
-    g_type_init();
 
     opt_ctx = g_option_context_new(NULL);
     g_option_context_add_main_entries(opt_ctx, options, NULL);

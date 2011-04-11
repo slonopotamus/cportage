@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
 #include <stdlib.h>
 
 #if HAVE_UTSNAME_H
@@ -36,20 +35,16 @@ static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 build_profile_str(
     const CPSettings settings,
     const char *portdir
-) /*@modifies errno@*/ {
+) /*@@*/ {
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cp_settings_profile(settings);
-    GFile *profiles_dir_file = g_file_new_for_path(profiles_dir);
-    GFile *profile_file = g_file_new_for_path(profile);
 
-    char *result = g_file_get_relative_path(profiles_dir_file, profile_file);
+    char *result = cp_io_get_relative_path(profiles_dir, profile);
     if (result == NULL) {
         result = g_strconcat("!", profile, NULL);
     }
 
     g_free(profiles_dir);
-    g_object_unref(profiles_dir_file);
-    g_object_unref(profile_file);
     return result;
 }
 

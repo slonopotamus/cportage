@@ -171,6 +171,12 @@ g_filename_to_utf8(
 
 /* gutils.h */
 
+#define G_DIR_SEPARATOR '/'
+#define G_DIR_SEPARATOR_S "/"
+#define G_IS_DIR_SEPARATOR(c) ((c) == '/')
+#define G_SEARCHPATH_SEPARATOR ':'
+#define G_SEARCHPATH_SEPARATOR_S ":"
+
 /*@only@*/ gchar *
 g_path_get_dirname(const gchar *file_name) /*@*/;
 

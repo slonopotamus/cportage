@@ -107,6 +107,13 @@ cp_io_getlines(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
 
+/*@null@*/ /*@only@*/ char *
+cp_io_get_relative_path(
+    const char *parent,
+    const char *descendant
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@*/;
+
 #pragma GCC visibility pop
 
 G_END_DECLS
