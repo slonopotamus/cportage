@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/version.h>
+#include "version.h"
 
 struct CPVersion {
     /*@only@*/ char *raw;

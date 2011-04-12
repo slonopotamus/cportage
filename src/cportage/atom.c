@@ -20,7 +20,7 @@
 #include <cportage/atom.h>
 #include <cportage/error.h>
 #include <cportage/macros.h>
-#include <cportage/version.h>
+#include "version.h"
 
 typedef enum OP_TYPE {
     OP_NONE,

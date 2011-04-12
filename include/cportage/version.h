@@ -85,30 +85,6 @@ cp_version_str(const CPVersion self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 #pragma GCC visibility pop
 
-/**
- * Performs matching of given versions ignoring revision.
- * Used in '~foo/bar-1' atoms.
- *
- * \return %TRUE if \a first matches \a second, %FALSE otherwise
- */
-gboolean
-cp_version_any_revision_match(
-    const CPVersion first,
-    const CPVersion second
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-/**
- * Performs glob matching of given versions.
- * Used in '=foo/bar-1*' atoms.
- *
- * \return %TRUE if \a first matches \a second, %FALSE otherwise
- */
-gboolean
-cp_version_glob_match(
-    const CPVersion first, 
-    const CPVersion second
-) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
 G_END_DECLS
 
 #endif
