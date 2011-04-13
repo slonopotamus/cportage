@@ -49,7 +49,7 @@ set(GLIB_MINIMAL_REQUIRED 2.20)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-pkg_check_modules(GLIB2 REQUIRED "glib-2.0>=${GLIB_MINIMAL_REQUIRED}")
+pkg_check_modules(GLIB2 REQUIRED "glib-2.0 >= ${GLIB_MINIMAL_REQUIRED}")
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-isystem ")
 include_directories(SYSTEM ${GLIB2_INCLUDE_DIRS})

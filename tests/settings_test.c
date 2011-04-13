@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/settings.h>
+#include <cportage.h>
 
 static char *dir;
 

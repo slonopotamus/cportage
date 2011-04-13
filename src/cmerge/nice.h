@@ -20,7 +20,9 @@
 #ifndef CMERGE_NICE_H
 #define CMERGE_NICE_H
 
-#include <cportage/settings.h>
+#include <cportage.h>
+
+/*@-exportany@*/
 
 void
 adjust_niceness(

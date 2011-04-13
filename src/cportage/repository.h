@@ -17,41 +17,22 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
+#ifndef CP_REPOSITORY_H
+#define CP_REPOSITORY_H
 
-#ifndef CP_ERROR_H
-#define CP_ERROR_H
-
-#include <glib.h>
+#include <cportage.h>
 
 /*@-exportany@*/
 
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
-
-#define CP_ERROR cp_error_quark()
-
-GQuark
-cp_error_quark(void) /*@*/;
-
 /**
- * Error codes for cportage library.
+ * Creates a #CPRepository with given path. Assumes path is absolute.
+ *
+ * \return a #CPRepository, free it using cp_repository_unref()
  */
-enum CPError {
-    CP_ERROR_EAPI_UNSUPPORTED,
-    CP_ERROR_ATOM_SYNTAX,
-    /*@-enummemuse@*/
-    CP_ERROR_SHELLCONFIG_SOURCE_DISABLED,
-    CP_ERROR_SHELLCONFIG_SYNTAX,
-    /*@=enummemuse@*/
-    CP_ERROR_SETTINGS_REQUIRED_MISSING
-};
-
-#pragma GCC visibility pop
-
-G_END_DECLS
+/*@newref@*/ CPRepository
+cp_repository_new(
+    const char *path
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *stderr,errno@*/ /*@globals fileSystem@*/;
 
 #endif

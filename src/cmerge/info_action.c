@@ -18,6 +18,7 @@
 */
 
 #include "config.h"
+#include "actions.h"
 
 #include <stdlib.h>
 
@@ -25,11 +26,7 @@
 #   include <sys/utsname.h>
 #endif
 
-#include <cportage/atom.h>
-#include <cportage/io.h>
-#include <cportage/strings.h>
-
-#include "actions.h"
+#include <cportage.h>
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 build_profile_str(

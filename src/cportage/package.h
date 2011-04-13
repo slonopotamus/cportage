@@ -17,9 +17,25 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "error.h"
+#ifndef CP_PACKAGE_H
+#define CP_PACKAGE_H
 
-GQuark
-cp_error_quark(void) {
-  return g_quark_from_static_string("cp-error-quark");
-}
+#include <cportage.h>
+
+/*@-exportany@*/
+
+/**
+ * Creates a #CPPackage. Assumes all data was already validated.
+ *
+ * \return a #CPPackage, free it using cp_package_unref()
+ */
+/*@newref@*/ CPPackage
+cp_package_new(
+    const char *category,
+    const char *name,
+    CPVersion version,
+    const char *slot,
+    const char *repo
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies version@*/;
+
+#endif

@@ -17,12 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/eapi.h>
-#include <cportage/error.h>
-#include <cportage/io.h>
-#include <cportage/settings.h>
-#include <cportage/shellconfig.h>
-#include <cportage/strings.h>
+#include "eapi.h"
+#include "error.h"
+#include "io.h"
+#include "macros.h"
+#include "repository.h"
+#include "settings.h"
+#include "shellconfig.h"
+#include "strings.h"
 
 struct CPSettings {
     /*@only@*/ char *root;

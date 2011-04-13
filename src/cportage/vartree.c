@@ -17,8 +17,11 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/eapi.h>
-#include <cportage/vartree.h>
+#include "atom.h"
+#include "eapi.h"
+#include "macros.h"
+#include "package.h"
+#include "settings.h"
 
 struct CPVartree {
     char *root;

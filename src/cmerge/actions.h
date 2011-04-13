@@ -20,7 +20,7 @@
 #ifndef CMERGE_ACTIONS_H
 #define CMERGE_ACTIONS_H
 
-#include <cportage/vartree.h>
+#include <cportage.h>
 
 /*@-exportany@*/
 
@@ -49,7 +49,7 @@ cmerge_info_action(
     CPContext ctx,
     const CMergeOptions options,
     /*@null@*/ GError **error
-) /*@modifies settings,*error,*stdout,errno@*/ /*@globals fileSystem@*/;
+) /*@modifies ctx->settings,*error,*stdout,errno@*/ /*@globals fileSystem@*/;
 
 int
 cmerge_install_action(

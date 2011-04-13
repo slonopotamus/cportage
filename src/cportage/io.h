@@ -17,9 +17,30 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "error.h"
+/** I/O utility functions. */
 
-GQuark
-cp_error_quark(void) {
-  return g_quark_from_static_string("cp-error-quark");
-}
+#ifndef CP_IO_H
+#define CP_IO_H
+
+#include <cportage.h>
+
+/*@-exportany@*/
+
+/*@-globuse@*/
+/**
+ * GLib-style realpath() wrapper.
+ *
+ * \param path  a pathname in the GLib file name encoding
+ * \param error return location for a %GError, or %NULL
+ * \return      a pathname in the GLib file name encoding
+ *              or %NULL if an error occured, free it using g_free()
+ */
+/*@null@*/ char *
+cp_io_realpath(
+    const char *path,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno@*/ /*@globals errno,fileSystem@*/;
+/*@=globuse@*/
+
+#endif

@@ -1,4 +1,4 @@
-file(GLOB sources *.c)
+aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}" sources)
 
 add_executable(cmerge ${sources})
 set_link_flags(cmerge)

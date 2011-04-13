@@ -19,7 +19,7 @@
 
 #include <stdlib.h>
 
-#include <cportage/strings.h>
+#include "strings.h"
 
 /* This could work much faster with handcoded loop, but i'm lazy */
 char **

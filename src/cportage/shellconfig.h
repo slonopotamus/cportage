@@ -17,10 +17,6 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
-
 /** I/O utility functions. */
 
 #ifndef CP_SHELLCONFIG_H
@@ -30,10 +26,6 @@
 
 /*@-exportany@*/
 /*@-declundef@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
 
 /**
  * Reads shell-like config file into a %GHashTable.
@@ -52,17 +44,5 @@ cp_read_shellconfig(
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/;
-
-/** TODO: documentation */
-/*@null@*/ char *
-cp_varexpand(
-    const char *str,
-    GHashTable *vars,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
 
 #endif

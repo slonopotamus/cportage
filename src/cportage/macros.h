@@ -17,39 +17,12 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
-
 /** Utility macros. */
 
 #ifndef CP_MACROS_H
 #define CP_MACROS_H
 
 #include <glib.h>
-
-/*@-exportany@*/
-
-G_BEGIN_DECLS
-
-/*@-namechecks@*/
-#ifdef S_SPLINT_S
-#   define _(String) String
-#else
-#   define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
-#endif
-/*@=namechecks@*/
-
-/*@iter CP_GLIST_ITER(GList *list, yield gpointer elem)@*/
-
-#define CP_GLIST_ITER(list, m_elem) { \
-    /*@null@*/ GList *m_iter; \
-    for (m_iter = (list); m_iter != NULL; m_iter = m_iter->next) { \
-        /*@-incondefs@*/ \
-        /*@dependent@*/ /*@null@*/ void *m_elem = m_iter->data; \
-        /*@=incondefs@*/
-
-#define end_CP_GLIST_ITER }}
 
 /*@iter CP_GDIR_ITER(GDir *dir, yield const char *elem)@*/
 
@@ -62,7 +35,5 @@ G_BEGIN_DECLS
     /*@=modnomods@*/
 
 #define end_CP_GDIR_ITER }}
-
-G_END_DECLS
 
 #endif

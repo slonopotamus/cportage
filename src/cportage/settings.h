@@ -17,9 +17,27 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "error.h"
+#ifndef CP_SETTINGS_H
+#define CP_SETTINGS_H
 
-GQuark
-cp_error_quark(void) {
-  return g_quark_from_static_string("cp-error-quark");
-}
+#include <cportage.h>
+
+/*@-exportany@*/
+
+/**
+ * \return readonly canonical path to settings root
+ */
+/*@observer@*/ const char *
+cp_settings_root(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * \return %TRUE if \a feature is enabled in \c FEATURES variable,
+ *         %FALSE otherwise
+ */
+gboolean
+cp_settings_feature_enabled(
+    const CPSettings self,
+    const char *feature
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+#endif

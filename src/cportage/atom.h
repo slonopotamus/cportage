@@ -17,56 +17,12 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
-
 #ifndef CP_ATOM_H
 #define CP_ATOM_H
 
-#include <cportage/package.h>
+#include <cportage.h>
 
 /*@-exportany@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
-
-/**
- * Structure, describing a single atom.
- */
-typedef /*@refcounted@*/ struct CPAtom *CPAtom;
-
-/**
- * Creates a #CPAtom structure for \a value.
- *
- * \param error return location for a %GError, or %NULL
- * \return      a #CPAtom, free it using cp_atom_unref()
- */
-/*@newref@*/ /*@null@*/ CPAtom
-cp_atom_new(
-    const char *value,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error@*/;
-
-/**
- * Increases reference count of \a self by 1.
- *
- * \param self a #CPAtom
- * \return \a self
- */
-/*@newref@*/ CPAtom
-cp_atom_ref(CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
-
-/**
- * Decreases reference count of \a self by 1. When reference count drops
- * to zero, it frees all the memory associated with the structure.
- *
- * \param self a #CPAtom
- */
-void
-cp_atom_unref(/*@killref@*/ /*@null@*/ CPAtom self) /*@modifies self@*/;
 
 /**
  * \return readonly category name of \a self
@@ -79,15 +35,6 @@ cp_atom_category(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
  */
 /*@observer@*/ const char *
 cp_atom_package(const CPAtom self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-/**
- * \return %TRUE if \a self matches \a package
- */
-gboolean
-cp_atom_matches(
-    const CPAtom self,
-    const CPPackage package
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies package@*/;
 
 /**
  * \param error return location for a %GError, or %NULL
@@ -137,9 +84,5 @@ cp_atom_pv_split(
     /*@out@*/ CPVersion *version,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *name,*version,*error@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
 
 #endif

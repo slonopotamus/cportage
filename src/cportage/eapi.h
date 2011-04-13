@@ -17,20 +17,12 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
-
 #ifndef CP_EAPI_H
 #define CP_EAPI_H
 
 #include <glib.h>
 
 /*@-exportany@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
 
 /**
  * \param eapi  EAPI string
@@ -57,9 +49,5 @@ cp_eapi_check_file(
     const char *file,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
 
 #endif

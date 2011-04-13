@@ -17,9 +17,9 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/atom.h>
-#include <cportage/error.h>
-#include <cportage/macros.h>
+#include "atom.h"
+#include "error.h"
+#include "package.h"
 #include "version.h"
 
 typedef enum OP_TYPE {

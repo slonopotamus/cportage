@@ -23,8 +23,8 @@
 
 #include <glib/gstdio.h>
 
-#include <cportage/io.h>
-#include <cportage/strings.h>
+#include "io.h"
+#include "strings.h"
 
 FILE *
 cp_io_fopen(const char *path, const char *mode, GError **error) {

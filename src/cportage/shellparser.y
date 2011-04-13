@@ -36,10 +36,10 @@
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #pragma GCC diagnostic ignored "-Wunreachable-code"
 
-#include <cportage/error.h>
-#include <cportage/io.h>
-#include <cportage/shellconfig.h>
-#include <cportage/strings.h>
+#include "error.h"
+#include "io.h"
+#include "shellconfig.h"
+#include "strings.h"
 
 #include "shellparser.h"
 #include "shellscanner.h"

@@ -18,10 +18,10 @@
 */
 
 #include "config.h"
+#include "nice.h"
 
 #include <errno.h>
 #include <stdlib.h>
-#include <cportage/shellconfig.h>
 
 #if HAVE_UNISTD_H
 #   include <unistd.h>
@@ -29,7 +29,6 @@
 #   include <sys/resource.h>
 #endif
 
-#include "nice.h"
 
 void
 adjust_niceness(const CPSettings settings) {

@@ -19,8 +19,8 @@
 
 #include <stdlib.h>
 
-#include <cportage/io.h>
-#include <cportage/repository.h>
+#include "io.h"
+#include "repository.h"
 
 struct CPRepository {
     /*@only@*/ char *name;

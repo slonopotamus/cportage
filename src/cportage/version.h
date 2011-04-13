@@ -17,10 +17,12 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CP_VERSION_PRIV_H
-#define CP_VERSION_PRIV_H
+#ifndef CP_VERSION_H
+#define CP_VERSION_H
 
-#include <cportage/version.h>
+#include <cportage.h>
+
+/*@-exportany@*/
 
 /**
  * Performs matching of given versions ignoring revision.

@@ -17,8 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/package.h>
-#include <cportage/version.h>
+#include "package.h"
+#include "version.h"
 
 struct CPPackage {
     /*@only@*/ char *category;

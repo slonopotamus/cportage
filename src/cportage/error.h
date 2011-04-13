@@ -17,9 +17,29 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "error.h"
+#ifndef CP_ERROR_H
+#define CP_ERROR_H
+
+#include <glib.h>
+
+/*@-exportany@*/
+
+#define CP_ERROR cp_error_quark()
 
 GQuark
-cp_error_quark(void) {
-  return g_quark_from_static_string("cp-error-quark");
-}
+cp_error_quark(void) /*@*/;
+
+/**
+ * Error codes for cportage library.
+ */
+enum CPError {
+    CP_ERROR_EAPI_UNSUPPORTED,
+    CP_ERROR_ATOM_SYNTAX,
+    /*@-enummemuse@*/
+    CP_ERROR_SHELLCONFIG_SOURCE_DISABLED,
+    CP_ERROR_SHELLCONFIG_SYNTAX,
+    /*@=enummemuse@*/
+    CP_ERROR_SETTINGS_REQUIRED_MISSING
+};
+
+#endif

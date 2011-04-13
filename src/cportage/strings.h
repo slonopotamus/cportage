@@ -17,31 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(CPORTAGE_H_INSIDE) && !defined(CPORTAGE_COMPILATION)
-#error "Only <cportage.h> can be included directly."
-#endif
-
 /** String functions. */
 
 #ifndef CP_STRINGS_H
 #define CP_STRINGS_H
 
-#include <cportage/macros.h>
+#include <cportage.h>
 
 /*@-exportany@*/
-
-G_BEGIN_DECLS
-
-#pragma GCC visibility push(default)
-
-/*@iter CP_STRV_ITER(char **arr, yield char *elem)@*/
-
-#define CP_STRV_ITER(arr, m_elem) { \
-    char **m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        char *m_elem = *m_iter;
-
-#define end_CP_STRV_ITER }}
 
 /**
  * Splits given string at whitespace. Empty elements are filtered out.
@@ -53,14 +36,6 @@ char **
 cp_strings_pysplit(
     const char *str
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
-
-/**
- * Sorts %NULL-terminated string array in place.
- *
- * \param str_array array to sort.
- */
-void
-cp_strings_sort(char **str_array) /*@modifies *str_array@*/;
 
 /**
  * Parses string as boolean
@@ -76,9 +51,5 @@ cp_string_is_true(
 
 gboolean
 cp_strv_contains(char **haystack, const char *needle) /*@*/;
-
-#pragma GCC visibility pop
-
-G_END_DECLS
 
 #endif

@@ -17,9 +17,9 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cportage/eapi.h>
-#include <cportage/error.h>
-#include <cportage/strings.h>
+#include "eapi.h"
+#include "error.h"
+#include "strings.h"
 
 static gboolean
 cp_eapi_supported(const char *eapi) /*@*/ {
