@@ -20,13 +20,15 @@
 #include <stdlib.h>
 
 #include <cportage.h>
+#include "cportage/atom.h"
 
 struct item {
     const char *str;
     const gboolean valid;
 };
 
-int main(void) {
+static void
+atom_new(void) {
     const struct item data[] = {
         { "sys-apps/portage", TRUE },
         { "=sys-apps/portage-2.1", TRUE },
@@ -133,6 +135,29 @@ int main(void) {
         g_clear_error(&error);
         ++i;
     }
+}
 
-    return EXIT_SUCCESS;
+static void
+pv_split(void) {
+    char *pkg = NULL;
+    CPVersion version = NULL;
+    GError *error = NULL;
+    gboolean success = cp_atom_pv_split("foo-1.0-r1", &pkg, &version, &error);
+
+    g_assert_no_error(error);
+    g_assert(success);
+    g_assert_cmpstr(pkg, ==, "foo");
+    g_assert(version != NULL);
+    g_assert_cmpstr(cp_version_str(version), ==, "1.0-r1");
+    g_free(pkg);
+    cp_version_unref(version);
+}
+
+int main(int argc, char *argv[]) {
+    g_test_init(&argc, &argv, NULL);
+
+    g_test_add_func("/atom/new", atom_new);
+    g_test_add_func("/atom/pv_split", pv_split);
+
+    return g_test_run();
 }

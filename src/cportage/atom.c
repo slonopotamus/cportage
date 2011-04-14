@@ -66,17 +66,17 @@ struct CPAtom {
  */
 #define USE_NAME "[A-Za-z0-9][\\w+@-]*"
 /* See 2.2 section for version syntax. */
-#define VER "\\d+(\\.\\d+)*[a-z]?(_(pre|p|beta|alpha|rc)\\d*)*(-r\\d+)?"
+#define VER "\\d+(?:\\.\\d+)*[a-z]?(?:_(?:pre|p|beta|alpha|rc)\\d*)*(?:-r\\d+)?"
 /* TODO: add reference to PMS */
 #define OP "(?P<op>[=~]|[><]=?)"
 #define USE_ITEM "(?:!?" USE_NAME "[=?]|-?" USE_NAME ")"
 #define USE "(?P<use>\\[" USE_ITEM "(?:," USE_ITEM ")*\\])?"
-#define PKG_FULL PKG "(-" VER ")\?\?"
-#define CP "(" CAT "/" PKG_FULL ")"
-#define PV PKG_FULL "-(" VER ")"
 #define REPO "(?P<repo>[\\w][\\w-]*)"
 
-#define CPV CP "-" VER
+#define PKG_FULL PKG "(-" VER ")\?\?"
+#define CP "(" CAT "/" PKG_FULL ")"
+#define CPV CP "-(" VER ")"
+#define PV PKG_FULL "-(" VER ")"
 #define ATOM "^(?:(?:" OP CPV ")|(?P<glob>=" CPV "\\*)|(?P<simple>" CP "))" \
     "(?::" SLOT ")?" \
     "(?:::" REPO ")?" \
@@ -453,7 +453,7 @@ cp_atom_pv_split(const char *pv, char **name, CPVersion *version, GError **error
         goto OUT;
     }
 
-    ver_str = safe_fetch(match, 7);
+    ver_str = safe_fetch(match, 3);
     *version = cp_version_new(ver_str, error);
     if (*version == NULL) {
         goto OUT;
