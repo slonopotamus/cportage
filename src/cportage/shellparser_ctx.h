@@ -21,7 +21,7 @@
 
 /*@-fielduse@*/
 
-typedef struct cp_shellconfig_ctx_t {
+typedef struct cp_shellparser_ctx_t {
     yyscan_t yyscanner;
     const char *filename;
     GHashTable *entries;
@@ -29,4 +29,4 @@ typedef struct cp_shellconfig_ctx_t {
     GError **error;
     int magic;
     gboolean allow_source;
-} /*@unused@*/ cp_shellconfig_ctx;
+} /*@unused@*/ cp_shellparser_ctx;

@@ -38,12 +38,12 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
 #include "shellparser.h"
-#include "shellconfig_ctx.h"
+#include "shellparser_ctx.h"
 
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng; \
     yycolumn += yyleng;
-#define YY_EXTRA_TYPE cp_shellconfig_ctx *
+#define YY_EXTRA_TYPE cp_shellparser_ctx *
 #define DUPSTR yylval->str = g_strdup(yytext)
 
 %}
@@ -62,35 +62,35 @@ NewLine    \r?\n
     }
 %}
 
-<INITIAL>[[:blank:]]+#.* { /* comments */                                 }
-<INITIAL>^#.*            { /* comments */                                 }
-<INITIAL>[[:blank:]]+$   { /* trailing whitespace */                      }
+<INITIAL>[[:blank:]]+#.* { /* comments */                                }
+<INITIAL>^#.*            { /* comments */                                }
+<INITIAL>[[:blank:]]+$   { /* trailing whitespace */                     }
 
-\\{NewLine}              { /* line continuation */                        }
-export                   {                              return EXPORT;    }
-source                   {                              return SOURCE;    }
-{NewLine}                { yylval->str = g_strdup(" "); return EOL;       }
-[[:blank:]]+             { yylval->str = g_strdup(" "); return BLANK;     }
-[a-zA-Z]+                { DUPSTR;                      return ALPHA;     }
-[[:digit:]]+             { DUPSTR;                      return NUMBER;    }
+\\{NewLine}              { /* line continuation */                       }
+export                   {                             return EXPORT;    }
+source                   {                             return SOURCE;    }
+{NewLine}                {                             return EOL;       }
+[[:blank:]]+             {                             return BLANK;     }
+[a-zA-Z]+                { DUPSTR;                     return ALPHA;     }
+[[:digit:]]+             { DUPSTR;                     return NUMBER;    }
 \\([0-7]{2,3}|x[0-9a-fA-F]{1,2}|c.|.) { yylval->str = g_strcompress(yytext); return ESC_CHAR; }
-\$                       { DUPSTR;                      return DOLLAR;    }
-\.                       { DUPSTR;                      return DOT;       }
-\=                       { DUPSTR;                      return EQUALS;    }
-\_                       { DUPSTR;                      return UNDERLINE; }
-\{                       { DUPSTR;                      return LBRACE;    }
-\}                       { DUPSTR;                      return RBRACE;    }
+\$                       {                             return DOLLAR;    }
+\.                       {                             return DOT;       }
+\=                       {                             return EQUALS;    }
+\_                       {                             return UNDERLINE; }
+\{                       {                             return LBRACE;    }
+\}                       {                             return RBRACE;    }
 
-<INITIAL>\"              { DUPSTR; BEGIN QUOTE_STATE;   return QUOTE;     }
-<QUOTE_STATE>\"          { DUPSTR; BEGIN INITIAL;       return QUOTE;     }
-\"                       { DUPSTR;                      return QUOTE;     }
+<INITIAL>\"              {         BEGIN QUOTE_STATE;  return QUOTE;     }
+<QUOTE_STATE>\"          {         BEGIN INITIAL;      return QUOTE;     }
+\"                       {                             return QUOTE;     }
 
-<INITIAL>\'              { DUPSTR; BEGIN SQUOTE_STATE;  return SQUOTE;    }
-<SQUOTE_STATE>\'         { DUPSTR; BEGIN INITIAL;       return SQUOTE;    }
-\'                       { DUPSTR;                      return SQUOTE;    }
+<INITIAL>\'              {         BEGIN SQUOTE_STATE; return SQUOTE;    }
+<SQUOTE_STATE>\'         {         BEGIN INITIAL;      return SQUOTE;    }
+\'                       {                             return SQUOTE;    }
 
-\#                       { DUPSTR;                      return POUND;     }
-[&<>()|;`]               { DUPSTR;                      return QCHAR;     }
-.                        { DUPSTR;                      return NQCHAR;    }
+\#                       {                             return POUND;     }
+[&<>()|;`]               { DUPSTR;                     return QCHAR;     }
+.                        { DUPSTR;                     return NQCHAR;    }
 
 %%

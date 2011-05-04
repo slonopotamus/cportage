@@ -25,7 +25,7 @@
 %lex-param { void *scanner }
 %locations
 %name-prefix "cp_shellconfig_"
-%parse-param { cp_shellconfig_ctx *ctx }
+%parse-param { cp_shellparser_ctx *ctx }
 %verbose
 
 %{
@@ -43,7 +43,7 @@
 
 #include "shellparser.h"
 #include "shellscanner.h"
-#include "shellconfig_ctx.h"
+#include "shellparser_ctx.h"
 
 #define scanner ctx->yyscanner
 #define YYDEBUG 1
@@ -68,7 +68,7 @@
 static void
 cp_shellconfig_error(
     const YYLTYPE *locp,
-    cp_shellconfig_ctx *ctx,
+    cp_shellparser_ctx *ctx,
     const char *err
 ) {
     if (ctx->error == NULL || *ctx->error != NULL) {
@@ -89,7 +89,7 @@ cp_shellconfig_error(
 }
 
 static gboolean
-dosource(cp_shellconfig_ctx *ctx, const char *path) {
+dosource(cp_shellparser_ctx *ctx, const char *path) {
     /* TODO: protect against include loop? */
     char *full;
     gboolean result;
@@ -108,19 +108,19 @@ dosource(cp_shellconfig_ctx *ctx, const char *path) {
 }
 
 static char *
-dolookup(const cp_shellconfig_ctx *ctx, const char *key) {
+dolookup(const cp_shellparser_ctx *ctx, const char *key) {
     const char *found = g_hash_table_lookup(ctx->entries, key);
     return g_strdup(found == NULL ? "" : found);
 }
 
 %}
 
-%token <str> ALPHA BLANK DOLLAR DOT EOL EQUALS ESC_CHAR LBRACE NQCHAR NUMBER
-%token <str> POUND QCHAR QUOTE RBRACE SQUOTE UNDERLINE
+%token <str> ALPHA ESC_CHAR NQCHAR NUMBER QCHAR
 
-%token EXPORT SOURCE VAR_MAGIC FILE_MAGIC
+%token VAR_MAGIC FILE_MAGIC
+%token EXPORT SOURCE POUND QUOTE LBRACE RBRACE SQUOTE UNDERLINE BLANK DOLLAR DOT EOL EQUALS
 
-%type <str> blank value var_ref
+%type <str> value var_ref
 %type <str> fname fname_part vname vname_start vname_end vname_end_part
 %type <str> sqstr sqstr_loop sqstr_part
 %type <str> dqstr dqstr_loop dqstr_part
@@ -142,17 +142,17 @@ file:
  */
 stmt_list:
     stmt_with_blank
-  | EOL { g_free($1); }
-  | EOL stmt_with_blank { g_free($1); }
-  | stmt_list EOL { g_free($2); }
-  | stmt_list EOL stmt_with_blank { g_free($2); }
+  | EOL
+  | EOL stmt_with_blank
+  | stmt_list EOL
+  | stmt_list EOL stmt_with_blank
 
 /* Statement, optionally surrounded with blanks */
 stmt_with_blank:
     stmt
-  | blank stmt { g_free($1); }
-  | stmt blank { g_free($2); }
-  | blank stmt blank { g_free($1); g_free($3); }
+  | blank stmt
+  | stmt blank
+  | blank stmt blank
 
 /* Possible statements */
 stmt:
@@ -163,28 +163,28 @@ stmt:
 
 source_stmt:
     source_op blank fname
-        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $2 and $3? */ } g_free($2); g_free($3); }
+        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $3? */ } g_free($3); }
 
 source_op:
-    DOT { g_free($1); }
+    DOT
   | SOURCE
 
 /* --- Variable definition --- */
 
 var_def_stmt:
     var_def
-  | EXPORT blank var_def { g_free($2); }
+  | EXPORT blank var_def
 
 var_def:
-    vname EQUALS value { g_hash_table_insert(ctx->entries, $1, $3); g_free($2); }
+    vname EQUALS value { g_hash_table_insert(ctx->entries, $1, $3); }
 
 value:
     /* empty */ { $$ = g_strdup(""); }
   | fname
 
 var_ref:
-    DOLLAR        vname        { $$ = dolookup(ctx, $2); g_free($1); g_free($2); }
-  | DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($1); g_free($2); g_free($3); g_free($4); }
+    DOLLAR        vname        { $$ = dolookup(ctx, $2); g_free($2); }
+  | DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($3); }
 
 /* --- Filename --- */
 
@@ -204,7 +204,7 @@ vname:
     vname_start vname_end { $$ = DOCONCAT2($1, $2); }
 
 vname_start:
-    UNDERLINE
+    UNDERLINE { $$ = g_strdup("_"); }
   | SOURCE    { $$ = g_strdup("source"); }
   | EXPORT    { $$ = g_strdup("export"); }
   | ALPHA
@@ -219,7 +219,7 @@ vname_end_part:
 
 /* -- Double-quoted string -- */
 dqstr:
-    QUOTE dqstr_loop QUOTE { $$ = $2; g_free($1); g_free($3); }
+    QUOTE dqstr_loop QUOTE { $$ = $2; }
 
 dqstr_loop:
     /* empty */           { $$ = g_strdup(""); }
@@ -228,11 +228,11 @@ dqstr_loop:
 dqstr_part:
     qstr_part
   | var_ref
-  | SQUOTE
+  | SQUOTE { $$ = g_strdup("'"); }
 
 /* -- Single-quoted string -- */
 sqstr:
-    SQUOTE sqstr_loop SQUOTE { $$ = $2; g_free($1); g_free($3); }
+    SQUOTE sqstr_loop SQUOTE { $$ = $2; }
 
 sqstr_loop:
     /* empty */           { $$ = g_strdup(""); }
@@ -240,8 +240,8 @@ sqstr_loop:
 
 sqstr_part:
     qstr_part
-  | DOLLAR
-  | QUOTE
+  | DOLLAR { $$ = g_strdup("$"); }
+  | QUOTE  { $$ = g_strdup("\""); }
 
 /* -- Misc string parts -- */
 
@@ -249,29 +249,29 @@ sqstr_part:
 qstr_part:
     nqstr_part
   | QCHAR
-  | BLANK
-  | EOL
+  | BLANK { $$ = g_strdup(" "); }
+  | EOL   { $$ = g_strdup(" "); }
 
 /* Symbols that can be part of nonquoted string */
 nqstr_part:
     vname_end_part
   | NQCHAR
-  | DOT
-  | EQUALS
+  | DOT    { $$ = g_strdup("."); }
+  | EQUALS { $$ = g_strdup("="); }
   | ESC_CHAR
-  | POUND
-  | LBRACE
-  | RBRACE
+  | POUND  { $$ = g_strdup("#"); }
+  | LBRACE { $$ = g_strdup("{"); }
+  | RBRACE { $$ = g_strdup("}"); }
 
 blank:
     BLANK
-  | blank BLANK { $$ = DOCONCAT2($1, $2); }
+  | blank BLANK
 
 %%
 
 static gboolean
 doparse(
-    cp_shellconfig_ctx *ctx,
+    cp_shellparser_ctx *ctx,
     GHashTable *entries,
     const char *path,
     gboolean allow_source,
@@ -302,7 +302,7 @@ cp_read_shellconfig(
     gboolean allow_source,
     GError **error
 ) {
-    cp_shellconfig_ctx ctx;
+    cp_shellparser_ctx ctx;
     gboolean retval;
     FILE *f;
 
@@ -324,7 +324,7 @@ cp_read_shellconfig(
 
 char *
 cp_varexpand(const char *str, GHashTable *vars G_GNUC_UNUSED, GError **error) {
-    cp_shellconfig_ctx ctx;
+    cp_shellparser_ctx ctx;
     YY_BUFFER_STATE bp;
 
     g_assert(error == NULL || *error == NULL);
