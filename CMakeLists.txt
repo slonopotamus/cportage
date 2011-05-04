@@ -44,7 +44,7 @@ add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS}
 ################
 
 include(FindPkgConfig)
-set(GLIB_MINIMAL_REQUIRED 2.20)
+set(GLIB_MINIMAL_REQUIRED 2.28)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
