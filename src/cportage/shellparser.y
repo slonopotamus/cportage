@@ -120,10 +120,11 @@ dolookup(const cp_shellparser_ctx *ctx, const char *key) {
 %token VAR_MAGIC FILE_MAGIC
 %token EXPORT SOURCE POUND QUOTE LBRACE RBRACE SQUOTE UNDERLINE BLANK DOLLAR DOT EOL EQUALS
 
-%type <str> value var_ref
-%type <str> fname fname_part vname vname_start vname_end vname_end_part
+%type <str> value var_ref var_ref_nq
+%type <str> fname fname_ fname__ fname_part
+%type <str> vname vname_start vname_end vname_end_part
 %type <str> sqstr sqstr_loop sqstr_part
-%type <str> dqstr dqstr_loop dqstr_part
+%type <str> dqstr dqstr_loop dqstr_loop_ dqstr_part
 %type <str> nqstr_part qstr_part
 
 %%
@@ -183,14 +184,31 @@ value:
   | fname
 
 var_ref:
+    DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($3); }
+
+var_ref_nq:
     DOLLAR        vname        { $$ = dolookup(ctx, $2); g_free($2); }
-  | DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($3); }
 
 /* --- Filename --- */
 
+/*
+  Nonempty string of [var_ref_nq, vname_end_part, fname_part]
+  where vname_end_part never follows var_ref_nq.
+ */
 fname:
-    fname_part
-  | fname fname_part { $$ = DOCONCAT2($1, $2); }
+    fname__
+  | var_ref_nq
+  | fname  var_ref_nq { $$ = DOCONCAT2($1, $2); }
+
+/* Things allowed before vname_end_part in fname */
+fname_:
+    /* empty */ { $$ = g_strdup(""); }
+  | fname__
+
+fname__:
+    fname_ vname_end_part { $$ = DOCONCAT2($1, $2); }
+  | fname  fname_part     { $$ = DOCONCAT2($1, $2); }
+  | fname_part
 
 fname_part:
     var_ref
@@ -221,9 +239,19 @@ vname_end_part:
 dqstr:
     QUOTE dqstr_loop QUOTE { $$ = $2; }
 
+/*
+  Possibly empty string of [var_ref_nq, vname_end_part, dqstr_part]
+  where vname_end_part never follows var_ref_nq.
+ */
 dqstr_loop:
-    /* empty */           { $$ = g_strdup(""); }
-  | dqstr_loop dqstr_part { $$ = DOCONCAT2($1, $2); }
+    dqstr_loop_
+  | dqstr_loop  var_ref_nq { $$ = DOCONCAT2($1, $2); }
+
+/* Things allowed before vname_end_part in dqstr_loop */
+dqstr_loop_:
+    /* empty */                { $$ = g_strdup(""); }
+  | dqstr_loop_ vname_end_part { $$ = DOCONCAT2($1, $2); }
+  | dqstr_loop  dqstr_part     { $$ = DOCONCAT2($1, $2); }
 
 dqstr_part:
     qstr_part
@@ -240,6 +268,7 @@ sqstr_loop:
 
 sqstr_part:
     qstr_part
+  | vname_end_part
   | DOLLAR { $$ = g_strdup("$"); }
   | QUOTE  { $$ = g_strdup("\""); }
 
@@ -254,8 +283,7 @@ qstr_part:
 
 /* Symbols that can be part of nonquoted string */
 nqstr_part:
-    vname_end_part
-  | NQCHAR
+    NQCHAR
   | DOT    { $$ = g_strdup("."); }
   | EQUALS { $$ = g_strdup("="); }
   | ESC_CHAR
