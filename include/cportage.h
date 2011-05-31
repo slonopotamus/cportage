@@ -30,6 +30,9 @@ G_BEGIN_DECLS
 /*@-exportany@*/
 /*@-exportiter@*/
 
+gboolean
+cp_strv_contains(char **haystack, const char *needle) /*@*/;
+
 /**
  * Sorts %NULL-terminated string array in place.
  *
@@ -226,6 +229,12 @@ cp_settings_repositories(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/*@null@*/ /*@newref@*/ CPRepository
+cp_settings_get_repository(
+    const CPSettings self,
+    const char *name
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
 /**
  * \return readonly value of \a key variable
  *         or \a fallback if variable is not set
@@ -334,6 +343,12 @@ cp_package_cmp(
     const CPPackage first,
     const CPPackage second
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
+ * \return readonly string representation of \a self
+ */
+/*@observer@*/ const char *
+cp_package_str(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * \return readonly category name of \a self

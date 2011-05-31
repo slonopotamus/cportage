@@ -295,6 +295,9 @@ gint
 g_ascii_strcasecmp(const gchar *s1,  const gchar *s2) /*@*/;
 
 /*@only@*/ gchar *
+g_ascii_strup(const gchar *str, gssize len) /*@*/;
+
+/*@only@*/ gchar *
 g_strconcat(const gchar *string1, ...) /*@*/;
 
 guint
@@ -497,6 +500,15 @@ void
 g_list_free(
     /*@null@*/ /*@only@*/ GList *list
 ) /*@modifies list@*/;
+
+void
+g_list_free_full(
+    /*@null@*/ /*@only@*/ GList *list,
+    GDestroyNotify free_func
+) /*@modifies list@*/;
+
+/*@null@*/ /*@observer@*/ GList *
+g_list_last(/*@null@*/ GList *list) /*@*/;
 
 void
 g_list_foreach(

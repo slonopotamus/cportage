@@ -461,6 +461,17 @@ cp_settings_repositories(const CPSettings self) {
     return self->repos;
 }
 
+CPRepository
+cp_settings_get_repository(const CPSettings self, const char *name) {
+    CP_REPOSITORY_ITER(self->repos, repo) {
+        if (g_strcmp0(name, cp_repository_name(repo)) == 0) {
+            return cp_repository_ref(repo);
+        }
+    } end_CP_REPOSITORY_ITER
+
+    return NULL;
+}
+
 const char *
 cp_settings_get_default(
     const CPSettings self,

@@ -26,6 +26,7 @@ struct CPPackage {
     CPVersion version;
     /*@only@*/ char *slot;
     /*@only@*/ char *repo;
+    /*@only@*/ char *str;
 
     /*@refs@*/ int refs;
 };
@@ -54,6 +55,8 @@ cp_package_new(
     self->slot = g_strdup(slot);
     g_assert(self->repo == NULL);
     self->repo = g_strdup(repo);
+    g_assert(self->str == NULL);
+    self->str = g_strdup_printf("%s/%s-%s", category, name, cp_version_str(version));
 
     return self;
 }
@@ -80,6 +83,7 @@ cp_package_unref(CPPackage self) {
         cp_version_unref(self->version);
         g_free(self->slot);
         g_free(self->repo);
+        g_free(self->str);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -131,4 +135,9 @@ cp_package_cmp(const CPPackage first, const CPPackage second) {
     }
 
     return cp_version_cmp(first->version, second->version);
+}
+
+const char *
+cp_package_str(const CPPackage self) {
+    return self->str;
 }
