@@ -214,7 +214,7 @@ vname:
   | vname_start vname_end { $$ = DOCONCAT2($1, $2); }
 
 vname_start:
-    UNDERLINE { $$ = g_strdup("_"); }
+    UNDERLINE { $$ = g_strnfill(1, '_'); }
   | SOURCE    { $$ = g_strdup("source"); }
   | EXPORT    { $$ = g_strdup("export"); }
   | ALPHA
@@ -250,7 +250,7 @@ dqstr_loop_:
 dqstr_part:
     qstr_part
   | var_ref
-  | SQUOTE { $$ = g_strdup("'"); }
+  | SQUOTE { $$ = g_strnfill(1, '\''); }
 
 /* -- Single-quoted string -- */
 sqstr:
@@ -264,8 +264,8 @@ sqstr_loop:
 sqstr_part:
     qstr_part
   | vname_end_part
-  | DOLLAR { $$ = g_strdup("$"); }
-  | QUOTE  { $$ = g_strdup("\""); }
+  | DOLLAR { $$ = g_strnfill(1, '$'); }
+  | QUOTE  { $$ = g_strnfill(1, '"'); }
 
 /* -- Misc string parts -- */
 
@@ -273,18 +273,18 @@ sqstr_part:
 qstr_part:
     nqstr_part
   | QCHAR
-  | BLANK { $$ = g_strdup(" "); }
-  | EOL   { $$ = g_strdup(" "); }
+  | BLANK { $$ = g_strnfill(1, ' '); }
+  | EOL   { $$ = g_strnfill(1, ' '); }
 
 /* Symbols that can be part of nonquoted string */
 nqstr_part:
     NQCHAR
-  | DOT    { $$ = g_strdup("."); }
-  | EQUALS { $$ = g_strdup("="); }
+  | DOT    { $$ = g_strnfill(1, '.'); }
+  | EQUALS { $$ = g_strnfill(1, '='); }
   | ESC_CHAR
-  | POUND  { $$ = g_strdup("#"); }
-  | LBRACE { $$ = g_strdup("{"); }
-  | RBRACE { $$ = g_strdup("}"); }
+  | POUND  { $$ = g_strnfill(1, '#'); }
+  | LBRACE { $$ = g_strnfill(1, '{'); }
+  | RBRACE { $$ = g_strnfill(1, '}'); }
 
 blank:
     BLANK
