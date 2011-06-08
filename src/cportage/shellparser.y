@@ -120,8 +120,8 @@ dolookup(const cp_shellparser_ctx *ctx, const char *key) {
 %token VAR_MAGIC FILE_MAGIC
 %token EXPORT SOURCE POUND QUOTE LBRACE RBRACE SQUOTE UNDERLINE BLANK DOLLAR DOT EOL EQUALS
 
-%type <str> value var_ref var_ref_nq
-%type <str> fname fname_ fname__ fname_part
+%type <str> var_ref var_ref_nq
+%type <str> fname fname_ fname_part
 %type <str> vname vname_start vname_end vname_end_part
 %type <str> sqstr sqstr_loop sqstr_part
 %type <str> dqstr dqstr_loop dqstr_loop_ dqstr_part
@@ -130,12 +130,10 @@ dolookup(const cp_shellparser_ctx *ctx, const char *key) {
 %%
 
 start:
-    FILE_MAGIC file
+    FILE_MAGIC
+  | FILE_MAGIC stmt_list
+  | VAR_MAGIC            { ctx->expanded = g_strdup(""); }
   | VAR_MAGIC dqstr_loop { ctx->expanded = $2; }
-
-file:
-    /* empty */
-  | stmt_list
 
 /*
   Any number of statements separated by one or more newlines.
@@ -177,11 +175,8 @@ var_def_stmt:
   | EXPORT blank var_def
 
 var_def:
-    vname EQUALS value { g_hash_table_insert(ctx->entries, $1, $3); }
-
-value:
-    /* empty */ { $$ = g_strdup(""); }
-  | fname
+    vname EQUALS       { g_hash_table_insert(ctx->entries, $1, g_strdup("")); }
+  | vname EQUALS fname { g_hash_table_insert(ctx->entries, $1, $3); }
 
 var_ref:
     DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($3); }
@@ -196,17 +191,13 @@ var_ref_nq:
   where vname_end_part never follows var_ref_nq.
  */
 fname:
-    fname__
+    fname_
   | var_ref_nq
-  | fname  var_ref_nq { $$ = DOCONCAT2($1, $2); }
+  | fname var_ref_nq { $$ = DOCONCAT2($1, $2); }
 
-/* Things allowed before vname_end_part in fname */
 fname_:
-    /* empty */ { $$ = g_strdup(""); }
-  | fname__
-
-fname__:
-    fname_ vname_end_part { $$ = DOCONCAT2($1, $2); }
+    vname_end_part
+  | fname_ vname_end_part { $$ = DOCONCAT2($1, $2); }
   | fname  fname_part     { $$ = DOCONCAT2($1, $2); }
   | fname_part
 
@@ -219,7 +210,8 @@ fname_part:
 /* --- Variable name --- */
 
 vname:
-    vname_start vname_end { $$ = DOCONCAT2($1, $2); }
+    vname_start
+  | vname_start vname_end { $$ = DOCONCAT2($1, $2); }
 
 vname_start:
     UNDERLINE { $$ = g_strdup("_"); }
@@ -228,7 +220,7 @@ vname_start:
   | ALPHA
 
 vname_end:
-    /* empty */              { $$ = g_strdup(""); }
+    vname_end_part
   | vname_end vname_end_part { $$ = DOCONCAT2($1, $2); }
 
 vname_end_part:
@@ -237,21 +229,23 @@ vname_end_part:
 
 /* -- Double-quoted string -- */
 dqstr:
-    QUOTE dqstr_loop QUOTE { $$ = $2; }
+    QUOTE            QUOTE { $$ = g_strdup(""); }
+  | QUOTE dqstr_loop QUOTE { $$ = $2; }
 
 /*
-  Possibly empty string of [var_ref_nq, vname_end_part, dqstr_part]
+  Nonempty string of [var_ref_nq, vname_end_part, dqstr_part]
   where vname_end_part never follows var_ref_nq.
  */
 dqstr_loop:
     dqstr_loop_
-  | dqstr_loop  var_ref_nq { $$ = DOCONCAT2($1, $2); }
+  | var_ref_nq
+  | dqstr_loop var_ref_nq { $$ = DOCONCAT2($1, $2); }
 
-/* Things allowed before vname_end_part in dqstr_loop */
 dqstr_loop_:
-    /* empty */                { $$ = g_strdup(""); }
+    vname_end_part
   | dqstr_loop_ vname_end_part { $$ = DOCONCAT2($1, $2); }
   | dqstr_loop  dqstr_part     { $$ = DOCONCAT2($1, $2); }
+  | dqstr_part
 
 dqstr_part:
     qstr_part
@@ -260,10 +254,11 @@ dqstr_part:
 
 /* -- Single-quoted string -- */
 sqstr:
-    SQUOTE sqstr_loop SQUOTE { $$ = $2; }
+    SQUOTE            SQUOTE { $$ = g_strdup(""); }
+  | SQUOTE sqstr_loop SQUOTE { $$ = $2; }
 
 sqstr_loop:
-    /* empty */           { $$ = g_strdup(""); }
+    sqstr_part
   | sqstr_loop sqstr_part { $$ = DOCONCAT2($1, $2); }
 
 sqstr_part:
