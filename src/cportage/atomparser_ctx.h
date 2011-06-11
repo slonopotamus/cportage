@@ -17,24 +17,14 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CP_VERSION_H
-#define CP_VERSION_H
+/*@-fielduse@*/
 
-#include <cportage.h>
+typedef struct cp_atomparser_ctx_t {
+    yyscan_t yyscanner;
 
-/*@-exportany@*/
+    CPAtom atom;
+    CPVersion version;
+    struct pv pv;
 
-/**
- * Creates new #CPVersion structure for \a version.
- *
- * \param version a valid version string
- * \param error   return location for a %GError, or %NULL
- * \return        a #CPVersion structure, free it using cp_version_unref()
- */
-/*@newref@*/ /*@null@*/ CPVersion
-cp_version_new(
-    const char *version,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-
-#endif
+    int magic;
+} /*@unused@*/ cp_atomparser_ctx;

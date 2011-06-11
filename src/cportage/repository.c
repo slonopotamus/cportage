@@ -20,13 +20,14 @@
 #include <stdlib.h>
 
 #include "io.h"
+#include "macros.h"
 #include "repository.h"
 
 struct CPRepository {
     /*@only@*/ char *name;
     /*@only@*/ char *path;
 
-    /*@refs@*/ int refs;
+    /*@refs@*/ unsigned int refs;
 };
 
 static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
@@ -66,7 +67,7 @@ cp_repository_new(const char *path) {
     CPRepository self;
 
     self = g_new0(struct CPRepository, 1);
-    self->refs = 1;
+    self->refs = (unsigned int)1;
     g_assert(self->path == NULL);
     self->path = g_strdup(path);
     g_assert(self->name == NULL);

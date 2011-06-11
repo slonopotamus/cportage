@@ -102,7 +102,6 @@ cp_io_getlines(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
 
-/*@-declundef@*/
 /** TODO: documentation */
 /*@null@*/ char *
 cp_varexpand(
@@ -110,7 +109,6 @@ cp_varexpand(
     GHashTable *vars,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
-/*@=declundef@*/
 
 /**
  * A structure describing a single repository.
@@ -469,14 +467,6 @@ cp_vartree_find_packages(
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies self,*match,*error@*/ /*@globals fileSystem@*/;
-
-/*@-namechecks@*/
-#ifdef S_SPLINT_S
-#   define _(String) String
-#else
-#   define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
-#endif
-/*@=namechecks@*/
 
 /*@iter CP_GLIST_ITER(GList *list, yield gpointer elem)@*/
 

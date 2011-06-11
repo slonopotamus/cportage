@@ -27,6 +27,7 @@
 #endif
 
 #include "actions.h"
+#include "../cportage/macros.h"
 
 int
 cmerge_help_action(

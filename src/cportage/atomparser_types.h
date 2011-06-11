@@ -17,24 +17,37 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CP_VERSION_H
-#define CP_VERSION_H
-
 #include <cportage.h>
 
-/*@-exportany@*/
+/*@-fielduse@*/
 
-/**
- * Creates new #CPVersion structure for \a version.
- *
- * \param version a valid version string
- * \param error   return location for a %GError, or %NULL
- * \return        a #CPVersion structure, free it using cp_version_unref()
- */
-/*@newref@*/ /*@null@*/ CPVersion
-cp_version_new(
-    const char *version,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+struct pv {
+    char *package;
+    CPVersion version;
+};
 
-#endif
+typedef enum VersionSuffixType {
+    SUF_ALPHA,
+    SUF_BETA,
+    SUF_PRE,
+    SUF_RC,
+    SUF_P
+} VersionSuffixType;
+
+typedef struct VersionSuffix {
+    VersionSuffixType type;
+    char *value;
+} *VersionSuffix;
+
+typedef union YYSTYPE {
+    char *str;
+    GList/*<char *>*/ *str_list;
+    GList/*<VersionSuffix>*/ *suffix_list;
+    CPAtom atom;
+    CPVersion version;
+    struct pv pv;
+    VersionSuffixType suffix_type;
+    char chr;
+} YYSTYPE;
+
+#define YYSTYPE YYSTYPE

@@ -3,7 +3,6 @@ if(HAVE_READ AND HAVE_FILENO)
 else()
     set(flex_mode "--nounistd")
 endif()
-set(bison_flags "-Wall -Werror --report=all")
 
 macro(add_flex_bison_target _name)
   flex_target("${_name}scanner"
@@ -14,10 +13,11 @@ macro(add_flex_bison_target _name)
   bison_target("${_name}parser"
     "${_name}parser.y"
     "${CMAKE_CURRENT_BINARY_DIR}/${_name}parser.c"
-    COMPILE_FLAGS "${bison_flags}")
+    COMPILE_FLAGS "-Wall -Werror --report=all")
   add_flex_bison_dependency("${_name}scanner" "${_name}parser")
 endmacro()
 
+add_flex_bison_target("atom")
 add_flex_bison_target("shell")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -25,11 +25,12 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}" sources)
 set(sources
   ${sources}
+  ${BISON_atomparser_OUTPUTS} ${FLEX_atomscanner_OUTPUTS}
   ${BISON_shellparser_OUTPUTS} ${FLEX_shellscanner_OUTPUTS}
 )
 
 add_library(cportage SHARED ${sources})
-target_link_libraries(cportage ${GLIB2_LIBRARIES})
+target_link_libraries(cportage ${GLIB2_LIBRARIES} ${GMP_LIBRARY})
 set_target_properties(cportage PROPERTIES
   SOVERSION "${CP_VERSION_MAJOR}"
   VERSION "${CP_VERSION}")

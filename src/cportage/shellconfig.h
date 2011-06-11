@@ -25,7 +25,6 @@
 #include <glib.h>
 
 /*@-exportany@*/
-/*@-declundef@*/
 
 /**
  * Reads shell-like config file into a %GHashTable.

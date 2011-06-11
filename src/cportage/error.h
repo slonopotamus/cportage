@@ -34,8 +34,8 @@ cp_error_quark(void) /*@*/;
  */
 enum CPError {
     CP_ERROR_EAPI_UNSUPPORTED,
-    CP_ERROR_ATOM_SYNTAX,
     /*@-enummemuse@*/
+    CP_ERROR_ATOM_SYNTAX,
     CP_ERROR_SHELLCONFIG_SOURCE_DISABLED,
     CP_ERROR_SHELLCONFIG_SYNTAX,
     /*@=enummemuse@*/

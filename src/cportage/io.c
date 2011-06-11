@@ -24,6 +24,7 @@
 #include <glib/gstdio.h>
 
 #include "io.h"
+#include "macros.h"
 #include "strings.h"
 
 FILE *

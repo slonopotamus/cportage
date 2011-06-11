@@ -36,7 +36,7 @@ struct CPSettings {
     CPRepository main_repo;
     CPRepository* repos;
 
-    /*@refs@*/ int refs;
+    /*@refs@*/ unsigned int refs;
 };
 
 /**
@@ -167,7 +167,7 @@ load_etc_config(
     gboolean result;
 
     g_assert(error == NULL || *error == NULL);
-    path = g_build_filename(root_relative? self->root : "/", "etc", name, NULL);
+    path = g_build_filename(root_relative ? self->root : "/", "etc", name, NULL);
     result = !g_file_test(path, G_FILE_TEST_EXISTS)
         || cp_read_shellconfig(self->config, path, allow_source, error);
     g_free(path);
@@ -351,7 +351,7 @@ cp_settings_new(const char *root, GError **error) {
     self = g_new0(struct CPSettings, 1);
 
     /* init basic things */
-    self->refs = 1;
+    self->refs = (unsigned int)1;
     g_assert(self->root == NULL);
     self->root = cp_io_realpath(root, error);
     if (self->root == NULL) {

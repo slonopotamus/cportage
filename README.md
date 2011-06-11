@@ -15,6 +15,7 @@ Build time only:
 Both build and runtime:
 
  -  GLib >= 2.28 (tested with 2.28.6)
+ -  GMP (tested with 4.3.2)
 
 Compiling
 ---------

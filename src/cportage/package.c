@@ -28,7 +28,7 @@ struct CPPackage {
     /*@only@*/ char *repo;
     /*@only@*/ char *str;
 
-    /*@refs@*/ int refs;
+    /*@refs@*/ unsigned int refs;
 };
 
 CPPackage
@@ -42,7 +42,7 @@ cp_package_new(
     CPPackage self;
 
     self = g_new0(struct CPPackage, 1);
-    self->refs = 1;
+    self->refs = (unsigned int)1;
 
     /* TODO: validate args or make function private */
     g_assert(self->category == NULL);

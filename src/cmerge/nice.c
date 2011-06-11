@@ -18,7 +18,6 @@
 */
 
 #include "config.h"
-#include "nice.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -29,7 +28,8 @@
 #   include <sys/resource.h>
 #endif
 
-
+#include "nice.h"
+#include "../cportage/macros.h"
 void
 adjust_niceness(const CPSettings settings) {
     /*@observer@*/ static const char *key = "PORTAGE_NICENESS";

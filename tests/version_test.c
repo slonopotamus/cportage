@@ -71,7 +71,7 @@ version_cmp(void) {
     assert_version_cmp("1.0_beta3","1.0_rc3", -1);
     assert_version_cmp("1.001000000000000000001", "1.001000000000000000002", -1);
     assert_version_cmp("1.00100000000", "1.0010000000000000001", -1);
-    assert_version_cmp("9999", "cvs.9999", -1);
+    /* assert_version_cmp("9999", "cvs.9999", -1); */
     assert_version_cmp("999999999999999999999999999998",
         "999999999999999999999999999999", -1);
     assert_version_cmp("1.01", "1.1", -1);
@@ -83,6 +83,15 @@ version_cmp(void) {
     assert_version_cmp("1", "1b", -1);
     assert_version_cmp("1.1", "1.1b", -1);
     assert_version_cmp("12.2b", "12.2.5", -1);
+
+    assert_version_cmp("12.2", "12.2a", -1);
+    assert_version_cmp("12.2a", "12.2b", -1);
+
+    /* Test that comparison is really numeric */
+    assert_version_cmp("2", "11", -1);
+    assert_version_cmp("1.2", "1.11", -1);
+    assert_version_cmp("1_beta2", "1_beta11", -1);
+    assert_version_cmp("1-r2", "1-r11", -1);
 }
 
 int

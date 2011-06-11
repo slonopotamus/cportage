@@ -24,8 +24,9 @@
 #endif
 
 #include <stdlib.h>
-
 #include <cportage.h>
+#include "../cportage/macros.h"
+
 
 static int
 envvar(

@@ -44,10 +44,23 @@ add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS}
 ################
 
 include(FindPkgConfig)
+include(CheckIncludeFile)
+include(CheckSymbolExists)
+include(CheckCSourceRuns)
+
 set(GLIB_MINIMAL_REQUIRED 2.28)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
+
+find_library(GMP_LIBRARY gmp)
+if(NOT GMP_LIBRARY)
+    message(FATAL_ERROR "GMP library not found")
+endif()
+check_include_file(gmp.h HAVE_GMP_H)
+if(NOT HAVE_GMP_H)
+    message(FATAL_ERROR "<gmp.h> header not found")
+endif()
 
 pkg_check_modules(GLIB2 REQUIRED "glib-2.0 >= ${GLIB_MINIMAL_REQUIRED}")
 
@@ -58,10 +71,6 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 ###################
 # Platform checks #
 ###################
-
-include(CheckIncludeFile)
-include(CheckSymbolExists)
-include(CheckCSourceRuns)
 
 check_symbol_exists(realpath stdlib.h HAVE_REALPATH)
 if(NOT HAVE_REALPATH)

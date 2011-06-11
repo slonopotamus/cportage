@@ -28,7 +28,7 @@ struct CPVartree {
     /** Lazily populated category->packagename->packages cache. */
     /*@owned@*/ GHashTable *cache;
 
-    /*@refs@*/ int refs;
+    /*@refs@*/ unsigned int refs;
 };
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
@@ -66,6 +66,7 @@ try_load_package(
     if (!result) {
         goto OUT;
     }
+    slot = g_strstrip(slot);
 
     result = cp_atom_slot_validate(slot, error);
     if (!result) {
@@ -78,6 +79,7 @@ try_load_package(
     if (!result) {
         goto OUT;
     }
+    repo = g_strstrip(repo);
 
     result = cp_atom_repo_validate(repo, error);
     if (!result) {
@@ -201,7 +203,7 @@ cp_vartree_new(const CPSettings settings) {
     CPVartree self;
 
     self = g_new0(struct CPVartree, 1);
-    self->refs = 1;
+    self->refs = (unsigned int)1;
     g_assert(self->root == NULL);
     self->root = g_build_filename(cp_settings_root(settings),
                                   "var", "db", "pkg", NULL);

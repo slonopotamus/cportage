@@ -36,4 +36,12 @@
 
 #define end_CP_GDIR_ITER }}
 
+/*@-namechecks@*/
+#ifdef S_SPLINT_S
+#   define _(String) String
+#else
+#   define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+#endif
+/*@=namechecks@*/
+
 #endif

@@ -38,6 +38,7 @@
 
 #include "error.h"
 #include "io.h"
+#include "macros.h"
 #include "shellconfig.h"
 #include "strings.h"
 
@@ -118,7 +119,8 @@ dolookup(const cp_shellparser_ctx *ctx, const char *key) {
 %token <str> ALPHA ESC_CHAR NQCHAR NUMBER QCHAR
 
 %token VAR_MAGIC FILE_MAGIC
-%token EXPORT SOURCE POUND QUOTE LBRACE RBRACE SQUOTE UNDERLINE BLANK DOLLAR DOT EOL EQUALS
+%token EXPORT SOURCE POUND QUOTE LBRACE RBRACE SQUOTE UNDERLINE BLANK
+%token DOLLAR DOT EOL EQUALS
 
 %type <str> var_ref var_ref_nq
 %type <str> fname fname_ fname_part
@@ -161,8 +163,8 @@ stmt:
 /* --- Sourcing --- */
 
 source_stmt:
-    source_op blank fname
-        { if (!dosource(ctx, $3)) { YYABORT; /* TODO: memory leak of $3? */ } g_free($3); }
+    source_op blank fname { gboolean success = dosource(ctx, $3);
+                            g_free($3); if (!success) { YYABORT; } }
 
 source_op:
     DOT

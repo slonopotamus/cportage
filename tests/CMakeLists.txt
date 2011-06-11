@@ -3,7 +3,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../src")
 macro(add_cportage_test _test_name)
   add_executable(${_test_name} ${_test_name}.c)
   set_link_flags(${_test_name})
-  target_link_libraries(${_test_name} cportage_static ${GLIB2_LIBRARIES})
+  target_link_libraries(${_test_name} cportage_static ${GLIB2_LIBRARIES} ${GMP_LIBRARY})
   add_test(${_test_name} ${_test_name} "${CMAKE_CURRENT_SOURCE_DIR}")
 endmacro()
 
