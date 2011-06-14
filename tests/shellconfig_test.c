@@ -29,7 +29,14 @@ assert_parse(const char *path) {
     );
     GError *error = NULL;
     char *full_path = g_build_filename(dir, path, NULL);
-    gboolean retval = cp_read_shellconfig(entries, full_path, TRUE, &error);
+    gboolean retval = cp_read_shellconfig(
+        entries,
+        (CPShellconfigLookupFunc)g_hash_table_lookup,
+        (CPShellconfigSaveFunc)g_hash_table_insert,
+        full_path,
+        TRUE,
+        &error
+    );
 
     g_assert_no_error(error);
     g_assert(retval);

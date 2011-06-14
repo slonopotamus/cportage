@@ -26,18 +26,24 @@
 
 /*@-exportany@*/
 
+typedef void (*CPShellconfigSaveFunc)(void *map, char *key, char *value);
+
+typedef const char *(*CPShellconfigLookupFunc)(void *map, const char *key);
+
 /**
  * Reads shell-like config file into a %GHashTable.
  *
  * \param path         UTF8-encoded filename
- * \param into         a %GHashTable to collect config entries into
+ * \param into         a map to collect config entries into
  * \param allow_source if %TRUE, \c source statements are handled
  * \param error        return location for a %GError, or %NULL
  * \return             %TRUE on success, %FALSE if an error occurred
  */
 gboolean
 cp_read_shellconfig(
-    GHashTable *into,
+    void *into,
+    CPShellconfigLookupFunc lookup_func,
+    CPShellconfigSaveFunc save_func,
     const char *path,
     gboolean allow_source,
     /*@null@*/ GError **error

@@ -44,7 +44,7 @@ incrementals(void) {
     g_assert_no_error(error);
     g_assert(settings != NULL);
     use = cp_settings_get(settings, "USE");
-    g_assert_cmpstr(use, ==, "use1 -use2 use3 -use4 use5 -use6");
+    g_assert_cmpstr(use, ==, "use1 use3 use5");
 
     cp_settings_unref(settings);
     g_free(root);

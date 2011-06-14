@@ -471,10 +471,10 @@ cp_vartree_find_packages(
 /*@iter CP_GLIST_ITER(GList *list, yield gpointer elem)@*/
 
 #define CP_GLIST_ITER(list, m_elem) { \
-    /*@null@*/ GList *m_iter; \
-    for (m_iter = (list); m_iter != NULL; m_iter = m_iter->next) { \
+    /*@null@*/ GList *m_elem##_iter = (list); \
+    for (; m_elem##_iter != NULL; m_elem##_iter = m_elem##_iter->next) { \
         /*@-incondefs@*/ \
-        /*@dependent@*/ /*@null@*/ void *m_elem = m_iter->data; \
+        /*@dependent@*/ /*@null@*/ void *m_elem = m_elem##_iter->data; \
         /*@=incondefs@*/
 
 #define end_CP_GLIST_ITER }}
@@ -482,9 +482,9 @@ cp_vartree_find_packages(
 /*@iter CP_STRV_ITER(char **arr, yield char *elem)@*/
 
 #define CP_STRV_ITER(arr, m_elem) { \
-    char **m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        char *m_elem = *m_iter;
+    char **m_elem##_iter = (arr); \
+    for (; *m_elem##_iter != NULL; ++m_elem##_iter) { \
+        char *m_elem = *m_elem##_iter;
 
 #define end_CP_STRV_ITER }}
 

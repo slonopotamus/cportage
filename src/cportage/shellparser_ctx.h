@@ -17,14 +17,16 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <glib.h>
+#include "shellconfig.h"
 
 /*@-fielduse@*/
 
 typedef struct cp_shellparser_ctx_t {
     yyscan_t yyscanner;
     const char *filename;
-    GHashTable *entries;
+    void *entries;
+    CPShellconfigLookupFunc lookup_func;
+    CPShellconfigSaveFunc save_func;
     char *expanded;
     GError **error;
     int magic;

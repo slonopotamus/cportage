@@ -102,7 +102,14 @@ dosource(cp_shellparser_ctx *ctx, const char *path) {
         full = g_build_filename(dirname, path, NULL);
         g_free(dirname);
     }
-    result = cp_read_shellconfig(ctx->entries, full, TRUE, ctx->error);
+    result = cp_read_shellconfig(
+        ctx->entries,
+        ctx->lookup_func,
+        ctx->save_func,
+        full,
+        TRUE,
+        ctx->error
+    );
 
     g_free(full);
     return result;
@@ -110,7 +117,7 @@ dosource(cp_shellparser_ctx *ctx, const char *path) {
 
 static char *
 dolookup(const cp_shellparser_ctx *ctx, const char *key) {
-    const char *found = g_hash_table_lookup(ctx->entries, key);
+    const char *found = ctx->lookup_func(ctx->entries, key);
     return g_strdup(found == NULL ? "" : found);
 }
 
@@ -177,8 +184,8 @@ var_def_stmt:
   | EXPORT blank var_def
 
 var_def:
-    vname EQUALS       { g_hash_table_insert(ctx->entries, $1, g_strdup("")); }
-  | vname EQUALS fname { g_hash_table_insert(ctx->entries, $1, $3); }
+    vname EQUALS       { ctx->save_func(ctx->entries, $1, g_strdup("")); }
+  | vname EQUALS fname { ctx->save_func(ctx->entries, $1, $3); }
 
 var_ref:
     DOLLAR LBRACE vname RBRACE { $$ = dolookup(ctx, $3); g_free($3); }
@@ -297,7 +304,6 @@ blank:
 static gboolean
 doparse(
     cp_shellparser_ctx *ctx,
-    GHashTable *entries,
     const char *path,
     gboolean allow_source,
     int magic,
@@ -306,7 +312,6 @@ doparse(
     g_assert(error == NULL || *error == NULL);
 
     ctx->filename = path;
-    ctx->entries = entries;
     ctx->error = error;
     ctx->allow_source = allow_source;
     ctx->magic = magic;
@@ -322,7 +327,9 @@ doparse(
 
 gboolean
 cp_read_shellconfig(
-    GHashTable *into,
+    void *into,
+    CPShellconfigLookupFunc lookup_func,
+    CPShellconfigSaveFunc save_func,
     const char *path,
     gboolean allow_source,
     GError **error
@@ -333,6 +340,10 @@ cp_read_shellconfig(
 
     g_assert(error == NULL || *error == NULL);
 
+    ctx.entries = into;
+    ctx.lookup_func = lookup_func;
+    ctx.save_func = save_func;
+
     f = cp_io_fopen(path, "r", error);
     if (f == NULL) {
         return FALSE;
@@ -340,7 +351,7 @@ cp_read_shellconfig(
 
     cp_shellconfig_lex_init(&ctx.yyscanner);
     cp_shellconfig_set_in(f, ctx.yyscanner);
-    retval = doparse(&ctx, into, path, allow_source, FILE_MAGIC, error);
+    retval = doparse(&ctx, path, allow_source, FILE_MAGIC, error);
     cp_shellconfig_lex_destroy(ctx.yyscanner);
     fclose(f);
 
@@ -348,18 +359,21 @@ cp_read_shellconfig(
 }
 
 char *
-cp_varexpand(const char *str, GHashTable *vars G_GNUC_UNUSED, GError **error) {
+cp_varexpand(const char *str, GHashTable *vars, GError **error) {
     cp_shellparser_ctx ctx;
     YY_BUFFER_STATE bp;
 
     g_assert(error == NULL || *error == NULL);
 
+    ctx.entries = vars;
+    ctx.lookup_func = (CPShellconfigLookupFunc)g_hash_table_lookup;
+    ctx.save_func = NULL;
     ctx.expanded = NULL;
 
     cp_shellconfig_lex_init(&ctx.yyscanner);
     bp = cp_shellconfig__scan_string(str, ctx.yyscanner);
     cp_shellconfig__switch_to_buffer(bp, ctx.yyscanner);
-    if (doparse(&ctx, vars, str, FALSE, VAR_MAGIC, error)) {
+    if (doparse(&ctx, str, FALSE, VAR_MAGIC, error)) {
         g_assert(ctx.expanded != NULL);
     } else {
         g_free(ctx.expanded);

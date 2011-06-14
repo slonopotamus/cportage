@@ -17,6 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string.h>
+
 #include "eapi.h"
 #include "error.h"
 #include "io.h"
@@ -30,14 +32,80 @@ struct CPSettings {
     /*@only@*/ char *root;
     /*@only@*/ char *profile;
 
-    /*@only@*/ GHashTable/*<char *,char *>*/ *config;
-    /*@only@*/ char **features;
+    /*@only@*/ GTree/*<char *,char *>*/ *config;
+    /*@only@*/ GTree/*<char *,GTree<char *, gboolean>>*/ *incrementals;
 
     CPRepository main_repo;
     CPRepository* repos;
 
     /*@refs@*/ unsigned int refs;
 };
+
+static const char *incremental_keys[] = {
+    "USE", "USE_EXPAND", "USE_EXPAND_HIDDEN", "FEATURES", "ACCEPT_KEYWORDS",
+    "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
+    "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES", NULL
+};
+
+static void
+add_incremental(CPSettings self, const char *key, /*@null@*/ const char *value) {
+    GTree *values;
+    char **items;
+
+    if (value == NULL) {
+        return;
+    }
+
+    items = cp_strings_pysplit(value);
+    if (items == NULL) {
+        return;
+    }
+
+    values = g_tree_lookup(self->incrementals, key);
+    if (values == NULL) {
+        values = g_tree_new_full((GCompareDataFunc)strcmp, NULL, g_free, NULL);
+        g_tree_insert(self->incrementals, g_strdup(key), values);
+    }
+
+    CP_STRV_ITER(items, item) {
+        if (g_strcmp0(item, "-*") == 0) {
+            values = g_tree_new_full(
+                (GCompareDataFunc)strcmp, NULL, g_free, NULL
+            );
+            g_tree_insert(self->incrementals, g_strdup(key), values);
+        } else if (item[0] == '-') {
+            g_tree_remove(values, &item[1]);
+        } else {
+            g_tree_insert(values, g_strdup(item), NULL);
+        }
+    } end_CP_STRV_ITER
+    g_strfreev(items);
+}
+
+static gboolean
+read_config(
+    CPSettings self,
+    const char *path,
+    gboolean allow_source,
+    GError **error
+) {
+    if (!cp_read_shellconfig(
+        self->config,
+        (CPShellconfigLookupFunc)g_tree_lookup,
+        (CPShellconfigSaveFunc)g_tree_insert,
+        path,
+        allow_source,
+        error)
+    ) {
+        return FALSE;
+    }
+
+    CP_STRV_ITER((void *)incremental_keys, key) {
+        add_incremental(self, key, g_tree_lookup(self->config, key));
+    } end_CP_STRV_ITER
+
+    return TRUE;
+}
 
 /**
  * Loads profiles (recursively, in a depth-first order)
@@ -138,7 +206,7 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
     /* Parse profile configs */
     config_file = g_build_filename(profile_dir, "make.defaults", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        result = cp_read_shellconfig(self->config, config_file, FALSE, error);
+        result = read_config(self, config_file, FALSE, error);
     }
     g_free(config_file);
 
@@ -169,7 +237,7 @@ load_etc_config(
     g_assert(error == NULL || *error == NULL);
     path = g_build_filename(root_relative ? self->root : "/", "etc", name, NULL);
     result = !g_file_test(path, G_FILE_TEST_EXISTS)
-        || cp_read_shellconfig(self->config, path, allow_source, error);
+        || read_config(self, path, allow_source, error);
     g_free(path);
     return result;
 }
@@ -212,23 +280,41 @@ init_cbuild(CPSettings self) /*@modifies *self@*/ {
     if (chost == NULL) {
         return;
     }
-    g_hash_table_insert(self->config, g_strdup(key), g_strdup(chost));
+    g_tree_insert(self->config, g_strdup(key), g_strdup(chost));
 }
 
-/**
- * Populates #CPSettings feature list with data from \c FEATURES config variable.
- *
- * \param self a #CPSettings structure
- */
+static gboolean
+str_incrementals(const char *name, void *value G_GNUC_UNUSED, GString *str) {
+    if (str->len > 0) {
+        g_string_append_c(str, ' ');
+    }
+
+    g_string_append(str, name);
+
+    return FALSE;
+}
+
 static void
-init_features(CPSettings self) /*@modifies *self@*/ {
-    /*@observer@*/ static const char *key = "FEATURES";
-    g_assert(self->features == NULL);
-    self->features = cp_strings_pysplit(cp_settings_get_default(self, key, ""));
-    cp_strings_sort(self->features);
-    g_hash_table_insert(self->config,
-        g_strdup(key),
-        g_strjoinv(" ", self->features));
+post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
+    /* TODO: PMS reference? */
+    add_incremental(self, "USE", cp_settings_get(self, "ARCH"));
+
+    CP_STRV_ITER((void *)incremental_keys, key) {
+        GTree *values = g_tree_lookup(self->incrementals, key);
+        GString *str;
+
+        if (values == NULL) {
+            continue;
+        }
+
+        str = g_string_new("");
+        g_tree_foreach(values, (GTraverseFunc)str_incrementals, str);
+        g_tree_insert(
+            self->config,
+            g_strdup(key),
+            g_string_free(str, FALSE)
+        );
+    } end_CP_STRV_ITER
 }
 
 /** TODO: documentation */
@@ -254,7 +340,7 @@ init_main_repo(
 
     self->main_repo = cp_repository_new(canonical);
 
-    g_hash_table_insert(self->config, g_strdup("PORTDIR"), canonical);
+    g_tree_insert(self->config, g_strdup("PORTDIR"), canonical);
 
     return TRUE;
 }
@@ -322,7 +408,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     g_hash_table_destroy(name2repo);
     g_strfreev(paths);
 
-    g_hash_table_insert(self->config,
+    g_tree_insert(self->config,
         g_strdup("PORTDIR_OVERLAY"),
         g_string_free(overlay_str, FALSE)
     );
@@ -364,10 +450,13 @@ cp_settings_new(const char *root, GError **error) {
         goto ERR;
     }
 
-    /* init self->config */
+    /* init self->config and self->incrementals */
     g_assert(self->config == NULL);
-    self->config = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, g_free
+    self->config = g_tree_new_full(
+        (GCompareDataFunc)strcmp, NULL, g_free, g_free
+    );
+    self->incrementals = g_tree_new_full(
+        (GCompareDataFunc)strcmp, NULL, g_free, (GDestroyNotify)g_tree_destroy
     );
     if (!load_etc_config(self, "profile.env", FALSE, TRUE, error)) {
         goto ERR;
@@ -386,11 +475,11 @@ cp_settings_new(const char *root, GError **error) {
         we do not need these variables at all, but let's act like portage.
         At least savedconfig.eclass depends on this.
      */
-    g_hash_table_insert(self->config,
+    g_tree_insert(self->config,
         g_strdup("PORTAGE_CONFIGROOT"),
         g_strdup(self->root)
     );
-    g_hash_table_insert(self->config,
+    g_tree_insert(self->config,
         g_strdup("ROOT"),
         g_strdup(self->root)
     );
@@ -403,7 +492,8 @@ cp_settings_new(const char *root, GError **error) {
 
     /* init misc stuff */
     init_cbuild(self);
-    init_features(self);
+    /* TODO: we can do this here or inside read_shellconfig. Which is better? */
+    post_process_incrementals(self);
 
     return self;
 
@@ -434,9 +524,11 @@ cp_settings_unref(CPSettings self) {
         g_free(self->root);
         g_free(self->profile);
         if (self->config != NULL) {
-            g_hash_table_destroy(self->config);
+            g_tree_destroy(self->config);
         }
-        g_strfreev(self->features);
+        if (self->incrementals != NULL) {
+            g_tree_destroy(self->incrementals);
+        }
         cp_repository_unref(self->main_repo);
         if (self->repos != NULL) {
             CP_REPOSITORY_ITER(self->repos, repo) {
@@ -484,7 +576,7 @@ cp_settings_get_default(
 
 const char *
 cp_settings_get(const CPSettings self, const char *key) {
-    return g_hash_table_lookup(self->config, key);
+    return g_tree_lookup(self->config, key);
 }
 
 const char *
@@ -517,6 +609,9 @@ cp_settings_root(const CPSettings self) {
 
 gboolean
 cp_settings_feature_enabled(const CPSettings self, const char *feature) {
-    /* Could be replaced with bsearch since features are sorted */
-    return cp_strv_contains(self->features, feature);
+    GTree *features = g_tree_lookup(self->incrementals, "FEATURES");
+    if (features == NULL) {
+        return FALSE;
+    }
+    return g_tree_lookup_extended(features, feature, NULL, NULL);
 }
