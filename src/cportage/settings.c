@@ -131,7 +131,7 @@ read_config(
         /*
           Since PMS doesn't say when incremental stacking should happen and what
           value should variable have until it happened, we do stacking after all
-          config files were loaded (in post_process_incrementals) and clear value
+          config files were loaded (in post_process_config) and clear value
           here so that we don't parse same string over and over again for all
           config files after the one it appeared in.
          */
@@ -350,15 +350,55 @@ remove_masked_use(const char *name, void *value G_GNUC_UNUSED, GTree *use) {
     return FALSE;
 }
 
+static gboolean
+process_use_expand(
+    const char *name,
+    /*@unused@*/ void *unused G_GNUC_UNUSED,
+    CPSettings settings
+) /*@modifies *settings@*/ {
+    const char *value = cp_settings_get(settings, name);
+    char **items;
+    char *lower_key;
+
+    if (value == NULL) {
+        goto OUT;
+    }
+
+    items = cp_strings_pysplit(value);
+    if (items == NULL) {
+        goto OUT;
+    }
+
+    lower_key = g_ascii_strdown(name, (ssize_t)-1);
+
+    CP_STRV_ITER(items, item) {
+        char *str = g_strdup_printf("%s_%s", lower_key, item);
+        add_incremental(settings, "USE", str);
+        g_free(str);
+    } end_CP_STRV_ITER
+
+    g_free(lower_key);
+    g_strfreev(items);
+
+OUT:
+    return FALSE;
+}
+
 /**
  * See comments in read_config.
  */
 static void
-post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
+post_process_config(CPSettings self) /*@modifies *self@*/ {
     size_t i;
+    GTree *use_expand = g_tree_lookup(self->incrementals, "USE_EXPAND");
 
     /* PMS, section 12.1.1 */
     add_incremental(self, "USE", cp_settings_get(self, "ARCH"));
+
+    /* PMS, section 12.1.1 */
+    if (use_expand != NULL) {
+        g_tree_foreach(use_expand, (GTraverseFunc)process_use_expand, self);
+    }
 
     for (i = 0; i < G_N_ELEMENTS(incremental_keys); ++i) {
         const char *key = incremental_keys[i];
@@ -568,7 +608,7 @@ cp_settings_new(const char *root, GError **error) {
 
     /* init misc stuff */
     init_cbuild(self);
-    post_process_incrementals(self);
+    post_process_config(self);
 
     return self;
 

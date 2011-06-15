@@ -22,48 +22,36 @@
 static char *dir;
 
 static void
-profiles_order(void) {
-    char *root = g_build_filename(dir, "roots/profiles_order", NULL);
+test_var(const char *test_dir, const char *var, const char *expected_value) {
+    char *root = g_build_filename(dir, test_dir, NULL);
     GError *error = NULL;
     CPSettings settings = cp_settings_new(root, &error);
 
     g_assert_no_error(error);
-    g_assert_cmpstr(cp_settings_get(settings, "foo"), ==, "bar baz");
+    g_assert_cmpstr(cp_settings_get(settings, var), ==, expected_value);
 
     cp_settings_unref(settings);
     g_free(root);
+}
+
+static void
+profiles_order(void) {
+    test_var("roots/profiles_order", "foo", "bar baz");
 }
 
 static void
 incrementals(void) {
-    char *root = g_build_filename(dir, "roots/incrementals", NULL);
-    GError *error = NULL;
-    CPSettings settings = cp_settings_new(root, &error);
-    const char *use;
-
-    g_assert_no_error(error);
-    g_assert(settings != NULL);
-    use = cp_settings_get(settings, "USE");
-    g_assert_cmpstr(use, ==, "use1 use3 use5");
-
-    cp_settings_unref(settings);
-    g_free(root);
+    test_var("roots/incrementals", "USE", "use1 use3 use5");
 }
 
 static void
 use_mask(void) {
-    char *root = g_build_filename(dir, "roots/use_mask", NULL);
-    GError *error = NULL;
-    CPSettings settings = cp_settings_new(root, &error);
-    const char *use;
+    test_var("roots/use_mask", "USE", "normal unmasked");
+}
 
-    g_assert_no_error(error);
-    g_assert(settings != NULL);
-    use = cp_settings_get(settings, "USE");
-    g_assert_cmpstr(use, ==, "normal unmasked");
-
-    cp_settings_unref(settings);
-    g_free(root);
+static void
+use_expand(void) {
+    test_var("roots/use_expand", "USE", "foo_bar");
 }
 
 int
@@ -76,6 +64,7 @@ main(int argc, char *argv[]) {
     g_test_add_func("/settings/profile_order", profiles_order);
     g_test_add_func("/settings/incrementals", incrementals);
     g_test_add_func("/settings/use_mask", use_mask);
+    g_test_add_func("/settings/use_expand", use_expand);
 
     return g_test_run();
 }
