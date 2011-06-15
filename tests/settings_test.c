@@ -54,6 +54,11 @@ use_expand(void) {
     test_var("roots/use_expand", "USE", "foo_bar");
 }
 
+static void
+use_force(void) {
+    test_var("roots/use_force", "USE", "forced parentforced");
+}
+
 int
 main(int argc, char *argv[]) {
     g_test_init(&argc, &argv, NULL);
@@ -63,8 +68,9 @@ main(int argc, char *argv[]) {
 
     g_test_add_func("/settings/profile_order", profiles_order);
     g_test_add_func("/settings/incrementals", incrementals);
-    g_test_add_func("/settings/use_mask", use_mask);
-    g_test_add_func("/settings/use_expand", use_expand);
+    g_test_add_func("/settings/use/mask", use_mask);
+    g_test_add_func("/settings/use/expand", use_expand);
+    g_test_add_func("/settings/use/force", use_force);
 
     return g_test_run();
 }

@@ -33,8 +33,11 @@ struct CPSettings {
     /*@only@*/ char *profile;
 
     /*@only@*/ GTree/*<char *, char *>*/ *config;
+
+    /* TODO: actually, these aren't needed after settings object was created */
     /*@only@*/ GTree/*<char *, GTree<char *, NULL>>*/ *incrementals;
     /*@only@*/ GTree/*<char *, NULL>*/ *use_mask;
+    /*@only@*/ GTree/*<char *, NULL>*/ *use_force;
 
     CPRepository main_repo;
     CPRepository* repos;
@@ -203,16 +206,46 @@ add_parent_profiles(
     return result;
 }
 
+static gboolean
+collect_profile_list(
+    const char *profile_dir,
+    const char *file,
+    GTree *into,
+    /*@null@*/ GError **error
+) {
+    char *config_file;
+    gboolean result = FALSE;
+
+    g_assert(error == NULL || *error == NULL);
+
+    config_file = g_build_filename(profile_dir, file, NULL);
+
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        char **lines = cp_io_getlines(config_file, TRUE, error);
+        if (lines == NULL) {
+            goto ERR;
+        }
+        stack_dict(into, lines);
+        g_strfreev(lines);
+    }
+
+    result = TRUE;
+
+ERR:
+    g_free(config_file);
+    return result;
+}
+
 /** See declaration above. */
 static gboolean
-add_profile(CPSettings self, const char *profile_dir, GError **error) {
+add_profile(CPSettings self, const char *dir, GError **error) {
     char *config_file;
     gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
 
     /* Check eapi */
-    config_file = g_build_filename(profile_dir, "eapi", NULL);
+    config_file = g_build_filename(dir, "eapi", NULL);
     result = cp_eapi_check_file(config_file, error);
     g_free(config_file);
     if (!result) {
@@ -220,15 +253,15 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
     }
 
     /* Check whether profile is deprecated */
-    config_file = g_build_filename(profile_dir, "deprecated", NULL);
+    config_file = g_build_filename(dir, "deprecated", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        g_warning("Profile %s is deprecated", profile_dir);
+        g_warning("Profile %s is deprecated", dir);
         /* TODO: read and print deprecation reason from file */
     }
     g_free(config_file);
 
     /* Load parents */
-    config_file = g_build_filename(profile_dir, "parent", NULL);
+    config_file = g_build_filename(dir, "parent", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         result = add_parent_profiles(self, config_file, error);
     }
@@ -239,7 +272,7 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
 
     /* Parse profile configs */
 
-    config_file = g_build_filename(profile_dir, "make.defaults", NULL);
+    config_file = g_build_filename(dir, "make.defaults", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         result = read_config(self, config_file, FALSE, error);
     }
@@ -248,17 +281,13 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
         return FALSE;
     }
 
-    config_file = g_build_filename(profile_dir, "use.mask", NULL);
-    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        char **lines = cp_io_getlines(config_file, TRUE, error);
-        if (lines == NULL) {
-            result = FALSE;
-        } else {
-            stack_dict(self->use_mask, lines);
-        }
-        g_strfreev(lines);
+    if (!collect_profile_list(dir, "use.mask", self->use_mask, error)) {
+        return FALSE;
     }
-    g_free(config_file);
+
+    if (!collect_profile_list(dir, "use.force", self->use_force, error)) {
+        return FALSE;
+    }
 
     return result;
 }
@@ -344,6 +373,13 @@ str_incrementals(const char *name, void *value G_GNUC_UNUSED, GString *str) {
 }
 
 static gboolean
+force_use(const char *name, void *value G_GNUC_UNUSED, GTree *use) {
+    g_tree_insert(use, g_strdup(name), NULL);
+
+    return FALSE;
+}
+
+static gboolean
 remove_masked_use(const char *name, void *value G_GNUC_UNUSED, GTree *use) {
     g_tree_remove(use, name);
 
@@ -410,6 +446,9 @@ post_process_config(CPSettings self) /*@modifies *self@*/ {
         }
 
         if (strcmp(key, "USE") == 0) {
+            g_tree_foreach(
+                self->use_force, (GTraverseFunc)force_use, values
+            );
             g_tree_foreach(
                 self->use_mask, (GTraverseFunc)remove_masked_use, values
             );
@@ -568,6 +607,9 @@ cp_settings_new(const char *root, GError **error) {
     self->use_mask = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, NULL
     );
+    self->use_force = g_tree_new_full(
+        (GCompareDataFunc)strcmp, NULL, g_free, NULL
+    );
     if (!load_etc_config(self, "profile.env", FALSE, TRUE, error)) {
         goto ERR;
     }
@@ -646,6 +688,9 @@ cp_settings_unref(CPSettings self) {
         }
         if (self->use_mask != NULL) {
             g_tree_destroy(self->use_mask);
+        }
+        if (self->use_force != NULL) {
+            g_tree_destroy(self->use_force);
         }
         if (self->name2repo != NULL) {
             g_tree_destroy(self->name2repo);
