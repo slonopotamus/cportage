@@ -37,6 +37,7 @@ struct CPSettings {
 
     CPRepository main_repo;
     CPRepository* repos;
+    GTree/*<char *,CPRepository>*/ *name2repo;
 
     /*@refs@*/ unsigned int refs;
 };
@@ -356,7 +357,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     const char *path_str;
     char **paths;
     /*@owned@*/ GList/*<CPRepository>*/ *repo_list = NULL;
-    GHashTable/*<char *,CPRepository>*/ *name2repo;
     size_t repo_num = (size_t)1;
     GString *overlay_str;
 
@@ -367,7 +367,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     path_str = cp_settings_get_default(self, "PORTDIR_OVERLAY", "");
 
     paths = cp_strings_pysplit(path_str);
-    name2repo = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     overlay_str = g_string_new("");
 
     /*
@@ -379,7 +378,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     repo_list = g_list_prepend(repo_list, cp_repository_ref(self->main_repo));
     /*@=mustfreefresh@*/
     /*@-refcounttrans@*/
-    g_hash_table_insert(name2repo, g_strdup(main_repo_name), self->main_repo);
+    g_tree_insert(self->name2repo, g_strdup(main_repo_name), self->main_repo);
     /*@=refcounttrans@*/
 
     CP_STRV_ITER(paths, path) {
@@ -396,13 +395,13 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         repo = cp_repository_new(path);
         name = cp_repository_name(repo);
 
-        if (g_hash_table_lookup_extended(name2repo, name, NULL, NULL)) {
+        if (cp_settings_get_repository(self, name) != NULL) {
             /* TODO: print warning (duplicate repo) */
             cp_repository_unref(repo);
             continue;
         }
 
-        g_hash_table_insert(name2repo, g_strdup(name), repo);
+        g_tree_insert(self->name2repo, g_strdup(name), repo);
         /*@-kepttrans@*/
         repo_list = g_list_append(repo_list, repo);
         /*@=kepttrans@*/
@@ -410,7 +409,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
             "%s%s", repo_num++ > (size_t)1 ? " " : "", path);
     } end_CP_STRV_ITER
 
-    g_hash_table_destroy(name2repo);
     g_strfreev(paths);
 
     g_tree_insert(self->config,
@@ -489,6 +487,9 @@ cp_settings_new(const char *root, GError **error) {
         g_strdup(self->root)
     );
 
+    self->name2repo = g_tree_new_full(
+        (GCompareDataFunc)strcmp, NULL, g_free, NULL
+    );
     /* init repositories */
     if (!init_main_repo(self, error)) {
         goto ERR;
@@ -534,6 +535,9 @@ cp_settings_unref(CPSettings self) {
         if (self->incrementals != NULL) {
             g_tree_destroy(self->incrementals);
         }
+        if (self->name2repo != NULL) {
+            g_tree_destroy(self->name2repo);
+        }
         cp_repository_unref(self->main_repo);
         if (self->repos != NULL) {
             CP_REPOSITORY_ITER(self->repos, repo) {
@@ -560,13 +564,7 @@ cp_settings_repositories(const CPSettings self) {
 
 CPRepository
 cp_settings_get_repository(const CPSettings self, const char *name) {
-    CP_REPOSITORY_ITER(self->repos, repo) {
-        if (g_strcmp0(name, cp_repository_name(repo)) == 0) {
-            return cp_repository_ref(repo);
-        }
-    } end_CP_REPOSITORY_ITER
-
-    return NULL;
+    return g_tree_lookup(self->name2repo, name);
 }
 
 const char *
