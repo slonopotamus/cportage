@@ -50,6 +50,22 @@ incrementals(void) {
     g_free(root);
 }
 
+static void
+use_mask(void) {
+    char *root = g_build_filename(dir, "roots/use_mask", NULL);
+    GError *error = NULL;
+    CPSettings settings = cp_settings_new(root, &error);
+    const char *use;
+
+    g_assert_no_error(error);
+    g_assert(settings != NULL);
+    use = cp_settings_get(settings, "USE");
+    g_assert_cmpstr(use, ==, "normal unmasked");
+
+    cp_settings_unref(settings);
+    g_free(root);
+}
+
 int
 main(int argc, char *argv[]) {
     g_test_init(&argc, &argv, NULL);
@@ -59,6 +75,7 @@ main(int argc, char *argv[]) {
 
     g_test_add_func("/settings/profile_order", profiles_order);
     g_test_add_func("/settings/incrementals", incrementals);
+    g_test_add_func("/settings/use_mask", use_mask);
 
     return g_test_run();
 }

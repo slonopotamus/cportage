@@ -32,8 +32,9 @@ struct CPSettings {
     /*@only@*/ char *root;
     /*@only@*/ char *profile;
 
-    /*@only@*/ GTree/*<char *,char *>*/ *config;
-    /*@only@*/ GTree/*<char *,GTree<char *, gboolean>>*/ *incrementals;
+    /*@only@*/ GTree/*<char *, char *>*/ *config;
+    /*@only@*/ GTree/*<char *, GTree<char *, NULL>>*/ *incrementals;
+    /*@only@*/ GTree/*<char *, NULL>*/ *use_mask;
 
     CPRepository main_repo;
     CPRepository* repos;
@@ -47,6 +48,39 @@ static const char * const incremental_keys[] = {
     "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
     "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES"
 };
+
+static gboolean
+collect_removals(void *key, void *value G_GNUC_UNUSED, GList **to_remove) {
+    *to_remove = g_list_append(*to_remove, key);
+
+    return FALSE;
+}
+
+static void
+do_remove(void *elem, GTree *tree) {
+    g_tree_remove(tree, elem);
+}
+
+static void
+cp_tree_clear(GTree *tree) {
+    GList *to_remove = NULL;
+    g_tree_foreach(tree, (GTraverseFunc)collect_removals, &to_remove);
+    g_list_foreach(to_remove, (GFunc)do_remove, tree);
+    g_list_free(to_remove);
+}
+
+static void
+stack_dict(GTree *values, char **items) /*@modifies *values@*/ {
+    CP_STRV_ITER(items, item) {
+        if (g_strcmp0(item, "-*") == 0) {
+            cp_tree_clear(values);
+        } else if (item[0] == '-') {
+            g_tree_remove(values, &item[1]);
+        } else {
+            g_tree_insert(values, g_strdup(item), NULL);
+        }
+    } end_CP_STRV_ITER
+}
 
 static void
 add_incremental(CPSettings self, const char *key, /*@null@*/ const char *value) {
@@ -68,19 +102,7 @@ add_incremental(CPSettings self, const char *key, /*@null@*/ const char *value) 
         g_tree_insert(self->incrementals, g_strdup(key), values);
     }
 
-    CP_STRV_ITER(items, item) {
-        if (g_strcmp0(item, "-*") == 0) {
-            values = g_tree_new_full(
-                (GCompareDataFunc)strcmp, NULL, g_free, NULL
-            );
-            g_tree_insert(self->incrementals, g_strdup(key), values);
-        } else if (item[0] == '-') {
-            g_tree_remove(values, &item[1]);
-        } else {
-            g_tree_insert(values, g_strdup(item), NULL);
-        }
-    } end_CP_STRV_ITER
-    g_strfreev(items);
+    stack_dict(values, items);
 }
 
 static gboolean
@@ -106,6 +128,14 @@ read_config(
     for (i = 0; i < G_N_ELEMENTS(incremental_keys); ++i) {
         const char *key = incremental_keys[i];
         add_incremental(self, key, g_tree_lookup(self->config, key));
+        /*
+          Since PMS doesn't say when incremental stacking should happen and what
+          value should variable have until it happened, we do stacking after all
+          config files were loaded (in post_process_incrementals) and clear value
+          here so that we don't parse same string over and over again for all
+          config files after the one it appeared in.
+         */
+        g_tree_remove(self->config, key);
     }
 
     return TRUE;
@@ -208,9 +238,25 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
     }
 
     /* Parse profile configs */
+
     config_file = g_build_filename(profile_dir, "make.defaults", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         result = read_config(self, config_file, FALSE, error);
+    }
+    g_free(config_file);
+    if (!result) {
+        return FALSE;
+    }
+
+    config_file = g_build_filename(profile_dir, "use.mask", NULL);
+    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+        char **lines = cp_io_getlines(config_file, TRUE, error);
+        if (lines == NULL) {
+            result = FALSE;
+        } else {
+            stack_dict(self->use_mask, lines);
+        }
+        g_strfreev(lines);
     }
     g_free(config_file);
 
@@ -297,11 +343,21 @@ str_incrementals(const char *name, void *value G_GNUC_UNUSED, GString *str) {
     return FALSE;
 }
 
+static gboolean
+remove_masked_use(const char *name, void *value G_GNUC_UNUSED, GTree *use) {
+    g_tree_remove(use, name);
+
+    return FALSE;
+}
+
+/**
+ * See comments in read_config.
+ */
 static void
 post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
     size_t i;
 
-    /* TODO: PMS reference? */
+    /* PMS, section 12.1.1 */
     add_incremental(self, "USE", cp_settings_get(self, "ARCH"));
 
     for (i = 0; i < G_N_ELEMENTS(incremental_keys); ++i) {
@@ -311,6 +367,12 @@ post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
 
         if (values == NULL) {
             continue;
+        }
+
+        if (strcmp(key, "USE") == 0) {
+            g_tree_foreach(
+                self->use_mask, (GTraverseFunc)remove_masked_use, values
+            );
         }
 
         str = g_string_new("");
@@ -369,17 +431,19 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     paths = cp_strings_pysplit(path_str);
     overlay_str = g_string_new("");
 
-    /*
-      Settings object references main_repo both through self->main_repo and
-      self->repos. So, in order to simplify settings destruction, we increment
-      refcount here.
-     */
     /*@-mustfreefresh@*/
     repo_list = g_list_prepend(repo_list, cp_repository_ref(self->main_repo));
     /*@=mustfreefresh@*/
-    /*@-refcounttrans@*/
-    g_tree_insert(self->name2repo, g_strdup(main_repo_name), self->main_repo);
-    /*@=refcounttrans@*/
+    /*
+      Settings object references main_repo both through self->main_repo and
+      self->name2repo. So, in order to simplify settings destruction,
+      we increment refcount here.
+     */
+    g_tree_insert(
+        self->name2repo,
+        g_strdup(main_repo_name),
+        cp_repository_ref(self->main_repo)
+    );
 
     CP_STRV_ITER(paths, path) {
         CPRepository repo;
@@ -461,6 +525,9 @@ cp_settings_new(const char *root, GError **error) {
     self->incrementals = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, (GDestroyNotify)g_tree_destroy
     );
+    self->use_mask = g_tree_new_full(
+        (GCompareDataFunc)strcmp, NULL, g_free, NULL
+    );
     if (!load_etc_config(self, "profile.env", FALSE, TRUE, error)) {
         goto ERR;
     }
@@ -487,10 +554,13 @@ cp_settings_new(const char *root, GError **error) {
         g_strdup(self->root)
     );
 
-    self->name2repo = g_tree_new_full(
-        (GCompareDataFunc)strcmp, NULL, g_free, NULL
-    );
     /* init repositories */
+    self->name2repo = g_tree_new_full(
+        (GCompareDataFunc)strcmp,
+        NULL,
+        g_free,
+        (GDestroyNotify)cp_repository_unref
+    );
     if (!init_main_repo(self, error)) {
         goto ERR;
     }
@@ -498,7 +568,6 @@ cp_settings_new(const char *root, GError **error) {
 
     /* init misc stuff */
     init_cbuild(self);
-    /* TODO: we can do this here or inside read_shellconfig. Which is better? */
     post_process_incrementals(self);
 
     return self;
@@ -535,15 +604,14 @@ cp_settings_unref(CPSettings self) {
         if (self->incrementals != NULL) {
             g_tree_destroy(self->incrementals);
         }
+        if (self->use_mask != NULL) {
+            g_tree_destroy(self->use_mask);
+        }
         if (self->name2repo != NULL) {
             g_tree_destroy(self->name2repo);
         }
         cp_repository_unref(self->main_repo);
-        if (self->repos != NULL) {
-            CP_REPOSITORY_ITER(self->repos, repo) {
-                cp_repository_unref(repo);
-            } end_CP_REPOSITORY_ITER
-        }
+        /* Repositories refcount is decremented during name2repo destruction */
         g_free(self->repos);
 
         /*@-refcounttrans@*/
