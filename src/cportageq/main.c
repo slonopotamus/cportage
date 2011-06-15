@@ -27,7 +27,6 @@
 #include <cportage.h>
 #include "../cportage/macros.h"
 
-
 static int
 envvar(
     int argc,
@@ -226,8 +225,7 @@ usage(const char *progname) /*@modifies *stdout@*/ {
     g_print("%s: usage\n", progname);
 }
 
-/*@observer@*/ static const char *
-vars[] = {
+/*@observer@*/ static const char * const vars[] = {
     "distdir", "pkgdir", "portdir_overlay", "config_protect_mask",
     "config_protect", "portdir", "gentoo_mirrors"
 };
@@ -269,16 +267,26 @@ main(int argc, char **argv)
       filter_protected, best_visible, mass_best_visible, all_best_visible,
       vdb_path, list_preserved_libs
      */
-    }  else if (cp_strv_contains((void *)vars, argv[1])) {
-        char *arr[1];
-        arr[0] = g_ascii_strup(argv[1], (ssize_t)-1);
-        retval = envvar(1, arr, &error);
-        g_free(arr[0]);
     } else {
+        size_t i;
+
+        for (i = 0; i < G_N_ELEMENTS(vars); ++i) {
+            char *arr[1];
+
+            if (g_strcmp0(argv[1], vars[i]) != 0) {
+               continue;
+            }
+
+            arr[0] = g_ascii_strup(argv[1], (ssize_t)-1);
+            retval = envvar(1, arr, &error);
+            g_free(arr[0]);
+            goto OUT;
+        }
         usage(argv[0]);
         return 2;
     }
 
+OUT:
     if (retval == EXIT_SUCCESS) {
         return retval;
     }

@@ -41,10 +41,10 @@ struct CPSettings {
     /*@refs@*/ unsigned int refs;
 };
 
-static const char *incremental_keys[] = {
+static const char * const incremental_keys[] = {
     "USE", "USE_EXPAND", "USE_EXPAND_HIDDEN", "FEATURES", "ACCEPT_KEYWORDS",
     "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
-    "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES", NULL
+    "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES"
 };
 
 static void
@@ -89,6 +89,8 @@ read_config(
     gboolean allow_source,
     GError **error
 ) {
+    size_t i;
+
     if (!cp_read_shellconfig(
         self->config,
         (CPShellconfigLookupFunc)g_tree_lookup,
@@ -100,9 +102,10 @@ read_config(
         return FALSE;
     }
 
-    CP_STRV_ITER((void *)incremental_keys, key) {
+    for (i = 0; i < G_N_ELEMENTS(incremental_keys); ++i) {
+        const char *key = incremental_keys[i];
         add_incremental(self, key, g_tree_lookup(self->config, key));
-    } end_CP_STRV_ITER
+    }
 
     return TRUE;
 }
@@ -271,16 +274,15 @@ build_profile_path(
  */
 static void
 init_cbuild(CPSettings self) /*@modifies *self@*/ {
-    /*@observer@*/ static const char *key = "CBUILD";
     const char *chost;
-    if (cp_settings_get(self, key) != NULL) {
+    if (cp_settings_get(self, "CBUILD") != NULL) {
         return;
     }
     chost = cp_settings_get(self, "CHOST");
     if (chost == NULL) {
         return;
     }
-    g_tree_insert(self->config, g_strdup(key), g_strdup(chost));
+    g_tree_insert(self->config, g_strdup("CBUILD"), g_strdup(chost));
 }
 
 static gboolean
@@ -296,10 +298,13 @@ str_incrementals(const char *name, void *value G_GNUC_UNUSED, GString *str) {
 
 static void
 post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
+    size_t i;
+
     /* TODO: PMS reference? */
     add_incremental(self, "USE", cp_settings_get(self, "ARCH"));
 
-    CP_STRV_ITER((void *)incremental_keys, key) {
+    for (i = 0; i < G_N_ELEMENTS(incremental_keys); ++i) {
+        const char *key = incremental_keys[i];
         GTree *values = g_tree_lookup(self->incrementals, key);
         GString *str;
 
@@ -314,7 +319,7 @@ post_process_incrementals(CPSettings self) /*@modifies *self@*/ {
             g_strdup(key),
             g_string_free(str, FALSE)
         );
-    } end_CP_STRV_ITER
+    }
 }
 
 /** TODO: documentation */

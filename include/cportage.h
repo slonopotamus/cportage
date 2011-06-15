@@ -30,9 +30,6 @@ G_BEGIN_DECLS
 /*@-exportany@*/
 /*@-exportiter@*/
 
-gboolean
-cp_strv_contains(char **haystack, const char *needle) /*@*/;
-
 /**
  * Sorts %NULL-terminated string array in place.
  *

@@ -59,8 +59,12 @@ cp_strings_sort(char **str_array) {
     /*@=mods@*/
 }
 
-/*@observer@*/ static const char *trues[] = {"true", "t", "yes", "y", "1", "on"};
-/*@observer@*/ static const char *falses[] = {"false", "f", "no", "n", "0", "off"};
+/*@observer@*/ static const char * const trues[] = {
+    "true", "t", "yes", "y", "1", "on"
+};
+/*@observer@*/ static const char * const falses[] = {
+    "false", "f", "no", "n", "0", "off"
+};
 
 gboolean
 cp_string_is_true(const char *str) /*@globals trues,falses@*/ {
@@ -84,16 +88,4 @@ cp_string_is_true(const char *str) /*@globals trues,falses@*/ {
 
     g_warning("Unknown boolean value '%s', assuming true", str);
     return TRUE;
-}
-
-gboolean
-cp_strv_contains(char **haystack, const char *needle) {
-
-    CP_STRV_ITER(haystack, elem) {
-        if (g_strcmp0(elem, needle) == 0) {
-            return TRUE;
-        }
-    } end_CP_STRV_ITER
-
-    return FALSE;
 }
