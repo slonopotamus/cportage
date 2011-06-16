@@ -181,35 +181,63 @@ print_repositories(const CPSettings settings) /*@modifies *stdout,errno@*/ {
 }
 
 static void
+print_use(const CPSettings settings) {
+    char **use_expand_keys = cp_strings_pysplit(
+        cp_settings_get_default(settings, "USE_EXPAND", "")
+    );
+
+    g_print(
+        "USE=\"%s\"", cp_settings_get_default(settings, "_CP_USE_NO_EXPAND", "")
+    );
+
+    CP_STRV_ITER(use_expand_keys, key) {
+        const char *value = cp_settings_get_default(settings, key, "");
+        if (value[0] != '\0') {
+            g_print(" %s=\"%s\"", key, value);
+        }
+    } end_CP_STRV_ITER
+
+    g_print("\n");
+
+    g_strfreev(use_expand_keys);
+}
+
+static void
 print_settings(
     const CPSettings settings,
     const char *portdir
 ) /*@modifies *stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path = g_build_filename(portdir, "profiles", "info_vars", NULL);
     char **data = cp_io_getlines(path, TRUE, NULL);
+    GString *unset = NULL;
 
-    if (data != NULL) {
-        GString *unset = NULL;
-        cp_strings_sort(data);
-
-        CP_STRV_ITER(data, s) {
-            const char *value = cp_settings_get(settings, s);
-            if (value == NULL) {
-                if (unset == NULL) {
-                    unset = g_string_append(g_string_new("Unset: "), s);
-                } else {
-                    g_string_append_printf(unset, ", %s", s);
-                }
-            } else {
-                g_print("%s=\"%s\"\n", s, value);
-            }
-        } end_CP_STRV_ITER
-
-        if (unset != NULL) {
-            g_print("%s\n", unset->str);
-            (void)g_string_free(unset, TRUE);
-        }
+    if (data == NULL) {
+        goto OUT;
     }
+
+    cp_strings_sort(data);
+
+    CP_STRV_ITER(data, s) {
+        const char *value = cp_settings_get(settings, s);
+        if (value == NULL) {
+            if (unset == NULL) {
+                unset = g_string_append(g_string_new("Unset: "), s);
+            } else {
+                g_string_append_printf(unset, ", %s", s);
+            }
+        } else if (g_strcmp0(s, "USE") == 0) {
+            print_use(settings);
+        } else {
+            g_print("%s=\"%s\"\n", s, value);
+        }
+    } end_CP_STRV_ITER
+
+    if (unset != NULL) {
+        g_print("%s\n", unset->str);
+        (void)g_string_free(unset, TRUE);
+    }
+
+OUT:
     g_free(path);
     g_strfreev(data);
 }

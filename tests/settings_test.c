@@ -56,7 +56,8 @@ use_expand(void) {
 
 static void
 use_force(void) {
-    test_var("roots/use_force", "USE", "forced parentforced");
+    test_var("roots/use_force", "USE", "expand_forced normalforced parentforced");
+    test_var("roots/use_force", "EXPAND", "forced");
 }
 
 int

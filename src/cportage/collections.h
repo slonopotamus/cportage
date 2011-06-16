@@ -17,25 +17,23 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** String functions. */
+/** Collections functions. */
 
-#ifndef CP_STRINGS_H
-#define CP_STRINGS_H
+#ifndef CP_COLLECTIONS_H
+#define CP_COLLECTIONS_H
 
-#include <cportage.h>
+#include <glib.h>
 
 /*@-exportany@*/
 
-/**
- * Parses string as boolean
- *
- * \return %FALSE if \a str is one of "false", "f", "no", "n", "0",
- *         %TRUE otherwise
- */
-gboolean
-cp_string_is_true(
-    /*@null@*/ const char *str
-) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *stderr,errno@*/ /*@globals internalState@*/;
+void
+cp_tree_foreach_remove(
+    GTree *tree,
+    GHRFunc func,
+    /*@null@*/ void *user_data
+) /*@modifies *tree,*user_data@*/;
+
+void
+cp_stack_dict(GTree *tree, char **items) /*@modifies *tree@*/;
 
 #endif

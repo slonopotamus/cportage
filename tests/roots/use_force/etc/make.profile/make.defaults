@@ -1,1 +1,2 @@
 USE="-forced"
+USE_EXPAND="EXPAND"

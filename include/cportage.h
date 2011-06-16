@@ -38,6 +38,17 @@ G_BEGIN_DECLS
 void
 cp_strings_sort(char **str_array) /*@modifies *str_array@*/;
 
+/**
+ * Splits given string at whitespace. Empty elements are filtered out.
+ *
+ * \param str a string to split
+ * \return a %NULL-terminated string array, free it using g_strfreev()
+ */
+char **
+cp_strings_pysplit(
+    const char *str
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
 /*@null@*/ /*@only@*/ char *
 cp_io_get_relative_path(
     const char *parent,
