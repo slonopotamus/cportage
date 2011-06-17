@@ -51,12 +51,13 @@ cmpstrp(const void *p1, const void *p2) /*@*/ {
 
 void
 cp_strings_sort(char **str_array) {
-    const size_t len = (size_t)g_strv_length(str_array);
-    /*@-mods@*/
-    /*@-globs@*/
-    qsort(str_array, len, sizeof(*str_array), cmpstrp);
-    /*@=globs@*/
-    /*@=mods@*/
+    g_qsort_with_data(
+        str_array,
+        (int)g_strv_length(str_array),
+        sizeof(*str_array),
+        (GCompareDataFunc)cmpstrp,
+        NULL
+    );
 }
 
 /*@observer@*/ static const char * const trues[] = {

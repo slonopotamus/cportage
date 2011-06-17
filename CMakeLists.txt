@@ -96,11 +96,6 @@ if(HAVE_LOCALE_H)
     check_symbol_exists(setlocale locale.h HAVE_SETLOCALE)
 endif()
 
-check_symbol_exists(qsort stdlib.h HAVE_QSORT)
-if(NOT HAVE_QSORT)
-    message(FATAL_ERROR "Your system doesn't have qsort() function")
-endif()
-
 check_include_file(unistd.h HAVE_UNISTD_H)
 if(HAVE_UNISTD_H)
     check_symbol_exists(nice unistd.h HAVE_NICE)
