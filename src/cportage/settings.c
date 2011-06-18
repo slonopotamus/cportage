@@ -38,7 +38,7 @@ struct CPSettings {
     /*@only@*/ CPIncrementals incrementals;
 
     CPRepository main_repo;
-    CPRepository* repos;
+    GList/*<CPRepository>*/ *repos;
     GTree/*<char *,CPRepository>*/ *name2repo;
 
     /*@refs@*/ unsigned int refs;
@@ -279,8 +279,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     const char *main_repo_name;
     const char *path_str;
     char **paths;
-    /*@owned@*/ GList/*<CPRepository>*/ *repo_list = NULL;
-    size_t repo_num = (size_t)1;
     GString *overlay_str;
 
     g_assert(self->repos == NULL);
@@ -292,9 +290,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
     paths = cp_strings_pysplit(path_str);
     overlay_str = g_string_new("");
 
-    /*@-mustfreefresh@*/
-    repo_list = g_list_prepend(repo_list, cp_repository_ref(self->main_repo));
-    /*@=mustfreefresh@*/
     /*
       Settings object references main_repo both through self->main_repo and
       self->name2repo. So, in order to simplify settings destruction,
@@ -305,6 +300,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         g_strdup(main_repo_name),
         cp_repository_ref(self->main_repo)
     );
+    self->repos = g_list_prepend(self->repos, self->main_repo);
 
     CP_STRV_ITER(paths, path) {
         CPRepository repo;
@@ -327,11 +323,18 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         }
 
         g_tree_insert(self->name2repo, g_strdup(name), repo);
+        /*
+          self->repos is in reverse order so that packages from repositories
+          defined _later_ in PORTDIR_OVERLAY appear _earlier_.
+         */
         /*@-kepttrans@*/
-        repo_list = g_list_append(repo_list, repo);
+        self->repos = g_list_prepend(self->repos, repo);
         /*@=kepttrans@*/
-        g_string_append_printf(overlay_str,
-            "%s%s", repo_num++ > (size_t)1 ? " " : "", path);
+
+        if (overlay_str->len > 0) {
+            g_string_append_c(overlay_str, ' ');
+        }
+        g_string_append(overlay_str, path);
     } end_CP_STRV_ITER
 
     g_strfreev(paths);
@@ -340,20 +343,6 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         g_strdup("PORTDIR_OVERLAY"),
         g_string_free(overlay_str, FALSE)
     );
-
-    self->repos = g_new(CPRepository, repo_num + 1);
-    self->repos[repo_num] = NULL;
-    CP_GLIST_ITER(repo_list, repo) {
-        g_assert(repo != NULL);
-
-        /*
-          self->repos is in reverse order so that packages from repositories
-          defined _later_ in PORTDIR_OVERLAY appear _earlier_.
-         */
-        self->repos[--repo_num] = repo;
-    } end_CP_GLIST_ITER
-
-    g_list_free(repo_list);
 }
 
 CPSettings
@@ -466,7 +455,7 @@ cp_settings_unref(CPSettings self) {
         }
         cp_repository_unref(self->main_repo);
         /* Repositories refcount is decremented during name2repo destruction */
-        g_free(self->repos);
+        g_list_free(self->repos);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -479,7 +468,7 @@ cp_settings_main_repository(const CPSettings self) {
     return cp_repository_ref(self->main_repo);
 }
 
-CPRepository*
+GList *
 cp_settings_repositories(const CPSettings self) {
     return self->repos;
 }

@@ -174,9 +174,9 @@ OUT:
 static void
 print_repositories(const CPSettings settings) /*@modifies *stdout,errno@*/ {
     g_print("Repositories:");
-    CP_REPOSITORY_ITER(cp_settings_repositories(settings), repo) {
+    CP_GLIST_ITER(cp_settings_repositories(settings), repo) {
         g_print(" %s", cp_repository_name(repo));
-    } end_CP_REPOSITORY_ITER
+    } end_CP_GLIST_ITER
     g_print("\n");
 }
 

@@ -29,12 +29,12 @@ cmerge_sync_action(
 ) {
     g_assert(error == NULL || *error == NULL);
 
-    CP_REPOSITORY_ITER(cp_settings_repositories(ctx->settings), repo) {
+    CP_GLIST_ITER(cp_settings_repositories(ctx->settings), repo) {
         int retval = cp_repository_sync(repo, error);
         if (retval != EXIT_SUCCESS) {
             return retval;
         }
-    } end_CP_REPOSITORY_ITER
+    } end_CP_GLIST_ITER
 
     return EXIT_SUCCESS;
 }

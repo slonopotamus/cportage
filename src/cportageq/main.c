@@ -90,16 +90,14 @@ get_repos(
         goto ERR;
     }
 
-    CP_REPOSITORY_ITER(cp_settings_repositories(settings), repo) {
+    CP_GLIST_ITER(cp_settings_repositories(settings), repo) {
         if (i++ > 0) {
             g_print(" ");
         }
         g_print("%s", cp_repository_name(repo));
-    } end_CP_REPOSITORY_ITER
+    } end_CP_GLIST_ITER
 
-    if (i > 0) {
-        g_print("\n");
-    }
+    g_print("\n");
 
     retval = EXIT_SUCCESS;
 

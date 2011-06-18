@@ -165,15 +165,6 @@ cp_repository_sync(
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,*stdout,*stderr,errno,fileSystem@*/;
 
-/*@iter CP_REPOSITORY_ITER(CPRepository *arr, yield CPRepository elem)@*/
-
-#define CP_REPOSITORY_ITER(arr, m_elem) { \
-    CPRepository *m_iter; \
-    for (m_iter = (arr); *m_iter != NULL; ++m_iter) { \
-        CPRepository m_elem = *m_iter;
-
-#define end_CP_REPOSITORY_ITER }}
-
 /**
  * Central immutable storage of cportage configuration.
  */
@@ -227,10 +218,10 @@ cp_settings_main_repository(
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies self@*/;
 
 /**
- * \return readonly NULL-terminated list of repositories (including main repo)
+ * \return readonly list of repositories (including main repo)
  *         in \a self, ordered by their priority, ascending
  */
-/*@observer@*/ CPRepository *
+/*@observer@*/ GList * /*<CPRepository>*/
 cp_settings_repositories(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
