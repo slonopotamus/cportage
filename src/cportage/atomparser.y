@@ -70,8 +70,8 @@ suffix_free(VersionSuffix suffix) {
 
 %union{
     char *str;
-    GList/*<char *>*/ *str_list;
-    GList/*<VersionSuffix>*/ *suffix_list;
+    GSList/*<char *>*/ *str_list;
+    GSList/*<VersionSuffix>*/ *suffix_list;
     CPAtom atom;
     CPVersion version;
     struct pv pv;
@@ -82,7 +82,7 @@ suffix_free(VersionSuffix suffix) {
 %destructor { g_free($$);        } <str>
 %printer    { g_print("%s", $$); } <str>
 
-%destructor { g_list_free_full($$, g_free); } <str_list>
+%destructor { g_slist_free_full($$, g_free); } <str_list>
 
 %destructor { cp_atom_unref($$);              } <atom>
 
@@ -92,7 +92,7 @@ suffix_free(VersionSuffix suffix) {
 %destructor { g_free($$.package); cp_version_unref($$.version);         } <pv>
 %printer    { g_print("%s-%s", $$.package, cp_version_str($$.version)); } <pv>
 
-%destructor { g_list_free_full($$, (GDestroyNotify)suffix_free); } <suffix_list>
+%destructor { g_slist_free_full($$, (GDestroyNotify)suffix_free); } <suffix_list>
 
 %{
 
@@ -141,8 +141,8 @@ cp_atom_alloc(char *category, char *package, /*@null@*/ CPVersion version) {
 
 struct CPVersion {
     char *str;
-    GList/*<char *>*/ *minor;
-    GList/*<VersionSuffix>*/ *suffixes;
+    GSList/*<char *>*/ *minor;
+    GSList/*<VersionSuffix>*/ *suffixes;
     char *revision;
     char *major;
     /*@refs@*/ unsigned int refs;
@@ -169,9 +169,9 @@ normalize_minor(char *str) {
 static CPVersion
 cp_version_alloc(
     char *major,
-    /*@null@*/ GList *minor,
+    /*@null@*/ GSList *minor,
     char letter,
-    /*@null@*/ GList *suffixes,
+    /*@null@*/ GSList *suffixes,
     char *revision
 ) {
     CPVersion result;
@@ -181,16 +181,16 @@ cp_version_alloc(
     result->refs = 1;
 
     str = g_string_new(major);
-    CP_GLIST_ITER(minor, elem) {
+    CP_GSLIST_ITER(minor, elem) {
         g_string_append_c(str, '.');
         g_string_append(str, elem);
         /* Attention */
         normalize_minor(elem);
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
     if (letter != '\0') {
         g_string_append_c(str, letter);
     }
-    CP_GLIST_ITER(suffixes, elem) {
+    CP_GSLIST_ITER(suffixes, elem) {
         VersionSuffix suffix = elem;
         switch (suffix->type) {
             case SUF_ALPHA:
@@ -214,7 +214,7 @@ cp_version_alloc(
         if (suffix->value != NULL) {
             g_string_append(str, suffix->value);
         }
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
     if (revision != NULL) {
         g_string_append(str, "-r");
         g_string_append(str, revision);
@@ -337,12 +337,12 @@ maybe_revision:
 
 version_minor_loop:
     /* empty */ { $$ = NULL; }
-  | version_minor_loop DOT NUMBER { $$ = g_list_append($1, $3); }
+  | version_minor_loop DOT NUMBER { $$ = g_slist_append($1, $3); }
 
 suffix_loop:
     /* empty */ { $$ = NULL; }
   | suffix_loop UNDERLINE suffix_type maybe_number
-      { $$ = g_list_append($1, suffix_alloc($3, $4)); }
+      { $$ = g_slist_append($1, suffix_alloc($3, $4)); }
 
 suffix_type:
     ALPHA { $$ = SUF_ALPHA; }
@@ -491,8 +491,8 @@ cp_version_unref(CPVersion self) {
     if (--self->refs == 0) {
         g_free(self->str);
         g_free(self->major);
-        g_list_free_full(self->minor, g_free);
-        g_list_free_full(self->suffixes, (GDestroyNotify)suffix_free);
+        g_slist_free_full(self->minor, g_free);
+        g_slist_free_full(self->suffixes, (GDestroyNotify)suffix_free);
         g_free(self->revision);
 
         /*@-refcounttrans@*/
@@ -535,8 +535,8 @@ cp_version_cmp_internal(
     CPVersion second,
     gboolean check_revision
 ) {
-    GList *first_iter;
-    GList *second_iter;
+    GSList *first_iter;
+    GSList *second_iter;
     int result;
 
     /* Compare major version */

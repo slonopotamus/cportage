@@ -101,7 +101,7 @@ print_atom_matches(
     char *atom_label,
     GError **error
 ) /*@modifies vartree,*error,*stdout,errno@*/ {
-    GList *match;
+    GSList *match;
     int i = 0;
 
     if (!cp_vartree_find_packages(vartree, atom, &match, error)) {
@@ -115,11 +115,11 @@ print_atom_matches(
     }
 
     g_print("%-20s ", atom_label);
-    CP_GLIST_ITER(match, pkg) {
+    CP_GSLIST_ITER(match, pkg) {
         CPVersion version = cp_package_version(pkg);
         g_print("%s%s", i++ == 0 ? "" : ", ", cp_version_str(version));
         cp_version_unref(version);
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
     g_print("\n");
 
     cp_package_list_free(match);
@@ -174,9 +174,9 @@ OUT:
 static void
 print_repositories(const CPSettings settings) /*@modifies *stdout,errno@*/ {
     g_print("Repositories:");
-    CP_GLIST_ITER(cp_settings_repositories(settings), repo) {
+    CP_GSLIST_ITER(cp_settings_repositories(settings), repo) {
         g_print(" %s", cp_repository_name(repo));
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
     g_print("\n");
 }
 

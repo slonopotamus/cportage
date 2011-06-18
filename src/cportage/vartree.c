@@ -104,7 +104,7 @@ insert_package(
 ) /*@modifies *name2pkg@*/ {
     const char *name = cp_package_name(package);
     /*@only@*/ void *key = NULL;
-    GList *list = NULL;
+    GSList *list = NULL;
 
     if (g_hash_table_lookup_extended(name2pkg, name, &key, (void **)&list)) {
         gboolean stolen = g_hash_table_steal(name2pkg, name);
@@ -115,7 +115,7 @@ insert_package(
     }
 
     /*@-refcounttrans@*/
-    list = g_list_prepend(list, package);
+    list = g_slist_prepend(list, package);
     /*@=refcounttrans@*/
     g_hash_table_insert(name2pkg, key, list);
 }
@@ -172,7 +172,7 @@ get_packages(
     CPVartree self,
     const char *category,
     const char *package,
-    /*@out@*/ GList **result,
+    /*@out@*/ GSList **result,
     /*@null@*/ GError **error
 ) /*@modifies *self,*result,*error,errno@*/ /*@globals fileSystem@*/ {
     GHashTable *name2pkg;
@@ -247,12 +247,12 @@ gboolean
 cp_vartree_find_packages(
     CPVartree self,
     const CPAtom atom,
-    GList **match,
+    GSList **match,
     GError **error
 ) {
     const char *category = cp_atom_category(atom);
     const char *package = cp_atom_package(atom);
-    GList *pkgs;
+    GSList *pkgs;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -262,16 +262,16 @@ cp_vartree_find_packages(
         return FALSE;
     }
 
-    CP_GLIST_ITER(pkgs, pkg) {
+    CP_GSLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {
             /*@-mustfreefresh@*/
-            *match = g_list_insert_sorted(
+            *match = g_slist_insert_sorted(
                 *match,
                 cp_package_ref(pkg),
                 (GCompareFunc)cp_package_cmp);
             /*@=mustfreefresh@*/
         }
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
 
     return TRUE;
 }

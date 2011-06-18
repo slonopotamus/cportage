@@ -38,7 +38,7 @@ struct CPSettings {
     /*@only@*/ CPIncrementals incrementals;
 
     CPRepository main_repo;
-    GList/*<CPRepository>*/ *repos;
+    GSList/*<CPRepository>*/ *repos;
     GTree/*<char *,CPRepository>*/ *name2repo;
 
     /*@refs@*/ unsigned int refs;
@@ -300,7 +300,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         g_strdup(main_repo_name),
         cp_repository_ref(self->main_repo)
     );
-    self->repos = g_list_prepend(self->repos, self->main_repo);
+    self->repos = g_slist_prepend(self->repos, self->main_repo);
 
     CP_STRV_ITER(paths, path) {
         CPRepository repo;
@@ -328,7 +328,7 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
           defined _later_ in PORTDIR_OVERLAY appear _earlier_.
          */
         /*@-kepttrans@*/
-        self->repos = g_list_prepend(self->repos, repo);
+        self->repos = g_slist_prepend(self->repos, repo);
         /*@=kepttrans@*/
 
         if (overlay_str->len > 0) {
@@ -455,7 +455,7 @@ cp_settings_unref(CPSettings self) {
         }
         cp_repository_unref(self->main_repo);
         /* Repositories refcount is decremented during name2repo destruction */
-        g_list_free(self->repos);
+        g_slist_free(self->repos);
 
         /*@-refcounttrans@*/
         g_free(self);
@@ -468,7 +468,7 @@ cp_settings_main_repository(const CPSettings self) {
     return cp_repository_ref(self->main_repo);
 }
 
-GList *
+GSList *
 cp_settings_repositories(const CPSettings self) {
     return self->repos;
 }

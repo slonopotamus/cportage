@@ -90,12 +90,12 @@ get_repos(
         goto ERR;
     }
 
-    CP_GLIST_ITER(cp_settings_repositories(settings), repo) {
+    CP_GSLIST_ITER(cp_settings_repositories(settings), repo) {
         if (i++ > 0) {
             g_print(" ");
         }
         g_print("%s", cp_repository_name(repo));
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
 
     g_print("\n");
 
@@ -145,13 +145,13 @@ static int
 do_with_pkgs(
     int argc,
     char **argv,
-    int (*func)(GList *pkgs),
+    int (*func)(GSList *pkgs),
     /*@null@*/ GError **error
 ) /*@modifies *error@*/ /*@globals fileSystem@*/ {
     CPAtom atom = NULL;
     CPSettings settings = NULL;
     CPVartree vartree = NULL;
-    GList *pkgs = NULL;
+    GSList *pkgs = NULL;
     int retval = 2;
 
     if (argc != 2) {
@@ -190,22 +190,22 @@ ERR:
 }
 
 static int
-print_pkgs(GList *pkgs) {
-    CP_GLIST_ITER(pkgs, pkg) {
+print_pkgs(GSList *pkgs) {
+    CP_GSLIST_ITER(pkgs, pkg) {
         g_print("%s\n", cp_package_str(pkg));
-    } end_CP_GLIST_ITER
+    } end_CP_GSLIST_ITER
 
     return EXIT_SUCCESS;
 }
 
 static int
-test_nonempty(GList *pkgs) {
+test_nonempty(GSList *pkgs) {
     return pkgs == NULL? 1 : EXIT_SUCCESS;
 }
 
 static int
-print_last(GList *pkgs) {
-    GList *last = g_list_last(pkgs);
+print_last(GSList *pkgs) {
+    GSList *last = g_slist_last(pkgs);
 
     if (last == NULL) {
         g_print("\n");

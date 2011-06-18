@@ -221,7 +221,7 @@ cp_settings_main_repository(
  * \return readonly list of repositories (including main repo)
  *         in \a self, ordered by their priority, ascending
  */
-/*@observer@*/ GList * /*<CPRepository>*/
+/*@observer@*/ GSList * /*<CPRepository>*/
 cp_settings_repositories(
     const CPSettings self
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
@@ -330,7 +330,7 @@ cp_package_unref(/*@killref@*/ /*@null@*/ CPPackage self) /*@modifies self@*/;
  * Frees \a list of #CPackage instances.
  */
 void
-cp_package_list_free(/*@null@*/ /*@only@*/ GList *list) /*@modifies list@*/;
+cp_package_list_free(/*@null@*/ /*@only@*/ GSList *list) /*@modifies list@*/;
 
 /**
  * Comparator for #CPPackage.
@@ -462,21 +462,21 @@ gboolean
 cp_vartree_find_packages(
     CPVartree self,
     const CPAtom atom,
-    /*@out@*/ GList/*<CPPackage>*/ **match,
+    /*@out@*/ GSList/*<CPPackage>*/ **match,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies self,*match,*error@*/ /*@globals fileSystem@*/;
 
-/*@iter CP_GLIST_ITER(GList *list, yield gpointer elem)@*/
+/*@iter CP_GSLIST_ITER(GSList *list, yield gpointer elem)@*/
 
-#define CP_GLIST_ITER(list, m_elem) { \
-    /*@null@*/ GList *m_elem##_iter = (list); \
+#define CP_GSLIST_ITER(list, m_elem) { \
+    /*@null@*/ GSList *m_elem##_iter = (list); \
     for (; m_elem##_iter != NULL; m_elem##_iter = m_elem##_iter->next) { \
         /*@-incondefs@*/ \
         /*@dependent@*/ /*@null@*/ void *m_elem = m_elem##_iter->data; \
         /*@=incondefs@*/
 
-#define end_CP_GLIST_ITER }}
+#define end_CP_GSLIST_ITER }}
 
 /*@iter CP_STRV_ITER(char **arr, yield char *elem)@*/
 

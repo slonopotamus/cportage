@@ -474,52 +474,52 @@ g_spawn_command_line_sync(
     /*@null@*/ GError **error
 ) /*@modifies *standard_output,*standard_error,*error,*stdout,*stderr,errno,fileSystem@*/;
 
-/* glist.h */
+/* gslist.h */
 
-typedef struct _GList GList;
+typedef struct _GSList GSList;
 
-struct _GList {
+struct _GSList {
   /*@dependent@*/ /*@null@*/ gpointer data;
-  /*@dependent@*/ /*@null@*/ GList *next;
-  /*@dependent@*/ /*@null@*/ GList *prev;
+  /*@dependent@*/ /*@null@*/ GSList *next;
+  /*@dependent@*/ /*@null@*/ GSList *prev;
 };
 
-/*@only@*/ GList *
-g_list_append(
-    /*@keep@*/ /*@null@*/ GList *list,
+/*@only@*/ GSList *
+g_slist_append(
+    /*@keep@*/ /*@null@*/ GSList *list,
     /*@keep@*/ /*@null@*/ gpointer data
 ) /*@modifies *list@*/;
 
-/*@only@*/ GList *
-g_list_prepend(
-    /*@keep@*/ /*@null@*/ GList *list,
+/*@only@*/ GSList *
+g_slist_prepend(
+    /*@keep@*/ /*@null@*/ GSList *list,
     /*@keep@*/ /*@null@*/ gpointer data
 ) /*@modifies *list@*/;
 
 void
-g_list_free(
-    /*@null@*/ /*@only@*/ GList *list
+g_slist_free(
+    /*@null@*/ /*@only@*/ GSList *list
 ) /*@modifies list@*/;
 
 void
-g_list_free_full(
-    /*@null@*/ /*@only@*/ GList *list,
+g_slist_free_full(
+    /*@null@*/ /*@only@*/ GSList *list,
     GDestroyNotify free_func
 ) /*@modifies list@*/;
 
-/*@null@*/ /*@observer@*/ GList *
-g_list_last(/*@null@*/ GList *list) /*@*/;
+/*@null@*/ /*@observer@*/ GSList *
+g_slist_last(/*@null@*/ GSList *list) /*@*/;
 
 void
-g_list_foreach(
-    /*@null@*/ GList *list,
+g_slist_foreach(
+    /*@null@*/ GSList *list,
     GFunc func,
     /*@null@*/ gpointer user_data
 ) /*@modifies *list,user_data@*/;
 
-/*@only@*/ GList *
-g_list_insert_sorted(
-    /*@null@*/ GList *list,
+/*@only@*/ GSList *
+g_slist_insert_sorted(
+    /*@null@*/ GSList *list,
     /*@null@*/ gpointer data,
     GCompareFunc func
 ) /*@modifies *list@*/;

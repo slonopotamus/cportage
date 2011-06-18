@@ -27,7 +27,7 @@ do_remove(void *elem, void *user_data) {
 }
 
 struct removal_data {
-    /*@null@*/ GList *to_remove;
+    /*@null@*/ GSList *to_remove;
     GHRFunc func;
     /*@null@*/ void *user_data;
 };
@@ -37,7 +37,7 @@ collect_removals(void *key, void *value, void *user_data) {
     struct removal_data *data = user_data;
 
     if (data->func(key, value, data->user_data)) {
-        data->to_remove = g_list_append(data->to_remove, key);
+        data->to_remove = g_slist_append(data->to_remove, key);
     }
 
     return FALSE;
@@ -52,8 +52,8 @@ cp_tree_foreach_remove(GTree *tree, GHRFunc func, void *user_data) {
     data.user_data = user_data;
 
     g_tree_foreach(tree, collect_removals, &data);
-    g_list_foreach(data.to_remove, do_remove, tree);
-    g_list_free(data.to_remove);
+    g_slist_foreach(data.to_remove, do_remove, tree);
+    g_slist_free(data.to_remove);
 }
 
 static gboolean

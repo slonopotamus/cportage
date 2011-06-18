@@ -92,8 +92,8 @@ cp_package_unref(CPPackage self) {
 }
 
 void
-cp_package_list_free(GList *list) {
-    g_list_free_full(list, (GDestroyNotify)cp_package_unref);
+cp_package_list_free(GSList *list) {
+    g_slist_free_full(list, (GDestroyNotify)cp_package_unref);
 }
 
 const char *

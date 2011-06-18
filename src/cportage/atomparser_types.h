@@ -41,8 +41,8 @@ typedef struct VersionSuffix {
 
 typedef union YYSTYPE {
     char *str;
-    GList/*<char *>*/ *str_list;
-    GList/*<VersionSuffix>*/ *suffix_list;
+    GSList/*<char *>*/ *str_list;
+    GSList/*<VersionSuffix>*/ *suffix_list;
     CPAtom atom;
     CPVersion version;
     struct pv pv;
