@@ -106,24 +106,30 @@ int
 cp_repository_sync(const CPRepository self, GError **error) {
     gboolean result;
     char **sync_cmd;
-    int exit_status;
+    int status;
 
     g_assert(error == NULL || *error == NULL);
 
     sync_cmd = g_strsplit("git pull", " ", 0);
     g_message("Starting git pull in %s...", self->path);
     result = g_spawn_sync(self->path, sync_cmd, NULL, (gint)G_SPAWN_SEARCH_PATH,
-        NULL, NULL, NULL, NULL, &exit_status, error);
+        NULL, NULL, NULL, NULL, &status, error);
     g_strfreev(sync_cmd);
 
     if (!result) {
         return EXIT_FAILURE;
     }
 
-    if (exit_status != EXIT_SUCCESS) {
+    if (!WIFEXITED(status)) {
         g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
             "git pull error in %s", self->path);
-        return exit_status;
+        return EXIT_FAILURE;
+    }
+
+    if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+        g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
+            "git pull error in %s", self->path);
+        return WEXITSTATUS(status);
     }
 
     g_message("git pull in %s successful", self->path);

@@ -21,6 +21,7 @@
 #include "actions.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #if HAVE_UTSNAME_H
 #   include <sys/utsname.h>
@@ -225,7 +226,7 @@ print_settings(
             } else {
                 g_string_append_printf(unset, ", %s", s);
             }
-        } else if (g_strcmp0(s, "USE") == 0) {
+        } else if (strcmp(s, "USE") == 0) {
             print_use(settings);
         } else {
             g_print("%s=\"%s\"\n", s, value);
@@ -242,6 +243,36 @@ OUT:
     g_strfreev(data);
 }
 
+static char * G_GNUC_WARN_UNUSED_RESULT
+get_cpu(void) {
+    int status;
+    char *output = NULL;
+    char *end;
+
+    if (!g_spawn_command_line_sync("uname -p", &output, NULL, &status, NULL)) {
+        goto ERR;
+    }
+
+    if (output == NULL) {
+        goto ERR;
+    }
+
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != EXIT_SUCCESS) {
+        goto ERR;
+    }
+
+    end = strchr(output, '\n');
+    if (end != NULL) {
+        *end = '\0';
+    }
+
+    return output;
+
+ERR:
+    g_free(output);
+    return NULL;
+}
+
 int
 cmerge_info_action(
     CPContext ctx,
@@ -251,7 +282,7 @@ cmerge_info_action(
 #if HAVE_UNAME
     struct utsname utsname;
     /* TODO: read cpu name from `uname -p` */
-    const char *cpu = "ARMv6-compatible_processor_rev_2_-v6l";
+    char *cpu = get_cpu();
     /* TODO: read system name from /etc/gentoo-release */
     const char *sys_version = "gentoo-1.12.11.1";
 #endif
@@ -283,9 +314,15 @@ cmerge_info_action(
     /*@-compdef@*/
     /*@-usedef@*/
     g_print("%s-%s-%s-%s-with-%s\n",
-           utsname.sysname, utsname.release, utsname.machine, cpu, sys_version);
+        utsname.sysname,
+        utsname.release,
+        utsname.machine,
+        cpu == NULL ? "unknown" : cpu,
+        sys_version
+    );
     /*@=usedef@*/
     /*@=compdef@*/
+    g_free(cpu);
 #endif
 
     print_porttree_timestamp(portdir);
