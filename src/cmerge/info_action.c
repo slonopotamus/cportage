@@ -23,9 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if HAVE_UTSNAME_H
-#   include <sys/utsname.h>
-#endif
+#include <sys/utsname.h>
 
 #include <cportage.h>
 
@@ -244,7 +242,7 @@ OUT:
 }
 
 static char * G_GNUC_WARN_UNUSED_RESULT
-get_cpu(void) {
+get_processor(void) {
     int status;
     char *output = NULL;
     char *end;
@@ -273,20 +271,83 @@ ERR:
     return NULL;
 }
 
+static char * G_GNUC_WARN_UNUSED_RESULT
+get_baselayout_version(CPVartree vartree, /*@null@*/ GError **error) {
+    CPAtom atom = cp_atom_new("sys-apps/baselayout", NULL);
+    GSList *match = NULL;
+    CPVersion version = NULL;
+    char *result = NULL;
+
+    g_assert(atom != NULL);
+
+    if (!cp_vartree_find_packages(vartree, atom, &match, error)) {
+        goto OUT;
+    }
+
+    if (match == NULL) {
+        result = g_strdup("unknown");
+        goto OUT;
+    }
+
+    version = cp_package_version(g_slist_last(match)->data);
+    result = g_strdup(cp_version_str(version));
+
+OUT:
+    cp_atom_unref(atom);
+    cp_package_list_free(match);
+    cp_version_unref(version);
+
+    return result;
+}
+
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+print_system_name(
+    CPVartree vartree,
+    struct utsname *utsname,
+    /*@null@*/ GError **error
+) {
+    char *cpu = NULL;
+    char *sys_version = NULL;
+    gboolean result = FALSE;
+
+    g_assert(error == NULL || *error == NULL);
+
+    sys_version = get_baselayout_version(vartree, error);
+    if (sys_version == NULL) {
+        goto ERR;
+    }
+
+    cpu = get_processor();
+
+    g_print("=============================================================\n");
+    g_print("System uname: ");
+    /*@-compdef@*/
+    /*@-usedef@*/
+    g_print("%s-%s-%s-%s-with-gentoo-%s\n",
+        utsname->sysname,
+        utsname->release,
+        utsname->machine,
+        cpu == NULL ? "unknown" : cpu,
+        sys_version
+    );
+    /*@=usedef@*/
+    /*@=compdef@*/
+
+    result = TRUE;
+
+ERR:
+    g_free(cpu);
+    g_free(sys_version);
+    return result;
+}
+
 int
 cmerge_info_action(
     CPContext ctx,
     /*@unused@*/ const CMergeOptions options G_GNUC_UNUSED,
     GError **error
 ) {
-#if HAVE_UNAME
     struct utsname utsname;
-    /* TODO: read cpu name from `uname -p` */
-    char *cpu = get_cpu();
-    /* TODO: read system name from /etc/gentoo-release */
-    const char *sys_version = "gentoo-1.12.11.1";
-#endif
-
     CPRepository main_repo;
     const char *portdir;
     int rc;
@@ -304,33 +365,21 @@ cmerge_info_action(
     portdir = cp_repository_path(main_repo);
     cp_repository_unref(main_repo);
 
-    /*@-compdef@*/
     print_version(ctx->settings, &utsname, portdir);
-    /*@=compdef@*/
 
-#if HAVE_UNAME
-    g_print("=============================================================\n");
-    g_print("System uname: ");
-    /*@-compdef@*/
-    /*@-usedef@*/
-    g_print("%s-%s-%s-%s-with-%s\n",
-        utsname.sysname,
-        utsname.release,
-        utsname.machine,
-        cpu == NULL ? "unknown" : cpu,
-        sys_version
-    );
-    /*@=usedef@*/
-    /*@=compdef@*/
-    g_free(cpu);
-#endif
+    if (!print_system_name(ctx->vartree, &utsname, error)) {
+        goto ERR;
+    }
 
     print_porttree_timestamp(portdir);
     if (!print_packages(portdir, ctx->vartree, error)) {
-        return EXIT_FAILURE;
+        goto ERR;
     }
     print_repositories(ctx->settings);
     print_settings(ctx->settings, portdir);
 
     return EXIT_SUCCESS;
+
+ERR:
+    return EXIT_FAILURE;
 }

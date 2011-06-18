@@ -11,6 +11,3 @@
 #cmakedefine01 HAVE_EXECLP
 #cmakedefine01 HAVE_GETPID
 #cmakedefine01 HAVE_NICE
-
-#cmakedefine01 HAVE_UTSNAME_H
-#cmakedefine01 HAVE_UNAME
