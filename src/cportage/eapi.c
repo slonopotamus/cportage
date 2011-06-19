@@ -19,7 +19,6 @@
 
 #include "eapi.h"
 #include "error.h"
-#include "macros.h"
 #include "strings.h"
 
 static gboolean

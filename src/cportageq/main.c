@@ -19,13 +19,14 @@
 
 #include "config.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #if HAVE_LOCALE_H
 #   include <locale.h>
 #endif
 
-#include <stdlib.h>
 #include <cportage.h>
-#include "../cportage/macros.h"
 
 static int
 envvar(
@@ -38,7 +39,7 @@ envvar(
     CPSettings settings = NULL;
     int retval = 2;
 
-    if (argc > 0 && g_strcmp0("-v", argv[0]) == 0) {
+    if (argc > 0 && strcmp("-v", argv[0]) == 0) {
         verbose = TRUE;
         ++i;
     }
@@ -243,22 +244,22 @@ main(int argc, char **argv)
         return 2;
     }
 
-    if (g_strcmp0("--help", argv[1]) == 0 || g_strcmp0("-h", argv[1]) == 0) {
+    if (strcmp("--help", argv[1]) == 0 || strcmp("-h", argv[1]) == 0) {
         usage(argv[0]);
         return EXIT_SUCCESS;
     }
 
-    if (g_strcmp0("envvar", argv[1]) == 0) {
+    if (strcmp("envvar", argv[1]) == 0) {
         retval = envvar(argc - 2, &argv[2], &error);
-    } else if (g_strcmp0("get_repos", argv[1]) == 0) {
+    } else if (strcmp("get_repos", argv[1]) == 0) {
         retval = get_repos(argc - 2, &argv[2], &error);
-    } else if (g_strcmp0("get_repo_path", argv[1]) == 0) {
+    } else if (strcmp("get_repo_path", argv[1]) == 0) {
         retval = get_repo_path(argc - 2, &argv[2], &error);
-    } else if (g_strcmp0("match", argv[1]) == 0) {
+    } else if (strcmp("match", argv[1]) == 0) {
         retval = do_with_pkgs(argc - 2, &argv[2], print_pkgs, &error);
-    } else if (g_strcmp0("has_version", argv[1]) == 0) {
+    } else if (strcmp("has_version", argv[1]) == 0) {
         retval = do_with_pkgs(argc - 2, &argv[2], test_nonempty, &error);
-    } else if (g_strcmp0("best_version", argv[1]) == 0) {
+    } else if (strcmp("best_version", argv[1]) == 0) {
         retval = do_with_pkgs(argc - 2, &argv[2], print_last, &error);
     /*
       TODO: mass_best_version, metadata, contents, owners, is_protected,
@@ -271,7 +272,7 @@ main(int argc, char **argv)
         for (i = 0; i < G_N_ELEMENTS(vars); ++i) {
             char *arr[1];
 
-            if (g_strcmp0(argv[1], vars[i]) != 0) {
+            if (strcmp(argv[1], vars[i]) != 0) {
                continue;
             }
 

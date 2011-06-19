@@ -24,7 +24,6 @@
 #include "error.h"
 #include "incrementals.h"
 #include "io.h"
-#include "macros.h"
 #include "repository.h"
 #include "settings.h"
 #include "shellconfig.h"

@@ -467,6 +467,18 @@ cp_vartree_find_packages(
 ) G_GNUC_WARN_UNUSED_RESULT
 /*@modifies self,*match,*error@*/ /*@globals fileSystem@*/;
 
+/*
+  This macro intentionally conflicts with GLib one. The only difference is that
+  we don't do cast to 'char *'.
+ */
+/*@-namechecks@*/
+#ifdef S_SPLINT_S
+#   define _(String) String
+#else
+#   define _(String) g_dgettext(GETTEXT_PACKAGE, (String))
+#endif
+/*@=namechecks@*/
+
 /*@iter CP_GSLIST_ITER(GSList *list, yield gpointer elem)@*/
 
 #define CP_GSLIST_ITER(list, m_elem) { \
@@ -486,6 +498,18 @@ cp_vartree_find_packages(
         char *m_elem = *m_elem##_iter;
 
 #define end_CP_STRV_ITER }}
+
+/*@iter CP_GDIR_ITER(GDir *dir, yield const char *elem)@*/
+
+#define CP_GDIR_ITER(dir, m_elem) { \
+    /*@-incondefs@*/ \
+    /*@dependent@*/ /*@observer@*/ const char *m_elem; \
+    /*@=incondefs@*/ \
+    /*@-modnomods@*/ \
+    while ((m_elem = g_dir_read_name(dir)) != NULL) { \
+    /*@=modnomods@*/
+
+#define end_CP_GDIR_ITER }}
 
 #pragma GCC visibility pop
 

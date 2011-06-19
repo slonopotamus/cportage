@@ -44,7 +44,6 @@
 
 #include "atom.h"
 #include "error.h"
-#include "macros.h"
 #include "strings.h"
 #include "version.h"
 
@@ -557,7 +556,7 @@ cp_version_cmp_internal(
             /*
               We already stripped off trailing zeroes when created a CPVersion
              */
-            result = g_strcmp0(f, s);
+            result = strcmp(f, s);
         } else {
             result = num_cmp(f, s);
         }
@@ -781,10 +780,10 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
     gboolean result;
     CPVersion pkg_version;
 
-    if (g_strcmp0(self->category, cp_package_category(package)) != 0) {
+    if (strcmp(self->category, cp_package_category(package)) != 0) {
         return FALSE;
     }
-    if (g_strcmp0(self->package, cp_package_name(package)) != 0) {
+    if (strcmp(self->package, cp_package_name(package)) != 0) {
         return FALSE;
     }
     if (self->slot != NULL

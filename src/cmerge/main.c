@@ -21,6 +21,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if HAVE_LOCALE_H
 #   include <locale.h>
@@ -68,8 +69,8 @@ verbosity_cb(
     /*@unused@*/ void *data G_GNUC_UNUSED,
     /*@unused@*/ GError **error G_GNUC_UNUSED
 ) /*@modifies verbosity@*/ {
-    const gboolean verbose = g_strcmp0(option_name, "--verbose") == 0
-        || g_strcmp0(option_name, "-v") == 0;
+    const gboolean verbose = strcmp(option_name, "--verbose") == 0
+        || strcmp(option_name, "-v") == 0;
     verbosity = verbose ? VERBOSITY_VERBOSE : VERBOSITY_QUIET;
     return TRUE;
 }
@@ -128,8 +129,8 @@ action_cb(
         char *short_name = entry.short_name == '\0'
             ? NULL
             : g_strdup_printf("-%c", entry.short_name);
-        if (g_strcmp0(option_name, long_name) == 0
-                || g_strcmp0(option_name, short_name) == 0) {
+        if (strcmp(option_name, long_name) == 0
+                || strcmp(option_name, short_name) == 0) {
             action = &actions[i];
         }
         g_free(long_name);

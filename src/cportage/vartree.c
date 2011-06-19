@@ -19,7 +19,6 @@
 
 #include "atom.h"
 #include "eapi.h"
-#include "macros.h"
 #include "package.h"
 #include "settings.h"
 

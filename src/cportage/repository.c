@@ -20,7 +20,6 @@
 #include <stdlib.h>
 
 #include "io.h"
-#include "macros.h"
 #include "repository.h"
 
 struct CPRepository {
@@ -111,7 +110,7 @@ cp_repository_sync(const CPRepository self, GError **error) {
     g_assert(error == NULL || *error == NULL);
 
     sync_cmd = g_strsplit("git pull", " ", 0);
-    g_message("Starting git pull in %s...", self->path);
+    g_message(_("Starting git pull in %s..."), self->path);
     result = g_spawn_sync(self->path, sync_cmd, NULL, (gint)G_SPAWN_SEARCH_PATH,
         NULL, NULL, NULL, NULL, &status, error);
     g_strfreev(sync_cmd);
@@ -122,17 +121,17 @@ cp_repository_sync(const CPRepository self, GError **error) {
 
     if (!WIFEXITED(status)) {
         g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
-            "git pull error in %s", self->path);
+            _("git pull error in %s"), self->path);
         return EXIT_FAILURE;
     }
 
     if (WEXITSTATUS(status) != EXIT_SUCCESS) {
         g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
-            "git pull error in %s", self->path);
+            _("git pull error in %s"), self->path);
         return WEXITSTATUS(status);
     }
 
-    g_message("git pull in %s successful", self->path);
+    g_message(_("git pull in %s successful"), self->path);
     return EXIT_SUCCESS;
 }
 

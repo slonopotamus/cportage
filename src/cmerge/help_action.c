@@ -27,7 +27,6 @@
 #endif
 
 #include "actions.h"
-#include "../cportage/macros.h"
 
 int
 cmerge_help_action(
@@ -58,7 +57,7 @@ cmerge_help_action(
 #else
     g_assert(error == NULL || *error == NULL);
 
-    g_print("See `man cmerge` for documentation");
+    g_print(_("See `man cmerge` for documentation"));
     return EXIT_SUCCESS;
 #endif
 }

@@ -38,7 +38,6 @@
 
 #include "error.h"
 #include "io.h"
-#include "macros.h"
 #include "shellconfig.h"
 #include "strings.h"
 

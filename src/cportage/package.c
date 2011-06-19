@@ -17,6 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string.h>
+
 #include "package.h"
 #include "version.h"
 
@@ -124,12 +126,12 @@ int
 cp_package_cmp(const CPPackage first, const CPPackage second) {
     int result;
 
-    result = g_strcmp0(first->category, second->category);
+    result = strcmp(first->category, second->category);
     if (result != 0) {
         return result;
     }
 
-    result = g_strcmp0(first->name, second->name);
+    result = strcmp(first->name, second->name);
     if (result != 0) {
         return result;
     }
