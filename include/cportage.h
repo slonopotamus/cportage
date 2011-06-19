@@ -49,6 +49,10 @@ cp_strings_pysplit(
     const char *str
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/**
+ * \return relative part of \a descendant to \a parent or %NULL if \a descendant
+ *         isn't a descendant of \a parent, free it using g_free()
+ */
 /*@null@*/ /*@only@*/ char *
 cp_io_get_relative_path(
     const char *parent,
@@ -110,11 +114,17 @@ cp_io_getlines(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
 
-/** TODO: documentation */
+/**
+ * Replaces ${..} placeholders in \a str with values from \a vars.
+ *
+ * \param error return location for a %GError, or %NULL
+ * \return      a string with replaced placeholders
+ *              or %NULL if an error occurred, free it using g_free()
+ */
 /*@null@*/ char *
 cp_varexpand(
     const char *str,
-    GHashTable *vars,
+    GHashTable/*<char *, char *>*/ *vars,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 
@@ -157,7 +167,18 @@ cp_repository_path(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 /*@observer@*/ const char *
 cp_repository_name(const CPRepository self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
-/** TODO: documentation */
+/**
+ * Synchronizes repository contents from remote location (rsync or VCS).
+ * Synchronization method depends on repository settings.
+ *
+ * ATTENTION: after returning from this function, all #CPSettings instances
+ * that own repository with same path as \a self become invalid and need to be
+ * recreated (that also applies to all objects that were created from now-invalid
+ * #CPSettings objects, transitively.
+ *
+ * \param error return location for a %GError, or %NULL
+ * \return      %EXIT_SUCCESS on success, other value if an error occurred.
+ */
 int
 cp_repository_sync(
     const CPRepository self,
@@ -416,7 +437,7 @@ void
 cp_atom_unref(/*@killref@*/ /*@null@*/ CPAtom self) /*@modifies self@*/;
 
 /**
- * \return %TRUE if \a self matches \a package
+ * \return %TRUE if \a self matches \a package, %FALSE otherwise
  */
 gboolean
 cp_atom_matches(
@@ -456,7 +477,15 @@ void
 cp_vartree_unref(/*@killref@*/ /*@null@*/ CPVartree self) /*@modifies self@*/;
 
 /**
- * TODO: documentation.
+ * Searches for packages matching \a atom in \a self.
+ *
+ * \param atom  atom to match against
+ * \param match return location for matched atoms list,
+ *              free it using cp_package_list_free()
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE on success, %FALSE if an error occurred
+ *
+ * \see cp_atom_matches()
  */
 gboolean
 cp_vartree_find_packages(
