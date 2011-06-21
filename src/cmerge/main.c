@@ -179,7 +179,11 @@ main(int argc, char *argv[])
     adjust_niceness(ctx.settings);
     adjust_ionice(ctx.settings);
 
-    ctx.vartree = cp_vartree_new(ctx.settings);
+    ctx.vartree = cp_vartree_new(ctx.settings, &error);
+    if (ctx.vartree == NULL) {
+        retval = EXIT_FAILURE;
+        goto ERR;
+    }
 
     retval = action->func(&ctx, &opts, &error);
 

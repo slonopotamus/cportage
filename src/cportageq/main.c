@@ -170,7 +170,7 @@ do_with_pkgs(
         goto ERR;
     }
 
-    vartree = cp_vartree_new(settings);
+    vartree = cp_vartree_new(settings, error);
     if (vartree == NULL) {
         goto ERR;
     }

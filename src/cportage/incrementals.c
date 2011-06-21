@@ -251,7 +251,7 @@ post_process_incremental(void *key, void *value, void *user_data) {
 
         g_tree_insert(
             self->config,
-            g_strdup("_CP_USE_NO_EXPAND"),
+            g_strdup("CPORTAGE_USE_NO_EXPAND"),
             concat_keys(use_no_expand)
         );
 

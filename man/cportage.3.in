@@ -5,10 +5,20 @@ cportage \- \fBportage\fR(5)-compatible C library
 .nf
 .B #include <cportage.h>
 .fi
+.SH "MAKE.CONF VARIABLES"
+.TP
+This section describes cportage-specific make.conf variables.
+.TP
+\fBCPORTAGE_VARTREE_LAZY\fR = \fI[bool]\fR
+If \fItrue\fR (default), CPVartree operates in lazy mode and loads package
+metadata on demand.
 .SH "ENVIRONMENT OPTIONS"
 .TP
 \fBCPORTAGE_SHELLCONFIG_DEBUG\fR = \fI[bool]\fR
-Enables debug output during shell-like config files parsing
+Enables debug output in shell-like config parser
+.TP
+\fBCPORTAGE_ATOMPARSER_DEBUG\fR = \fI[bool]\fR
+Enables debug output in atom parser
 .SH "AUTHORS"
 .nf
 Marat Radchenko <marat@slonopotamus.org>

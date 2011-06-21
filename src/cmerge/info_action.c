@@ -185,8 +185,8 @@ print_use(const CPSettings settings) {
         cp_settings_get_default(settings, "USE_EXPAND", "")
     );
 
-    g_print(
-        "USE=\"%s\"", cp_settings_get_default(settings, "_CP_USE_NO_EXPAND", "")
+    g_print("USE=\"%s\"",
+        cp_settings_get_default(settings, "CPORTAGE_USE_NO_EXPAND", "")
     );
 
     CP_STRV_ITER(use_expand_keys, key) {

@@ -453,10 +453,12 @@ typedef /*@refcounted@*/ struct CPVartree *CPVartree;
 /**
  * TODO: documentation.
  */
-/*@newref@*/ CPVartree
+/*@newref@*/ /*@null@*/ CPVartree
 cp_vartree_new(
-    const CPSettings settings
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
+    const CPSettings settings,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno*/ /*@globals fileSystem@*/;
 
 /**
  * Increases reference count of \a self by 1.

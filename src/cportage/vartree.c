@@ -18,14 +18,18 @@
 */
 
 #include "atom.h"
+#include "collections.h"
 #include "eapi.h"
 #include "package.h"
 #include "settings.h"
+#include "strings.h"
 
 struct CPVartree {
     char *root;
-    /** Lazily populated category->packagename->packages cache. */
-    /*@owned@*/ GHashTable *cache;
+
+    /** Category->packagename->packages cache */
+    /*@only@*/ GHashTable *cache;
+    gboolean lazy_cache;
 
     /*@refs@*/ unsigned int refs;
 };
@@ -122,11 +126,11 @@ insert_package(
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 populate_cache(
     const CPVartree self,
-    GHashTable *name2pkg,
     const char *category,
     /*@null@*/ GError **error
 ) /*@modifies *name2pkg,*error,errno@*/ /*@globals fileSystem@*/ {
-    char *cat_path;
+    GHashTable *name2pkg = NULL;
+    char *cat_path = NULL;
     GDir *cat_dir = NULL;
     gboolean result = TRUE;
 
@@ -147,11 +151,14 @@ populate_cache(
         goto OUT;
     }
 
+    name2pkg = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_package_list_free
+    );
+
     CP_GDIR_ITER(cat_dir, pv) {
         CPPackage package = NULL;
 
         result = try_load_package(self, category, pv, &package, error);
-
         if (!result) {
             break;
         }
@@ -161,57 +168,72 @@ populate_cache(
     } end_CP_GDIR_ITER
 
     g_dir_close(cat_dir);
+
 OUT:
+    if (result) {
+        g_hash_table_insert(self->cache, g_strdup(category), name2pkg);
+    } else {
+        cp_hash_table_destroy(name2pkg);
+    }
     g_free(cat_path);
     return result;
 }
 
-static gboolean G_GNUC_WARN_UNUSED_RESULT
-get_packages(
-    CPVartree self,
-    const char *category,
-    const char *package,
-    /*@out@*/ GSList **result,
-    /*@null@*/ GError **error
-) /*@modifies *self,*result,*error,errno@*/ /*@globals fileSystem@*/ {
-    GHashTable *name2pkg;
+static gboolean
+init_cache(CPVartree self, /*@null@*/ GError **error) {
+    GDir *vdb_dir = NULL;
+    gboolean result = FALSE;
 
     g_assert(error == NULL || *error == NULL);
 
-    name2pkg = g_hash_table_lookup(self->cache, category);
-    if (name2pkg == NULL) {
-        name2pkg = g_hash_table_new_full(
-            g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_package_list_free
-        );
-        if (!populate_cache(self, name2pkg, category, error)) {
-            *result = NULL;
-            g_hash_table_destroy(name2pkg);
-            return FALSE;
-        }
-        g_hash_table_insert(self->cache, g_strdup(category), name2pkg);
+    vdb_dir = g_dir_open(self->root, 0, error);
+    if (vdb_dir == NULL) {
+        goto ERR;
     }
 
-    /*@-dependenttrans@*/
-    *result = g_hash_table_lookup(name2pkg, package);
-    /*@=dependenttrans@*/
-    return TRUE;
+    CP_GDIR_ITER(vdb_dir, category) {
+        if (self->lazy_cache) {
+            g_hash_table_insert(self->cache, g_strdup(category), NULL);
+        } else if (!populate_cache(self, category, error)) {
+            goto ERR;
+        }
+    } end_CP_GDIR_ITER
+
+    result = TRUE;
+
+ERR:
+    g_dir_close(vdb_dir);
+    return result;
 }
 
 CPVartree
-cp_vartree_new(const CPSettings settings) {
+cp_vartree_new(const CPSettings settings, GError **error) {
     CPVartree self;
+
+    g_assert(error == NULL || *error == NULL);
 
     self = g_new0(struct CPVartree, 1);
     self->refs = (unsigned int)1;
     g_assert(self->root == NULL);
     self->root = g_build_filename(cp_settings_root(settings),
                                   "var", "db", "pkg", NULL);
+
+    self->lazy_cache = cp_string_is_true(
+        cp_settings_get_default(settings, "CPORTAGE_VARTREE_LAZY", "true")
+    );
     g_assert(self->cache == NULL);
     self->cache = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_destroy
+        g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_hash_table_destroy
     );
+    if (!init_cache(self, error)) {
+       goto ERR;
+    }
 
     return self;
+
+ERR:
+    cp_vartree_unref(self);
+    return NULL;
 }
 
 CPVartree
@@ -232,14 +254,64 @@ cp_vartree_unref(CPVartree self) {
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
         g_free(self->root);
-        if (self->cache != NULL) {
-            g_hash_table_destroy(self->cache);
-        }
+        cp_hash_table_destroy(self->cache);
 
         /*@-refcounttrans@*/
         g_free(self);
         /*@=refcounttrans@*/
     }
+}
+
+static gboolean
+get_category_cache(
+    CPVartree self,
+    const char *cat,
+    /*@out@*/ GHashTable **result,
+    /*@null@*/ GError **error
+) {
+    g_assert(error == NULL || *error == NULL);
+
+    if (!g_hash_table_lookup_extended(self->cache, cat, NULL, (void **)result)) {
+        /* Nonexistent category */
+        *result = NULL;
+        return TRUE;
+    }
+
+    if (*result == NULL) {
+        /* Uninited lazy cache */
+        g_assert(self->lazy_cache);
+
+        if (!populate_cache(self, cat, error)) {
+            return FALSE;
+        }
+
+        *result = g_hash_table_lookup(self->cache, cat);
+    }
+
+    return TRUE;
+}
+
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+get_package_cache(
+    CPVartree self,
+    const char *category,
+    const char *package,
+    /*@out@*/ GSList **result,
+    /*@null@*/ GError **error
+) /*@modifies *self,*result,*error,errno@*/ /*@globals fileSystem@*/ {
+    GHashTable *name2pkg;
+
+    g_assert(error == NULL || *error == NULL);
+
+    if (!get_category_cache(self, category, &name2pkg, error)) {
+        return FALSE;
+    }
+
+    *result = name2pkg == NULL
+        ? NULL
+        : g_hash_table_lookup(name2pkg, package);
+
+    return TRUE;
 }
 
 gboolean
@@ -255,14 +327,18 @@ cp_vartree_find_packages(
 
     g_assert(error == NULL || *error == NULL);
 
-    *match = NULL;
-
-    if (!get_packages(self, category, package, &pkgs, error)) {
+    if (!get_package_cache(self, category, package, &pkgs, error)) {
         return FALSE;
     }
 
+    *match = NULL;
+
     CP_GSLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {
+            /*
+              TODO: instead of sorting here, keep cache reverse-sorted
+              and use g_slist_prepend.
+             */
             /*@-mustfreefresh@*/
             *match = g_slist_insert_sorted(
                 *match,

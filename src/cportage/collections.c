@@ -57,6 +57,13 @@ cp_tree_foreach_remove(GTree *tree, GHRFunc func, void *user_data) {
     g_slist_free(data.to_remove);
 }
 
+void
+cp_hash_table_destroy(GHashTable *hash_table) {
+    if (hash_table) {
+        g_hash_table_destroy(hash_table);
+    }
+}
+
 static gboolean
 true_filter(
     void *key G_GNUC_UNUSED,
