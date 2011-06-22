@@ -28,6 +28,12 @@
 
 #include <cportage.h>
 
+static const char *
+get_root(void) {
+    const char *result = g_getenv("ROOT");
+    return result == NULL ? "/" : result;
+}
+
 static int
 envvar(
     int argc,
@@ -49,7 +55,7 @@ envvar(
         goto ERR;
     }
 
-    settings = cp_settings_new("/", error);
+    settings = cp_settings_new(get_root(), error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -218,6 +224,35 @@ print_last(GSList *pkgs) {
     return EXIT_SUCCESS;
 }
 
+static int
+vdb_path(
+    GError **error
+) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+    CPSettings settings = NULL;
+    CPVartree vartree  = NULL;
+    int retval = 2;
+
+    settings = cp_settings_new(get_root(), error);
+    if (settings == NULL) {
+        goto ERR;
+    }
+
+    vartree = cp_vartree_new(settings, error);
+    if (vartree == NULL) {
+        goto ERR;
+    }
+
+    g_print("%s\n", cp_vartree_path(vartree));
+
+    retval = EXIT_SUCCESS;
+
+ERR:
+    cp_settings_unref(settings);
+    cp_vartree_unref(vartree);
+
+    return retval;
+}
+
 static void
 usage(const char *progname) /*@modifies *stdout@*/ {
     /* TODO: usage docs */
@@ -261,10 +296,12 @@ main(int argc, char **argv)
         retval = do_with_pkgs(argc - 2, &argv[2], test_nonempty, &error);
     } else if (strcmp("best_version", argv[1]) == 0) {
         retval = do_with_pkgs(argc - 2, &argv[2], print_last, &error);
+    } else if (strcmp("vdb_path", argv[1]) == 0) {
+        retval = vdb_path(&error);
     /*
       TODO: mass_best_version, metadata, contents, owners, is_protected,
       filter_protected, best_visible, mass_best_visible, all_best_visible,
-      vdb_path, list_preserved_libs
+      list_preserved_libs
      */
     } else {
         size_t i;

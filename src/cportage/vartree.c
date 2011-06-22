@@ -25,7 +25,7 @@
 #include "strings.h"
 
 struct CPVartree {
-    char *root;
+    char *path;
 
     /** Category->packagename->packages cache */
     /*@only@*/ GHashTable *cache;
@@ -56,14 +56,14 @@ try_load_package(
         goto OUT;
     }
 
-    config_file = g_build_filename(self->root, category, pv, "EAPI", NULL);
+    config_file = g_build_filename(self->path, category, pv, "EAPI", NULL);
     result = cp_eapi_check_file(config_file, error);
     g_free(config_file);
     if (!result) {
         goto OUT;
     }
 
-    config_file = g_build_filename(self->root, category, pv, "SLOT", NULL);
+    config_file = g_build_filename(self->path, category, pv, "SLOT", NULL);
     result = g_file_get_contents(config_file, &slot, NULL, error);
     g_free(config_file);
     if (!result) {
@@ -76,7 +76,7 @@ try_load_package(
         goto OUT;
     }
 
-    config_file = g_build_filename(self->root, category, pv, "repository", NULL);
+    config_file = g_build_filename(self->path, category, pv, "repository", NULL);
     result = g_file_get_contents(config_file, &repo, NULL, error);
     g_free(config_file);
     if (!result) {
@@ -140,7 +140,7 @@ populate_cache(
         goto OUT;
     }
 
-    cat_path = g_build_filename(self->root, category, NULL);
+    cat_path = g_build_filename(self->path, category, NULL);
     if (!g_file_test(cat_path, G_FILE_TEST_IS_DIR)) {
         goto OUT;
     }
@@ -186,7 +186,7 @@ init_cache(CPVartree self, /*@null@*/ GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    vdb_dir = g_dir_open(self->root, 0, error);
+    vdb_dir = g_dir_open(self->path, 0, error);
     if (vdb_dir == NULL) {
         goto ERR;
     }
@@ -214,8 +214,8 @@ cp_vartree_new(const CPSettings settings, GError **error) {
 
     self = g_new0(struct CPVartree, 1);
     self->refs = (unsigned int)1;
-    g_assert(self->root == NULL);
-    self->root = g_build_filename(cp_settings_root(settings),
+    g_assert(self->path == NULL);
+    self->path = g_build_filename(cp_settings_root(settings),
                                   "var", "db", "pkg", NULL);
 
     self->lazy_cache = cp_string_is_true(
@@ -253,7 +253,7 @@ cp_vartree_unref(CPVartree self) {
     }
     g_assert(self->refs > 0);
     if (--self->refs == 0) {
-        g_free(self->root);
+        g_free(self->path);
         cp_hash_table_destroy(self->cache);
 
         /*@-refcounttrans@*/
@@ -349,4 +349,9 @@ cp_vartree_find_packages(
     } end_CP_GSLIST_ITER
 
     return TRUE;
+}
+
+const char *
+cp_vartree_path(const CPVartree self) {
+    return self->path;
 }

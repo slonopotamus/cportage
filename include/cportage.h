@@ -478,6 +478,9 @@ cp_vartree_ref(CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 void
 cp_vartree_unref(/*@killref@*/ /*@null@*/ CPVartree self) /*@modifies self@*/;
 
+const char *
+cp_vartree_path(const CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
 /**
  * Searches for packages matching \a atom in \a self.
  *
