@@ -35,8 +35,8 @@ typedef enum VersionSuffixType {
 } VersionSuffixType;
 
 typedef struct VersionSuffix {
-    VersionSuffixType type;
     char *value;
+    VersionSuffixType type;
 } *VersionSuffix;
 
 typedef union YYSTYPE {
