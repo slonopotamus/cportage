@@ -52,11 +52,15 @@ use_mask(void) {
 static void
 use_expand(void) {
     test_var("roots/use_expand", "USE", "foo_bar");
+    test_var("roots/use_expand_stack", "USE", "foo_bar foo_baz");
+    test_var("roots/use_expand_override", "USE", "foo1_baz foo2_bar");
 }
 
 static void
 use_force(void) {
     test_var("roots/use_force", "USE", "expand_forced normalforced parentforced");
+
+    /* Tests regeneration of USE_EXPAND variables from USE */
     test_var("roots/use_force", "EXPAND", "forced");
 }
 

@@ -42,7 +42,10 @@ cp_incrementals_process_profile(
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 
 void
-cp_incrementals_config_changed(CPIncrementals self) /*@modifies *self@*/;
+cp_incrementals_config_changed(
+    CPIncrementals self,
+    gboolean stack_use_expand
+) /*@modifies *self@*/;
 
 void
 cp_incrementals_config_finished(CPIncrementals self) /*@modifies *self@*/;

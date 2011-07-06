@@ -65,6 +65,7 @@ read_config(
     CPSettings self,
     const char *path,
     gboolean allow_source,
+    gboolean stack_use_expand,
     GError **error
 ) {
     if (!cp_read_shellconfig(
@@ -78,7 +79,7 @@ read_config(
         return FALSE;
     }
 
-    cp_incrementals_config_changed(self->incrementals);
+    cp_incrementals_config_changed(self->incrementals, stack_use_expand);
 
     return TRUE;
 }
@@ -183,7 +184,7 @@ add_profile(CPSettings self, const char *dir, GError **error) {
 
     config_file = g_build_filename(dir, "make.defaults", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        result = read_config(self, config_file, FALSE, error);
+        result = read_config(self, config_file, FALSE, TRUE, error);
     }
     g_free(config_file);
     if (!result) {
@@ -209,6 +210,7 @@ load_etc_config(
     const char *name,
     gboolean allow_source,
     gboolean root_relative,
+    gboolean stack_use_expand,
     /*@null@*/ GError **error
 ) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
     char *path;
@@ -217,7 +219,7 @@ load_etc_config(
     g_assert(error == NULL || *error == NULL);
     path = g_build_filename(root_relative ? self->root : "/", "etc", name, NULL);
     result = !g_file_test(path, G_FILE_TEST_EXISTS)
-        || read_config(self, path, allow_source, error);
+        || read_config(self, path, allow_source, stack_use_expand, error);
     g_free(path);
     return result;
 }
@@ -372,16 +374,16 @@ cp_settings_new(const char *root, GError **error) {
         (GCompareDataFunc)strcmp, NULL, g_free, g_free
     );
     self->incrementals = cp_incrementals_new(self->config);
-    if (!load_etc_config(self, "profile.env", FALSE, TRUE, error)) {
+    if (!load_etc_config(self, "profile.env", FALSE, TRUE, TRUE, error)) {
         goto ERR;
     }
-    if (!load_etc_config(self, "make.globals", FALSE, FALSE, error)) {
+    if (!load_etc_config(self, "make.globals", FALSE, FALSE, TRUE, error)) {
         goto ERR;
     }
     if (!add_profile(self, self->profile, error)) {
         goto ERR;
     }
-    if (!load_etc_config(self, "make.conf", TRUE, TRUE, error)) {
+    if (!load_etc_config(self, "make.conf", TRUE, TRUE, FALSE, error)) {
         goto ERR;
     }
     /*

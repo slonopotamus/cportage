@@ -64,8 +64,8 @@ cp_hash_table_destroy(GHashTable *hash_table) {
     }
 }
 
-static gboolean
-true_filter(
+gboolean
+cp_true_filter(
     void *key G_GNUC_UNUSED,
     void *value G_GNUC_UNUSED,
     void *user_data G_GNUC_UNUSED
@@ -77,7 +77,7 @@ void
 cp_stack_dict(GTree *tree, char **items) /*@modifies *tree@*/ {
     CP_STRV_ITER(items, item) {
         if (strcmp(item, "-*") == 0) {
-            cp_tree_foreach_remove(tree, true_filter, NULL);
+            cp_tree_foreach_remove(tree, cp_true_filter, NULL);
         } else if (item[0] == '-') {
             g_tree_remove(tree, &item[1]);
         } else {

@@ -1,0 +1,3 @@
+USE_EXPAND="FOO1 FOO2"
+FOO1="bar"
+FOO2="bar"

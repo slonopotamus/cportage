@@ -53,9 +53,11 @@ static void
 add_incremental(
     CPIncrementals self,
     const char *key,
-    /*@null@*/ const char *value
+    /*@null@*/ const char *value,
+    gboolean stack_use_expand
 ) /*@modifies *self@*/ {
     char **items;
+    GTree *values;
 
     if (value == NULL) {
         return;
@@ -66,13 +68,38 @@ add_incremental(
         return;
     }
 
-    cp_stack_dict(register_incremental(self, key), items);
+    values = register_incremental(self, key);
+
+    /*
+      As a long-standing practice, USE_EXPAND variables are only stacked across
+      profiles, but not in make.conf. So, in order to be compatible with portage
+      (and official Gentoo docs), we have this logic here.
+      Yes, it is PMS violation.
+     */
+    if (!stack_use_expand) {
+        GTree *use_expand = g_tree_lookup(self->incrementals, "USE_EXPAND");
+        if (use_expand != NULL
+                && g_tree_lookup_extended(use_expand, key, NULL, NULL)) {
+            cp_tree_foreach_remove(values, cp_true_filter, NULL);
+        }
+    }
+
+    cp_stack_dict(values, items);
 }
+
+struct add_incrementals_data {
+    CPIncrementals self;
+    gboolean stack_use_expand;
+};
 
 static gboolean
 add_incrementals(void *key, void *value G_GNUC_UNUSED, void *user_data) {
-    CPIncrementals self = user_data;
-    add_incremental(self, key, g_tree_lookup(self->config, key));
+    struct add_incrementals_data *data = user_data;
+    CPIncrementals self = data->self;
+
+    add_incremental(
+        self, key, g_tree_lookup(self->config, key), data->stack_use_expand
+    );
 
     /* See post_process_incremental comments */
     g_tree_remove(self->config, key);
@@ -108,7 +135,7 @@ populate_from_use_expand(
     struct populate_use_data *data = user_data;
     char *str = g_strdup_printf("%s_%s", data->prefix, (char *)key);
 
-    add_incremental(data->self, "USE", str);
+    add_incremental(data->self, "USE", str, TRUE);
 
     g_free(str);
     return FALSE;
@@ -223,7 +250,7 @@ post_process_incremental(void *key, void *value, void *user_data) {
         GTree *use_expand = g_tree_lookup(self->incrementals, "USE_EXPAND");
 
         /* PMS, section 12.1.1 */
-        add_incremental(self, "USE", g_tree_lookup(self->config, "ARCH"));
+        add_incremental(self, "USE", g_tree_lookup(self->config, "ARCH"), TRUE);
 
         /* PMS, section 12.1.1 */
         if (use_expand != NULL) {
@@ -368,10 +395,14 @@ cp_incrementals_process_profile(
 }
 
 void
-cp_incrementals_config_changed(CPIncrementals self) {
+cp_incrementals_config_changed(CPIncrementals self, gboolean stack_use_expand) {
     GTree *use_expand;
+    struct add_incrementals_data data;
 
-    g_tree_foreach(self->incrementals, add_incrementals, self);
+    data.self = self;
+    data.stack_use_expand = stack_use_expand;
+
+    g_tree_foreach(self->incrementals, add_incrementals, &data);
 
     /* PMS, section 5.3.2 */
     /*
@@ -388,7 +419,7 @@ cp_incrementals_config_changed(CPIncrementals self) {
      */
     use_expand = g_tree_lookup(self->incrementals, "USE_EXPAND");
     if (use_expand != NULL) {
-        g_tree_foreach(use_expand, add_incrementals, self);
+        g_tree_foreach(use_expand, add_incrementals, &data);
     }
 }
 

@@ -33,6 +33,9 @@ cp_tree_foreach_remove(
     /*@null@*/ void *user_data
 ) /*@modifies *tree,*user_data@*/;
 
+gboolean
+cp_true_filter(void *key, void *value, void *user_data);
+
 void
 cp_hash_table_destroy(
     /*@null@*/ /*@only@*/ GHashTable *hash_table
