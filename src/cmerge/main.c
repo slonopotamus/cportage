@@ -130,7 +130,7 @@ action_cb(
             ? NULL
             : g_strdup_printf("-%c", entry.short_name);
         if (strcmp(option_name, long_name) == 0
-                || strcmp(option_name, short_name) == 0) {
+                || g_strcmp0(option_name, short_name) == 0) {
             action = &actions[i];
         }
         g_free(long_name);
