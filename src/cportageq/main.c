@@ -136,7 +136,7 @@ get_repo_path(
 
     for (i = 1; i < argc; ++i) {
         CPRepository repo = cp_settings_get_repository(settings, argv[i]);
-        g_print("%s\n", repo == NULL ? "None": cp_repository_path(repo));
+        g_print("%s\n", repo == NULL ? "": cp_repository_path(repo));
         cp_repository_unref(repo);
     }
 
