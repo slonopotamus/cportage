@@ -54,10 +54,16 @@ cp_strings_pysplit(
  *         isn't a descendant of \a parent, free it using g_free()
  */
 /*@null@*/ /*@only@*/ char *
-cp_io_get_relative_path(
+cp_path_get_relative(
     const char *parent,
     const char *descendant
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+gboolean
+cp_path_is_descendant(
+    const char *parent,
+    const char *descendant
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * GLib-style fopen() wrapper.
@@ -443,7 +449,25 @@ gboolean
 cp_atom_matches(
     const CPAtom self,
     const CPPackage package
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies package@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *package@*/;
+
+typedef struct CPConfigProtect *CPConfigProtect;
+
+CPConfigProtect
+cp_config_protect_new(
+    CPSettings settings
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+void
+cp_config_protect_destroy(
+    /*@null@*/ /*@only@*/ CPConfigProtect self
+) /*@modifies self@*/;
+
+gboolean
+cp_config_protect_is_protected(
+    const CPConfigProtect self,
+    const char *path
+) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * Installed packages tree.

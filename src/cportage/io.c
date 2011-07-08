@@ -18,13 +18,9 @@
 */
 
 #include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <glib/gstdio.h>
 
-#include "io.h"
-#include "strings.h"
+#include <cportage.h>
 
 FILE *
 cp_io_fopen(const char *path, const char *mode, GError **error) {
@@ -85,27 +81,6 @@ ERR:
     return -1;
 }
 
-char *
-cp_io_realpath(const char *path, GError **error) {
-    char *result;
-
-    g_assert(error == NULL || *error == NULL);
-
-    /* TODO: alternative impl using glibc canonicalize_file_name(3)? */
-    /*@-unrecog@*/
-    result = realpath(path, NULL);
-    /*@=unrecog@*/
-
-    if (result == NULL) {
-        int save_errno = errno;
-        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(save_errno),
-            _("Can't get real path of '%s': %s"),
-            path, g_strerror(save_errno));
-    }
-
-    return result;
-}
-
 /**
     TODO: current impl temporarily allocs 3x size of file.
     Could be rewritten to 1x.
@@ -148,32 +123,4 @@ cp_io_getlines(const char *path, const gboolean ignore_comments, GError **error)
 ERR:
     g_free(data);
     return result;
-}
-
-/** Taken from glocalfile.c */
-static /*@null@*/ const char *
-match_prefix(/*@returned@*/ const char *path, const char *prefix) /*@*/ {
-    size_t prefix_len = strlen(prefix);
-    if (strncmp(path, prefix, prefix_len) != 0) {
-      return NULL;
-    }
-
-    /* Handle the case where prefix is the root, so that
-     * the IS_DIR_SEPRARATOR check below works */
-    if (prefix_len > 0 && G_IS_DIR_SEPARATOR(prefix[prefix_len-1])) {
-      prefix_len--;
-    }
-
-    return &path[prefix_len];
-}
-
-char *
-cp_io_get_relative_path(const char *parent, const char *descendant) {
-    const char *remainder = match_prefix(descendant, parent);
-
-    if (remainder == NULL || !G_IS_DIR_SEPARATOR(remainder[0])) {
-        return NULL;
-    }
-
-    return g_strdup(&remainder[1]);
 }

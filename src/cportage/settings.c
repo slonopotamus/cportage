@@ -23,7 +23,7 @@
 #include "eapi.h"
 #include "error.h"
 #include "incrementals.h"
-#include "io.h"
+#include "path.h"
 #include "repository.h"
 #include "settings.h"
 #include "shellconfig.h"
@@ -242,7 +242,7 @@ build_profile_path(
 
     g_assert(error == NULL || *error == NULL);
     profile = g_build_filename(root, "etc", "make.profile", NULL);
-    result = cp_io_realpath(profile, error);
+    result = cp_path_realpath(profile, error);
     g_free(profile);
     return result;
 }
@@ -263,7 +263,7 @@ init_main_repo(
         return FALSE;
     }
 
-    canonical = cp_io_realpath(portdir, error);
+    canonical = cp_path_realpath(portdir, error);
     if (canonical == NULL) {
         return FALSE;
     }
@@ -357,7 +357,7 @@ cp_settings_new(const char *root, GError **error) {
     /* init basic things */
     self->refs = (unsigned int)1;
     g_assert(self->root == NULL);
-    self->root = cp_io_realpath(root, error);
+    self->root = cp_path_realpath(root, error);
     if (self->root == NULL) {
         goto ERR;
     }

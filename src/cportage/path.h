@@ -17,12 +17,10 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** I/O utility functions. */
+#ifndef CP_PATH_H
+#define CP_PATH_H
 
-#ifndef CP_IO_H
-#define CP_IO_H
-
-#include <cportage.h>
+#include <glib.h>
 
 /*@-exportany@*/
 
@@ -36,7 +34,7 @@
  *              or %NULL if an error occured, free it using g_free()
  */
 /*@null@*/ char *
-cp_io_realpath(
+cp_path_realpath(
     const char *path,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT

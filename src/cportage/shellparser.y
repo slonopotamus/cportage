@@ -38,7 +38,6 @@
 #pragma GCC diagnostic ignored "-Wunreachable-code"
 
 #include "error.h"
-#include "io.h"
 #include "shellconfig.h"
 #include "strings.h"
 

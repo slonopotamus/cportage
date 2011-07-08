@@ -19,7 +19,6 @@
 
 #include <stdlib.h>
 
-#include "io.h"
 #include "repository.h"
 
 struct CPRepository {

@@ -31,7 +31,7 @@ cp_incrementals_new(GTree *config) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 void
 cp_incrementals_destroy(
-    /*@null@*/ /*@only@*/ /*@out@*/ CPIncrementals self
+    /*@null@*/ /*@only@*/ CPIncrementals self
 ) /*@modifies self@*/;
 
 gboolean

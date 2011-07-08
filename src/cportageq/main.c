@@ -253,6 +253,39 @@ ERR:
     return retval;
 }
 
+static int
+is_protected(
+    int argc,
+    char **argv,
+    GError **error
+) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+    CPSettings settings = NULL;
+    CPConfigProtect config_protect = NULL;
+    int retval = 2;
+
+    if (argc != 2) {
+        g_critical(_("ERROR: expected 2 parameters, got %d!"), argc);
+        goto ERR;
+    }
+
+    settings = cp_settings_new(argv[0], error);
+    if (settings == NULL) {
+        goto ERR;
+    }
+
+    config_protect = cp_config_protect_new(settings);
+
+    retval = cp_config_protect_is_protected(config_protect, argv[1])
+        ? EXIT_SUCCESS
+        : EXIT_FAILURE;
+
+ERR:
+    cp_settings_unref(settings);
+    cp_config_protect_destroy(config_protect);
+
+    return retval;
+}
+
 static void
 usage(const char *progname) /*@modifies *stdout@*/ {
     /* TODO: usage docs */
@@ -298,8 +331,10 @@ main(int argc, char **argv)
         retval = do_with_pkgs(argc - 2, &argv[2], print_last, &error);
     } else if (strcmp("vdb_path", argv[1]) == 0) {
         retval = vdb_path(&error);
+    } else if (strcmp("is_protected", argv[1]) == 0) {
+        retval = is_protected(argc - 2, &argv[2], &error);
     /*
-      TODO: mass_best_version, metadata, contents, owners, is_protected,
+      TODO: mass_best_version, metadata, contents, owners,
       filter_protected, best_visible, mass_best_visible, all_best_visible,
       list_preserved_libs
      */

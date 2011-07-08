@@ -35,7 +35,7 @@ build_profile_str(
     char *profiles_dir = g_build_filename(portdir, "profiles", NULL);
     const char *profile = cp_settings_profile(settings);
 
-    char *result = cp_io_get_relative_path(profiles_dir, profile);
+    char *result = cp_path_get_relative(profiles_dir, profile);
     if (result == NULL) {
         result = g_strconcat("!", profile, NULL);
     }
