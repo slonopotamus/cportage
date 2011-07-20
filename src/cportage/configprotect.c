@@ -21,10 +21,26 @@
 
 #include <cportage.h>
 
+#include "settings.h"
+
 struct CPConfigProtect {
-    /*@only@*/ char **protected;
-    /*@only@*/ char **masked;
+    /*@null@*/ /*@only@*/ GSList/*<char *>*/ *protected;
+    /*@null@*/ /*@only@*/ GSList/*<char *>*/ *masked;
 };
+
+static /*@null@*/ /*@only@*/ GSList *
+build_path_list(CPSettings settings, const char *key) /*@*/ {
+    const char *root = cp_settings_root(settings);
+    char **items = cp_strings_pysplit(cp_settings_get_default(settings, key, ""));
+    GSList *result = NULL;
+
+    CP_STRV_ITER(items, item) {
+        result = g_slist_prepend(result, g_build_filename(root, item, NULL));
+    } end_CP_STRV_ITER
+
+    g_strfreev(items);
+    return result;
+}
 
 CPConfigProtect
 cp_config_protect_new(CPSettings settings) {
@@ -32,14 +48,8 @@ cp_config_protect_new(CPSettings settings) {
 
     self = g_new0(struct CPConfigProtect, 1);
 
-    /* TODO: only allow absolute paths? */
-    self->protected = cp_strings_pysplit(
-        cp_settings_get_default(settings, "CONFIG_PROTECT", "")
-    );
-
-    self->masked = cp_strings_pysplit(
-        cp_settings_get_default(settings, "CONFIG_PROTECT_MASK", "")
-    );
+    self->protected = build_path_list(settings, "CONFIG_PROTECT");
+    self->masked = build_path_list(settings, "CONFIG_PROTECT_MASK");
 
     return self;
 }
@@ -52,8 +62,8 @@ cp_config_protect_destroy(CPConfigProtect self) {
         /*@=mustfreeonly@*/
     }
 
-    g_strfreev(self->protected);
-    g_strfreev(self->masked);
+    g_slist_free_full(self->protected, g_free);
+    g_slist_free_full(self->masked, g_free);
 
     g_free(self);
 }
@@ -62,18 +72,17 @@ gboolean
 cp_config_protect_is_protected(const CPConfigProtect self, const char *path) {
     /* PMS, section 13.3.3 */
 
-    /* TODO: respect settings root */
-    CP_STRV_ITER(self->masked, item) {
+    CP_GSLIST_ITER(self->masked, item) {
         if (strcmp(item, path) == 0 || cp_path_is_descendant(item, path)) {
             return FALSE;
         }
-    } end_CP_STRV_ITER
+    } end_CP_GSLIST_ITER
 
-    CP_STRV_ITER(self->protected, item) {
+    CP_GSLIST_ITER(self->protected, item) {
         if (strcmp(item, path) == 0 || cp_path_is_descendant(item, path)) {
             return TRUE;
         }
-    } end_CP_STRV_ITER
+    } end_CP_GSLIST_ITER
 
     return FALSE;
 }
