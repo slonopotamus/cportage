@@ -206,11 +206,11 @@ concat_keys(GTree *tree) /*@*/ {
 
 static gboolean
 add_to_tree(
-    void *key,
+    /*@keep@*/ void *key,
     /*@keep@*/ void *value,
     void *user_data
 ) /*@modifies *user_data@*/ {
-    g_tree_insert(user_data, g_strdup(key), value);
+    g_tree_insert(user_data, key, value);
 
     return FALSE;
 }
