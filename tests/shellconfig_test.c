@@ -49,14 +49,14 @@ static void
 empty(void) {
     GHashTable *entries = assert_parse("shellconfig_test_empty.conf");
     g_assert(g_hash_table_size(entries) == 0);
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
 eol(void) {
     GHashTable *entries = assert_parse("shellconfig_test_eol.conf");
     g_assert(g_hash_table_size(entries) == 0);
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -76,7 +76,7 @@ simple(void) {
     g_assert_cmpstr(g_hash_table_lookup(entries, "NONREF"), ==, "");
     g_assert_cmpstr(g_hash_table_lookup(entries, "SHELL"), ==, "/bin/bash");
     g_assert_cmpstr(g_hash_table_lookup(entries, "UNICODE"), ==, "юникод");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -85,7 +85,7 @@ comments(void) {
     g_assert(g_hash_table_size(entries) == 2);
     g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "B");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "B");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -93,7 +93,7 @@ line_cont(void) {
     GHashTable *entries = assert_parse("shellconfig_test_line_cont.conf");
     g_assert(g_hash_table_size(entries) == 1);
     g_assert_cmpstr(g_hash_table_lookup(entries, "A"), ==, "BCD");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -102,7 +102,7 @@ source(void) {
     g_assert(g_hash_table_size(entries) == 2);
     g_assert_cmpstr(g_hash_table_lookup(entries, "VAR1"), ==, "VAL1");
     g_assert_cmpstr(g_hash_table_lookup(entries, "VAR2"), ==, "VAL2");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -113,7 +113,7 @@ escapes(void) {
     g_assert_cmpstr(g_hash_table_lookup(entries, "B"), ==, "${B}");
     g_assert_cmpstr(g_hash_table_lookup(entries, "C"), ==, "$C");
     g_assert_cmpstr(g_hash_table_lookup(entries, "D"), ==, "${D}");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -126,7 +126,7 @@ exotic(void) {
     g_assert_cmpstr(g_hash_table_lookup(entries, "export"), ==, "export");
     g_assert_cmpstr(g_hash_table_lookup(entries, "E"     ), ==, "a b");
     g_assert_cmpstr(g_hash_table_lookup(entries, "E1"    ), ==, "a b");
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 static void
@@ -153,7 +153,7 @@ expand_simple(void) {
     g_assert_cmpstr(expanded, ==, "123");
     g_free(expanded);
 
-    g_hash_table_destroy(entries);
+    g_hash_table_unref(entries);
 }
 
 int

@@ -128,7 +128,7 @@ populate_cache(
     const CPVartree self,
     const char *category,
     /*@null@*/ GError **error
-) /*@modifies *name2pkg,*error,errno@*/ /*@globals fileSystem@*/ {
+) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
     GHashTable *name2pkg = NULL;
     char *cat_path = NULL;
     GDir *cat_dir = NULL;
@@ -179,8 +179,11 @@ OUT:
     return result;
 }
 
-static gboolean
-init_cache(CPVartree self, /*@null@*/ GError **error) {
+static gboolean G_GNUC_WARN_UNUSED_RESULT
+init_cache(
+    CPVartree self,
+    /*@null@*/ GError **error
+) /*@modifies *self,*error@*/ /*@globals fileSystem@*/ {
     GDir *vdb_dir = NULL;
     gboolean result = FALSE;
 
@@ -194,7 +197,10 @@ init_cache(CPVartree self, /*@null@*/ GError **error) {
     CP_GDIR_ITER(vdb_dir, category) {
         if (self->lazy_cache) {
             g_hash_table_insert(self->cache, g_strdup(category), NULL);
-        } else if (!populate_cache(self, category, error)) {
+            continue;
+        }
+
+        if (!populate_cache(self, category, error)) {
             goto ERR;
         }
     } end_CP_GDIR_ITER
@@ -232,7 +238,10 @@ cp_vartree_new(const CPSettings settings, GError **error) {
     return self;
 
 ERR:
+    /*@-usereleased@*/
     cp_vartree_unref(self);
+    /*@=usereleased@*/
+
     return NULL;
 }
 
@@ -246,20 +255,23 @@ cp_vartree_ref(CPVartree self) {
 
 void
 cp_vartree_unref(CPVartree self) {
+    /*@-mustfreeonly@*/
     if (self == NULL) {
-        /*@-mustfreeonly@*/
         return;
-        /*@=mustfreeonly@*/
     }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->path);
-        cp_hash_table_destroy(self->cache);
 
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
     }
+    /*@=mustfreeonly@*/
+
+    g_free(self->path);
+    cp_hash_table_destroy(self->cache);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 static gboolean
@@ -268,12 +280,13 @@ get_category_cache(
     const char *cat,
     /*@out@*/ GHashTable **result,
     /*@null@*/ GError **error
-) {
+) /*@modifies *self,*result,*error,errno@*/ /*@globals fileSystem@*/ {
     g_assert(error == NULL || *error == NULL);
+
+    *result = NULL;
 
     if (!g_hash_table_lookup_extended(self->cache, cat, NULL, (void **)result)) {
         /* Nonexistent category */
-        *result = NULL;
         return TRUE;
     }
 
@@ -303,13 +316,15 @@ get_package_cache(
 
     g_assert(error == NULL || *error == NULL);
 
+    *result = NULL;
+
     if (!get_category_cache(self, category, &name2pkg, error)) {
         return FALSE;
     }
 
-    *result = name2pkg == NULL
-        ? NULL
-        : g_hash_table_lookup(name2pkg, package);
+    if (name2pkg != NULL) {
+        *result = g_hash_table_lookup(name2pkg, package);
+    }
 
     return TRUE;
 }
@@ -327,11 +342,11 @@ cp_vartree_find_packages(
 
     g_assert(error == NULL || *error == NULL);
 
+    *match = NULL;
+
     if (!get_package_cache(self, category, package, &pkgs, error)) {
         return FALSE;
     }
-
-    *match = NULL;
 
     CP_GSLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {

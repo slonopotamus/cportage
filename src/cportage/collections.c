@@ -22,23 +22,18 @@
 
 #include "collections.h"
 
-static void
-do_remove(void *elem, void *user_data) {
-    g_tree_remove(user_data, elem);
-}
-
 struct removal_data {
     /*@null@*/ GSList *to_remove;
-    GHRFunc func;
-    /*@null@*/ void *user_data;
+    /*@shared@*/ GHRFunc func;
+    /*@null@*/ /*@temp@*/ void *user_data;
 };
 
 static gboolean
-collect_removals(void *key, void *value, void *user_data) {
+collect_removals(/*@keep@*/ void *key, void *value, void *user_data) {
     struct removal_data *data = user_data;
 
     if (data->func(key, value, data->user_data)) {
-        data->to_remove = g_slist_append(data->to_remove, key);
+        data->to_remove = g_slist_prepend(data->to_remove, key);
     }
 
     return FALSE;
@@ -53,22 +48,33 @@ cp_tree_foreach_remove(GTree *tree, GHRFunc func, void *user_data) {
     data.user_data = user_data;
 
     g_tree_foreach(tree, collect_removals, &data);
-    g_slist_foreach(data.to_remove, do_remove, tree);
+
+    CP_GSLIST_ITER(data.to_remove, elem) {
+        (void)g_tree_remove(tree, elem);
+    } end_CP_GSLIST_ITER
+
     g_slist_free(data.to_remove);
 }
 
 void
 cp_hash_table_destroy(GHashTable *hash_table) {
-    if (hash_table) {
+    if (hash_table != NULL) {
         g_hash_table_destroy(hash_table);
+    }
+}
+
+void
+cp_tree_destroy(GTree *tree) {
+    if (tree != NULL) {
+        g_tree_destroy(tree);
     }
 }
 
 gboolean
 cp_true_filter(
-    void *key G_GNUC_UNUSED,
-    void *value G_GNUC_UNUSED,
-    void *user_data G_GNUC_UNUSED
+    /*@unused@*/ void *key G_GNUC_UNUSED,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    /*@unused@*/ void *user_data G_GNUC_UNUSED
 ) /*@*/ {
     return TRUE;
 }
@@ -79,7 +85,7 @@ cp_stack_dict(GTree *tree, char **items) /*@modifies *tree@*/ {
         if (strcmp(item, "-*") == 0) {
             cp_tree_foreach_remove(tree, cp_true_filter, NULL);
         } else if (item[0] == '-') {
-            g_tree_remove(tree, &item[1]);
+            (void)g_tree_remove(tree, &item[1]);
         } else {
             g_tree_insert(tree, g_strdup(item), NULL);
         }

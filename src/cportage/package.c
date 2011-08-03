@@ -73,24 +73,27 @@ cp_package_ref(CPPackage self) {
 
 void
 cp_package_unref(CPPackage self) {
+    /*@-mustfreeonly@*/
     if (self == NULL) {
-        /*@-mustfreeonly@*/
         return;
-        /*@=mustfreeonly@*/
     }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->category);
-        g_free(self->name);
-        cp_version_unref(self->version);
-        g_free(self->slot);
-        g_free(self->repo);
-        g_free(self->str);
 
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
     }
+    /*@=mustfreeonly@*/
+
+    g_free(self->category);
+    g_free(self->name);
+    cp_version_unref(self->version);
+    g_free(self->slot);
+    g_free(self->repo);
+    g_free(self->str);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 void

@@ -28,8 +28,8 @@
 
 #include <cportage.h>
 
-static const char *
-get_root(void) {
+static /*@observer@*/ const char *
+get_root(void) /*@*/ {
     const char *result = g_getenv("ROOT");
     return result == NULL ? "/" : result;
 }
@@ -292,14 +292,14 @@ usage(const char *progname) /*@modifies *stdout@*/ {
     g_print("%s: usage\n", progname);
 }
 
-/*@observer@*/ static const char * const vars[] = {
+/*@observer@*/ /*@unchecked@*/ static const char * const vars[] = {
     "distdir", "pkgdir", "portdir_overlay", "config_protect_mask",
     "config_protect", "portdir", "gentoo_mirrors"
 };
 
 int
 main(int argc, char **argv)
-/*@modifies stdout,*stderr,errno,internalState,fileSystem@*/ /*@globals vars@*/ {
+/*@modifies stdout,*stderr,errno,internalState,fileSystem@*/ {
     GError *error = NULL;
     int retval;
 

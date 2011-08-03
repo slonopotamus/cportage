@@ -186,6 +186,9 @@ g_path_get_basename(const gchar *file_name) /*@*/;
 gboolean
 g_path_is_absolute(const gchar *file_name) /*@*/;
 
+/*@shared@*/ const gchar *
+g_getenv(const gchar *variable) /*@*/;
+
 /* gfileutils.h */
 
 /*@constant GQuark G_FILE_ERROR @*/
@@ -363,7 +366,12 @@ g_utf8_strchr(
 ) /*@*/;
 
 /* ghash.h */
+
 typedef struct _GHashTable GHashTable;
+
+typedef gboolean  (*GHRFunc)  (gpointer  key,
+                               gpointer  value,
+                               gpointer  user_data);
 
 /*@only@*/ GHashTable *
 g_hash_table_new_full(
@@ -407,6 +415,58 @@ g_str_equal(gconstpointer v1, gconstpointer v2) /*@*/;
 
 guint
 g_str_hash(gconstpointer v) /*@*/;
+
+/* gtree.h */
+
+typedef struct _GTree GTree;
+
+typedef gboolean (*GTraverseFunc) (gpointer  key,
+                                   gpointer  value,
+                                   gpointer  data);
+
+/*@only@*/ GTree *
+g_tree_new(GCompareFunc key_compare_func) /*@*/;
+
+/*@only@*/ GTree *
+g_tree_new_full(
+    GCompareDataFunc key_compare_func,
+    /*@keep@*/ /*@null@*/ gpointer key_compare_data,
+    /*@null@*/ GDestroyNotify key_destroy_func,
+    /*@null@*/ GDestroyNotify value_destroy_func
+) /*@*/;
+
+void
+g_tree_insert(
+    GTree *tree,
+    /*@keep@*/ gpointer key,
+    /*@keep@*/ /*@null@*/ gpointer value
+) /*@modifies *tree@*/;
+
+/*@null@*/ /*@dependent@*/ gpointer
+g_tree_lookup(GTree *tree, gconstpointer key) /*@*/;
+
+gboolean
+g_tree_lookup_extended(
+    GTree *tree,
+    gconstpointer lookup_key,
+    /*@null@*/ /*@out@*/ gpointer *orig_key,
+    /*@null@*/ /*@out@*/ gpointer *value
+) /*@modifies *orig_key,*value@*/;
+
+gboolean
+g_tree_remove(GTree *tree, gconstpointer key) /*@modifies *tree@*/;
+
+void
+g_tree_destroy(
+    /*@only@*/ GTree *tree
+) /*@modifies tree@*/;
+
+void
+g_tree_foreach(
+    GTree *tree,
+    GTraverseFunc func,
+    /*@null@*/ gpointer user_data
+) /*@modifies *user_data@*/;
 
 /* gspawn.h */
 
@@ -515,12 +575,12 @@ g_slist_foreach(
     /*@null@*/ GSList *list,
     GFunc func,
     /*@null@*/ gpointer user_data
-) /*@modifies *list,user_data@*/;
+) /*@modifies *user_data@*/;
 
 /*@only@*/ GSList *
 g_slist_insert_sorted(
     /*@null@*/ GSList *list,
-    /*@null@*/ gpointer data,
+    /*@keep@*/ /*@null@*/ gpointer data,
     GCompareFunc func
 ) /*@modifies *list@*/;
 
@@ -663,5 +723,16 @@ g_option_context_parse(
     gchar ***argv,
     /*@null@*/ GError **error
 ) /*@modifies *argc,*argv,*error,*stderr,*stdout,errno@*/;
+
+/* gqsort.h */
+
+void
+g_qsort_with_data(
+    gconstpointer pbase,
+    gint total_elems,
+    gsize size,
+    GCompareDataFunc compare_func,
+    /*@null@*/ gpointer user_data
+) /*@modifies *pbase@*/;
 
 #endif

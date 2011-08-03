@@ -33,12 +33,12 @@ struct CPSettings {
     /*@only@*/ char *root;
     /*@only@*/ char *profile;
 
-    /*@only@*/ GTree/*<char *, char *>*/ *config;
+    /*@owned@*/ GTree/*<char *, char *>*/ *config;
     /*@only@*/ CPIncrementals incrementals;
 
     CPRepository main_repo;
-    GSList/*<CPRepository>*/ *repos;
-    GTree/*<char *,CPRepository>*/ *name2repo;
+    /*@only@*/ GSList/*<CPRepository>*/ *repos;
+    /*@only@*/ GTree/*<char *,CPRepository>*/ *name2repo;
 
     /*@refs@*/ unsigned int refs;
 };
@@ -60,14 +60,17 @@ init_cbuild(CPSettings self) /*@modifies *self@*/ {
     g_tree_insert(self->config, g_strdup("CBUILD"), g_strdup(chost));
 }
 
-static gboolean
+static gboolean G_GNUC_WARN_UNUSED_RESULT
 read_config(
     CPSettings self,
     const char *path,
     gboolean allow_source,
     gboolean stack_use_expand,
-    GError **error
-) {
+    /*@null@*/ GError **error
+) /*@modifies *self,*error@*/ /*@globals errno,fileSystem@*/ {
+
+    g_assert(error == NULL || *error == NULL);
+
     if (!cp_read_shellconfig(
         self->config,
         (CPShellconfigLookupFunc)g_tree_lookup,
@@ -148,14 +151,14 @@ add_parent_profiles(
 
 /** See declaration above. */
 static gboolean
-add_profile(CPSettings self, const char *dir, GError **error) {
+add_profile(CPSettings self, const char *profile_dir, GError **error) {
     char *config_file;
     gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
 
     /* Check eapi */
-    config_file = g_build_filename(dir, "eapi", NULL);
+    config_file = g_build_filename(profile_dir, "eapi", NULL);
     result = cp_eapi_check_file(config_file, error);
     g_free(config_file);
     if (!result) {
@@ -163,15 +166,15 @@ add_profile(CPSettings self, const char *dir, GError **error) {
     }
 
     /* Check whether profile is deprecated */
-    config_file = g_build_filename(dir, "deprecated", NULL);
+    config_file = g_build_filename(profile_dir, "deprecated", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        g_warning("Profile %s is deprecated", dir);
+        g_warning("Profile %s is deprecated", profile_dir);
         /* TODO: read and print deprecation reason from file */
     }
     g_free(config_file);
 
     /* Load parents */
-    config_file = g_build_filename(dir, "parent", NULL);
+    config_file = g_build_filename(profile_dir, "parent", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         result = add_parent_profiles(self, config_file, error);
     }
@@ -182,7 +185,7 @@ add_profile(CPSettings self, const char *dir, GError **error) {
 
     /* Parse profile configs */
 
-    config_file = g_build_filename(dir, "make.defaults", NULL);
+    config_file = g_build_filename(profile_dir, "make.defaults", NULL);
     if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
         result = read_config(self, config_file, FALSE, TRUE, error);
     }
@@ -191,7 +194,9 @@ add_profile(CPSettings self, const char *dir, GError **error) {
         return FALSE;
     }
 
-    return cp_incrementals_process_profile(self->incrementals, dir, error);
+    return cp_incrementals_process_profile(
+        self->incrementals, profile_dir, error
+    );
 }
 
 /**
@@ -217,6 +222,7 @@ load_etc_config(
     gboolean result;
 
     g_assert(error == NULL || *error == NULL);
+
     path = g_build_filename(root_relative ? self->root : "/", "etc", name, NULL);
     result = !g_file_test(path, G_FILE_TEST_EXISTS)
         || read_config(self, path, allow_source, stack_use_expand, error);
@@ -296,12 +302,16 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
       self->name2repo. So, in order to simplify settings destruction,
       we increment refcount here.
      */
+     /*@-mustfreefresh@*/
     g_tree_insert(
         self->name2repo,
         g_strdup(main_repo_name),
         cp_repository_ref(self->main_repo)
     );
+    /*@=mustfreefresh@*/
+    /*@-refcounttrans@*/
     self->repos = g_slist_prepend(self->repos, self->main_repo);
+    /*@=refcounttrans@*/
 
     CP_STRV_ITER(paths, path) {
         CPRepository repo;
@@ -333,9 +343,9 @@ init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
         /*@=kepttrans@*/
 
         if (overlay_str->len > 0) {
-            g_string_append_c(overlay_str, ' ');
+            overlay_str = g_string_append_c(overlay_str, ' ');
         }
-        g_string_append(overlay_str, path);
+        overlay_str = g_string_append(overlay_str, path);
     } end_CP_STRV_ITER
 
     g_strfreev(paths);
@@ -373,6 +383,7 @@ cp_settings_new(const char *root, GError **error) {
     self->config = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, g_free
     );
+    g_assert(self->incrementals == NULL);
     self->incrementals = cp_incrementals_new(self->config);
     if (!load_etc_config(self, "profile.env", FALSE, TRUE, TRUE, error)) {
         goto ERR;
@@ -401,6 +412,7 @@ cp_settings_new(const char *root, GError **error) {
     );
 
     /* init repositories */
+    g_assert(self->name2repo == NULL);
     self->name2repo = g_tree_new_full(
         (GCompareDataFunc)strcmp,
         NULL,
@@ -436,32 +448,31 @@ cp_settings_ref(CPSettings self) {
 
 void
 cp_settings_unref(CPSettings self) {
+    /*@-mustfreeonly@*/
     if (self == NULL) {
-        /*@-mustfreeonly@*/
         return;
-        /*@=mustfreeonly@*/
     }
+
     g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->root);
-        g_free(self->profile);
-
-        if (self->config != NULL) {
-            g_tree_destroy(self->config);
-        }
-        cp_incrementals_destroy(self->incrementals);
-
-        if (self->name2repo != NULL) {
-            g_tree_destroy(self->name2repo);
-        }
-        cp_repository_unref(self->main_repo);
-        /* Repositories refcount is decremented during name2repo destruction */
-        g_slist_free(self->repos);
-
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    if (--self->refs > 0) {
+        return;
     }
+    /*@=mustfreeonly@*/
+
+    g_free(self->root);
+    g_free(self->profile);
+
+    cp_tree_destroy(self->config);
+    cp_incrementals_destroy(self->incrementals);
+
+    cp_tree_destroy(self->name2repo);
+    cp_repository_unref(self->main_repo);
+    /* Repositories refcount is decremented during name2repo destruction */
+    g_slist_free(self->repos);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 CPRepository

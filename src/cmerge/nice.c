@@ -115,9 +115,7 @@ ERR:
             g_error_free(error);
         }
         g_free(cmd);
-        if (vars != NULL) {
-            g_hash_table_destroy(vars);
-        }
+        cp_hash_table_destroy(vars);
     }
 #else
     g_warning(_("%s is specified but system doesn't have getpid() function"), key);

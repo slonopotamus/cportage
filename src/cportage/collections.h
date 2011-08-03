@@ -34,12 +34,7 @@ cp_tree_foreach_remove(
 ) /*@modifies *tree,*user_data@*/;
 
 gboolean
-cp_true_filter(void *key, void *value, void *user_data);
-
-void
-cp_hash_table_destroy(
-    /*@null@*/ /*@only@*/ GHashTable *hash_table
-) /*@modifies hash_table@*/;
+cp_true_filter(void *key, void *value, /*@null@*/ void *user_data) /*@*/;
 
 void
 cp_stack_dict(GTree *tree, char **items) /*@modifies *tree@*/;

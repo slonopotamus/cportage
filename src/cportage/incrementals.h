@@ -27,7 +27,9 @@
 typedef struct CPIncrementals *CPIncrementals;
 
 /*@only@*/ CPIncrementals
-cp_incrementals_new(GTree *config) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+cp_incrementals_new(
+    /*@dependent@*/ GTree *config
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@modifies *config@*/;
 
 void
 cp_incrementals_destroy(
@@ -39,7 +41,7 @@ cp_incrementals_process_profile(
     CPIncrementals self,
     const char *dir,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self,*error@*/ /*@globals fileSystem@*/;
 
 void
 cp_incrementals_config_changed(

@@ -49,6 +49,16 @@ cp_strings_pysplit(
     const char *str
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+void
+cp_hash_table_destroy(
+    /*@null@*/ /*@only@*/ GHashTable *hash_table
+) /*@modifies hash_table@*/;
+
+void
+cp_tree_destroy(
+    /*@null@*/ /*@only@*/ GTree *tree
+) /*@modifies tree@*/;
+
 /**
  * \return relative part of \a descendant to \a parent or %NULL if \a descendant
  *         isn't a descendant of \a parent, free it using g_free()
@@ -502,7 +512,7 @@ cp_vartree_ref(CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
 void
 cp_vartree_unref(/*@killref@*/ /*@null@*/ CPVartree self) /*@modifies self@*/;
 
-const char *
+/*@observer@*/ const char *
 cp_vartree_path(const CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
@@ -537,13 +547,19 @@ cp_vartree_find_packages(
 #endif
 /*@=namechecks@*/
 
+/*
+ * Iterators intentionally do not support nesting to:
+ * 1. Workaround Splint unawareness of ## preprocessor operator
+ * 2. To avoid overcomplicated nested loops
+ */
+
 /*@iter CP_GSLIST_ITER(GSList *list, yield gpointer elem)@*/
 
 #define CP_GSLIST_ITER(list, m_elem) { \
-    /*@null@*/ GSList *m_elem##_iter = (list); \
-    for (; m_elem##_iter != NULL; m_elem##_iter = m_elem##_iter->next) { \
+    /*@null@*/ GSList *m_iter = (list); \
+    for (; m_iter != NULL; m_iter = m_iter->next) { \
         /*@-incondefs@*/ \
-        /*@dependent@*/ /*@null@*/ void *m_elem = m_elem##_iter->data; \
+        /*@dependent@*/ /*@null@*/ void *m_elem = m_iter->data; \
         /*@=incondefs@*/
 
 #define end_CP_GSLIST_ITER }}
@@ -551,9 +567,9 @@ cp_vartree_find_packages(
 /*@iter CP_STRV_ITER(char **arr, yield char *elem)@*/
 
 #define CP_STRV_ITER(arr, m_elem) { \
-    char **m_elem##_iter = (arr); \
-    for (; *m_elem##_iter != NULL; ++m_elem##_iter) { \
-        char *m_elem = *m_elem##_iter;
+    char **m_iter = (arr); \
+    for (; *m_iter != NULL; ++m_iter) { \
+        char *m_elem = *m_iter;
 
 #define end_CP_STRV_ITER }}
 

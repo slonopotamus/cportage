@@ -36,10 +36,8 @@ set_target_properties(cportage PROPERTIES
   VERSION "${CP_VERSION}")
 set_link_flags(cportage)
 
-if(ENABLE_TESTS)
-  add_library(cportage_static STATIC ${sources})
-  set_link_flags(cportage_static)
-endif()
+add_library(cportage_static STATIC EXCLUDE_FROM_ALL ${sources})
+set_link_flags(cportage_static)
 
 configure_file(cportage.pc.in "${CMAKE_CURRENT_BINARY_DIR}/cportage.pc")
 

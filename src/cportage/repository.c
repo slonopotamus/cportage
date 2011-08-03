@@ -84,20 +84,23 @@ cp_repository_ref(CPRepository self) {
 
 void
 cp_repository_unref(CPRepository self) {
+    /*@-mustfreeonly@*/
     if (self == NULL) {
-        /*@-mustfreeonly@*/
         return;
-        /*@=mustfreeonly@*/
     }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->name);
-        g_free(self->path);
 
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
     }
+    /*@=mustfreeonly@*/
+
+    g_free(self->name);
+    g_free(self->path);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 int

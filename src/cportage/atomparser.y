@@ -486,18 +486,21 @@ cp_version_unref(CPVersion self) {
         return;
         /*@=mustfreeonly@*/
     }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->str);
-        g_free(self->major);
-        g_slist_free_full(self->minor, g_free);
-        g_slist_free_full(self->suffixes, (GDestroyNotify)suffix_free);
-        g_free(self->revision);
 
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
     }
+
+    g_free(self->str);
+    g_free(self->major);
+    g_slist_free_full(self->minor, g_free);
+    g_slist_free_full(self->suffixes, (GDestroyNotify)suffix_free);
+    g_free(self->revision);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 const char *
@@ -751,18 +754,21 @@ cp_atom_unref(CPAtom self) {
         return;
         /*@=mustfreeonly@*/
     }
-    g_assert(self->refs > 0);
-    if (--self->refs == 0) {
-        g_free(self->category);
-        g_free(self->package);
-        cp_version_unref(self->version);
-        g_free(self->slot);
-        g_free(self->repo);
 
-        /*@-refcounttrans@*/
-        g_free(self);
-        /*@=refcounttrans@*/
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
     }
+
+    g_free(self->category);
+    g_free(self->package);
+    cp_version_unref(self->version);
+    g_free(self->slot);
+    g_free(self->repo);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
 }
 
 const char *

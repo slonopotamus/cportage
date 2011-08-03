@@ -24,21 +24,22 @@
 #include "strings.h"
 
 struct CPIncrementals {
-    GTree/*<char *, char *>*/ *config;
+    /*@dependent@*/ GTree/*<char *, char *>*/ *config;
 
     /*@only@*/ GTree/*<char *, GTree<char *, NULL>>*/ *incrementals;
     /*@only@*/ GTree/*<char *, NULL>*/ *use_mask;
     /*@only@*/ GTree/*<char *, NULL>*/ *use_force;
 };
 
-static const char * const default_incrementals[] = {
+/*@observer@*/ /*@unchecked@*/ static const char * const
+default_incrementals[] = {
     "USE", "USE_EXPAND", "USE_EXPAND_HIDDEN", "FEATURES", "ACCEPT_KEYWORDS",
     "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
     "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES"
 };
 
-static GTree *
-register_incremental(CPIncrementals self, const char *key) {
+static /*@dependent@*/ GTree *
+register_incremental(CPIncrementals self, const char *key) /*@modifies *self@*/ {
     GTree *result = g_tree_lookup(self->incrementals, key);
 
     if (result == NULL) {
@@ -85,15 +86,21 @@ add_incremental(
     }
 
     cp_stack_dict(values, items);
+
+    g_strfreev(items);
 }
 
 struct add_incrementals_data {
-    CPIncrementals self;
+    /*@dependent@*/ CPIncrementals self;
     gboolean stack_use_expand;
 };
 
 static gboolean
-add_incrementals(void *key, void *value G_GNUC_UNUSED, void *user_data) {
+add_incrementals(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
     struct add_incrementals_data *data = user_data;
     CPIncrementals self = data->self;
 
@@ -102,27 +109,35 @@ add_incrementals(void *key, void *value G_GNUC_UNUSED, void *user_data) {
     );
 
     /* See post_process_incremental comments */
-    g_tree_remove(self->config, key);
+    (void)g_tree_remove(self->config, key);
 
     return FALSE;
 }
 
 static gboolean
-force_use(void *key, void *value G_GNUC_UNUSED, void *user_data) {
+force_use(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
     g_tree_insert(user_data, g_strdup(key), NULL);
 
     return FALSE;
 }
 
 static gboolean
-remove_masked_use(void *key, void *value G_GNUC_UNUSED, void *user_data) {
-    g_tree_remove(user_data, key);
+remove_masked_use(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
+    (void)g_tree_remove(user_data, key);
 
     return FALSE;
 }
 
 struct populate_use_data {
-    CPIncrementals self;
+    /*@dependent@*/ CPIncrementals self;
     char *prefix;
 };
 
@@ -144,7 +159,7 @@ populate_from_use_expand(
 static gboolean
 populate_from_use_expands(
     void *key,
-    void *value G_GNUC_UNUSED,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
 ) /*@modifies *user_data@*/ {
     CPIncrementals self = user_data;
@@ -167,26 +182,34 @@ OUT:
 }
 
 static gboolean
-concat_key(void *key, void *value G_GNUC_UNUSED, void *user_data) {
+concat_key(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
     GString *str = user_data;
     if (str->len > 0) {
-        g_string_append_c(str, ' ');
+        (void)g_string_append_c(str, ' ');
     }
 
-    g_string_append(str, key);
+    (void)g_string_append(str, key);
 
     return FALSE;
 }
 
-static char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-concat_keys(GTree *tree) {
+static /*@only@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+concat_keys(GTree *tree) /*@*/ {
     GString *str = g_string_new("");
     g_tree_foreach(tree, concat_key, str);
     return g_string_free(str, FALSE);
 }
 
 static gboolean
-add_to_tree(void *key, void *value, void *user_data) {
+add_to_tree(
+    void *key,
+    /*@keep@*/ void *value,
+    void *user_data
+) /*@modifies *user_data@*/ {
     g_tree_insert(user_data, g_strdup(key), value);
 
     return FALSE;
@@ -198,7 +221,11 @@ struct use_expand_item_data {
 };
 
 static gboolean
-filter_use_expand(void *key, void *value G_GNUC_UNUSED, void *user_data) {
+filter_use_expand(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
     struct use_expand_item_data *data = user_data;
     const char *str_key = key;
 
@@ -212,12 +239,16 @@ filter_use_expand(void *key, void *value G_GNUC_UNUSED, void *user_data) {
 }
 
 struct use_expand_data {
-    CPIncrementals self;
-    GTree *use_no_expand;
+    /*@dependent@*/ CPIncrementals self;
+    /*@dependent@*/ GTree *use_no_expand;
 };
 
 static gboolean
-regenerate_use_expand(void *key, void *value G_GNUC_UNUSED, void *user_data) {
+regenerate_use_expand(
+    void *key,
+    /*@unused@*/ void *value G_GNUC_UNUSED,
+    void *user_data
+) /*@modifies *user_data@*/ {
     struct use_expand_data *data = user_data;
     struct use_expand_item_data item_data;
     char *lower_key = g_ascii_strdown(key, (ssize_t)-1);
@@ -241,7 +272,11 @@ regenerate_use_expand(void *key, void *value G_GNUC_UNUSED, void *user_data) {
 }
 
 static gboolean
-post_process_incremental(void *key, void *value, void *user_data) {
+post_process_incremental(
+    void *key,
+    void *value,
+    void *user_data
+) /*@modifies *value,*user_data@*/ {
     CPIncrementals self = user_data;
 
     if (strcmp(key, "USE") == 0) {
@@ -298,13 +333,13 @@ post_process_incremental(void *key, void *value, void *user_data) {
     return FALSE;
 }
 
-static gboolean
+static gboolean G_GNUC_WARN_UNUSED_RESULT
 collect_profile_list(
     const char *profile_dir,
     const char *file,
     GTree *into,
     /*@null@*/ GError **error
-) {
+) /*@modifies *into,*error@*/ /*@globals fileSystem@*/ {
     char *config_file;
     gboolean result = FALSE;
 
@@ -333,18 +368,25 @@ cp_incrementals_new(GTree *config) {
     CPIncrementals self;
     size_t i;
 
-    self = g_new(struct CPIncrementals, 1);
+    self = g_new0(struct CPIncrementals, 1);
 
+    g_assert(self->config == NULL);
     self->config = config;
+
+    g_assert(self->incrementals == NULL);
     self->incrementals = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, (GDestroyNotify)g_tree_destroy
     );
     for (i = 0; i < G_N_ELEMENTS(default_incrementals); ++i) {
-        register_incremental(self, g_strdup(default_incrementals[i]));
+        (void)register_incremental(self, default_incrementals[i]);
     }
+
+    g_assert(self->use_mask == NULL);
     self->use_mask = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, NULL
     );
+
+    g_assert(self->use_force == NULL);
     self->use_force = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, NULL
     );
@@ -360,15 +402,9 @@ cp_incrementals_destroy(CPIncrementals self) {
         /*@=mustfreeonly@*/
     }
 
-    if (self->incrementals != NULL) {
-        g_tree_destroy(self->incrementals);
-    }
-    if (self->use_mask != NULL) {
-        g_tree_destroy(self->use_mask);
-    }
-    if (self->use_force != NULL) {
-        g_tree_destroy(self->use_force);
-    }
+    cp_tree_destroy(self->incrementals);
+    cp_tree_destroy(self->use_mask);
+    cp_tree_destroy(self->use_force);
 
     /*@-refcounttrans@*/
     g_free(self);
@@ -438,5 +474,6 @@ cp_incrementals_contains(
     if (values == NULL) {
         return FALSE;
     }
+
     return g_tree_lookup_extended(values, value, NULL, NULL);
 }

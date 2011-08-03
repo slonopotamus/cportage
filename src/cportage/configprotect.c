@@ -48,7 +48,9 @@ cp_config_protect_new(CPSettings settings) {
 
     self = g_new0(struct CPConfigProtect, 1);
 
+    g_assert(self->protected == NULL);
     self->protected = build_path_list(settings, "CONFIG_PROTECT");
+    g_assert(self->masked == NULL);
     self->masked = build_path_list(settings, "CONFIG_PROTECT_MASK");
 
     return self;

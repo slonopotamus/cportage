@@ -60,15 +60,15 @@ cp_strings_sort(char **str_array) {
     );
 }
 
-/*@observer@*/ static const char * const trues[] = {
+/*@observer@*/ /*@unchecked@*/ static const char * const trues[] = {
     "true", "t", "yes", "y", "1", "on"
 };
-/*@observer@*/ static const char * const falses[] = {
+/*@observer@*/ /*@unchecked@*/ static const char * const falses[] = {
     "false", "f", "no", "n", "0", "off"
 };
 
 gboolean
-cp_string_is_true(const char *str) /*@globals trues,falses@*/ {
+cp_string_is_true(const char *str) {
     size_t i;
 
     if (str == NULL) {
