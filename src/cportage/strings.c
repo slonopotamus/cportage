@@ -67,26 +67,25 @@ cp_strings_sort(char **str_array) {
     "false", "f", "no", "n", "0", "off"
 };
 
-gboolean
-cp_string_is_true(const char *str) {
+CPTriBoolean
+cp_string_truth(const char *str) {
     size_t i;
 
     if (str == NULL) {
-        return FALSE;
+        return CP_UNKNOWN;
     }
 
     for (i = 0; i < G_N_ELEMENTS(trues); ++i) {
         if (g_ascii_strcasecmp(trues[i], str) == 0) {
-            return TRUE;
+            return CP_TRUE;
         }
     }
 
     for (i = 0; i < G_N_ELEMENTS(falses); ++i) {
         if (g_ascii_strcasecmp(falses[i], str) == 0) {
-            return FALSE;
+            return CP_FALSE;
         }
     }
 
-    g_warning("Unknown boolean value '%s', assuming true", str);
-    return TRUE;
+    return CP_UNKNOWN;
 }

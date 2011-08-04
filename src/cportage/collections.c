@@ -32,9 +32,11 @@ static gboolean
 collect_removals(/*@keep@*/ void *key, void *value, void *user_data) {
     struct removal_data *data = user_data;
 
+    /*@-branchstate@*/
     if (data->func(key, value, data->user_data)) {
         data->to_remove = g_slist_prepend(data->to_remove, key);
     }
+    /*@=branchstate@*/
 
     return FALSE;
 }

@@ -41,7 +41,8 @@ cp_incrementals_process_profile(
     CPIncrementals self,
     const char *dir,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self,*error@*/ /*@globals fileSystem@*/;
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/;
 
 void
 cp_incrementals_config_changed(

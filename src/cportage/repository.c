@@ -121,7 +121,7 @@ cp_repository_sync(const CPRepository self, GError **error) {
         return EXIT_FAILURE;
     }
 
-    if (!WIFEXITED(status)) {
+    if (WIFEXITED(status) != 0) {
         g_set_error(error, G_SPAWN_ERROR, (gint)G_SPAWN_ERROR_FAILED,
             _("git pull error in %s"), self->path);
         return EXIT_FAILURE;

@@ -67,7 +67,7 @@ read_config(
     gboolean allow_source,
     gboolean stack_use_expand,
     /*@null@*/ GError **error
-) /*@modifies *self,*error@*/ /*@globals errno,fileSystem@*/ {
+) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
 
     g_assert(error == NULL || *error == NULL);
 
@@ -282,7 +282,7 @@ init_main_repo(
 }
 
 static void
-init_repos(CPSettings self) /*@modifies *self@*/ /*@globals fileSystem@*/ {
+init_repos(CPSettings self) /*@modifies *self,*stderr,errno@*/ /*@globals fileSystem@*/ {
     const char *main_repo_name;
     const char *path_str;
     char **paths;

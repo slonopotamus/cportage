@@ -8,6 +8,6 @@ find src -name \*.c -print0 \
     | xargs -0 splint -Iinclude -Isplint-include -Isrc/cportage -Ibuild \
         -DCPORTAGE_COMPILATION -DGETTEXT_PACKAGE=\"cportage\" \
         -Dyyscan_t=gpointer \
-        -warnposix -strict -nullstate -exportlocal -protoparamname -sizeoftype \
+        -posixstrictlib -strict -nullstate -exportlocal -protoparamname -sizeoftype \
         -sysdirs src/cmerge:splint-include:/usr -sysdirerrors -warnmissingglobs \
         -boundsread -boundswrite -fcnuse -declundef -compmempass 2>&1

@@ -439,7 +439,7 @@ doparse(cp_atomparser_ctx *ctx, const char *value, int magic) {
     cp_atomparser__switch_to_buffer(bp, ctx->yyscanner);
     cp_atomparser_set_extra(ctx, ctx->yyscanner);
 
-    if (cp_string_is_true(g_getenv("CPORTAGE_ATOMPARSER_DEBUG"))) {
+    if (cp_string_truth(g_getenv("CPORTAGE_ATOMPARSER_DEBUG")) == CP_TRUE) {
         cp_atomparser_debug = 1;
         cp_atomparser_set_debug(1, ctx->yyscanner);
     }

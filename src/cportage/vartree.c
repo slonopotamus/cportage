@@ -183,7 +183,7 @@ static gboolean G_GNUC_WARN_UNUSED_RESULT
 init_cache(
     CPVartree self,
     /*@null@*/ GError **error
-) /*@modifies *self,*error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
     GDir *vdb_dir = NULL;
     gboolean result = FALSE;
 
@@ -224,9 +224,9 @@ cp_vartree_new(const CPSettings settings, GError **error) {
     self->path = g_build_filename(cp_settings_root(settings),
                                   "var", "db", "pkg", NULL);
 
-    self->lazy_cache = cp_string_is_true(
+    self->lazy_cache = cp_string_truth(
         cp_settings_get_default(settings, "CPORTAGE_VARTREE_LAZY", "true")
-    );
+    ) == CP_TRUE;
     g_assert(self->cache == NULL);
     self->cache = g_hash_table_new_full(
         g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_hash_table_destroy
@@ -298,7 +298,9 @@ get_category_cache(
             return FALSE;
         }
 
+        /*@-dependenttrans@*/
         *result = g_hash_table_lookup(self->cache, cat);
+        /*@=dependenttrans@*/
     }
 
     return TRUE;
@@ -323,7 +325,9 @@ get_package_cache(
     }
 
     if (name2pkg != NULL) {
+        /*@-dependenttrans@*/
         *result = g_hash_table_lookup(name2pkg, package);
+        /*@=dependenttrans@*/
     }
 
     return TRUE;

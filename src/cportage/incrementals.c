@@ -100,7 +100,7 @@ add_incrementals(
     void *key,
     /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
-) /*@modifies *user_data@*/ {
+) /*@*/ {
     struct add_incrementals_data *data = user_data;
     CPIncrementals self = data->self;
 
@@ -146,7 +146,7 @@ populate_from_use_expand(
     void *key,
     /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
-) /*@modifies *user_data@*/ {
+) /*@*/ {
     struct populate_use_data *data = user_data;
     char *str = g_strdup_printf("%s_%s", data->prefix, (char *)key);
 
@@ -161,7 +161,7 @@ populate_from_use_expands(
     void *key,
     /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
-) /*@modifies *user_data@*/ {
+) /*@*/ {
     CPIncrementals self = user_data;
     struct populate_use_data data;
     GTree *values = g_tree_lookup(self->incrementals, key);
@@ -199,9 +199,12 @@ concat_key(
 
 static /*@only@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 concat_keys(GTree *tree) /*@*/ {
+    char *result;
     GString *str = g_string_new("");
     g_tree_foreach(tree, concat_key, str);
-    return g_string_free(str, FALSE);
+    result = g_string_free(str, FALSE);
+    g_assert(result != NULL);
+    return result;
 }
 
 static gboolean
@@ -225,7 +228,7 @@ filter_use_expand(
     void *key,
     /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
-) /*@modifies *user_data@*/ {
+) /*@*/ {
     struct use_expand_item_data *data = user_data;
     const char *str_key = key;
 
@@ -248,7 +251,7 @@ regenerate_use_expand(
     void *key,
     /*@unused@*/ void *value G_GNUC_UNUSED,
     void *user_data
-) /*@modifies *user_data@*/ {
+) /*@*/ {
     struct use_expand_data *data = user_data;
     struct use_expand_item_data item_data;
     char *lower_key = g_ascii_strdown(key, (ssize_t)-1);
@@ -339,7 +342,7 @@ collect_profile_list(
     const char *file,
     GTree *into,
     /*@null@*/ GError **error
-) /*@modifies *into,*error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *into,*error,errno@*/ /*@globals fileSystem@*/ {
     char *config_file;
     gboolean result = FALSE;
 

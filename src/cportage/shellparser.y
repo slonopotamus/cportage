@@ -316,7 +316,7 @@ doparse(
     ctx->magic = magic;
     cp_shellconfig_set_extra(ctx, ctx->yyscanner);
 
-    if (cp_string_is_true(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG"))) {
+    if (cp_string_truth(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG")) == CP_TRUE) {
         cp_shellconfig_debug = 1;
         cp_shellconfig_set_debug(1, ctx->yyscanner);
     }

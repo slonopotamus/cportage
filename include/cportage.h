@@ -533,7 +533,7 @@ cp_vartree_find_packages(
     /*@out@*/ GSList/*<CPPackage>*/ **match,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies self,*match,*error@*/ /*@globals fileSystem@*/;
+/*@modifies self,*match,*error,errno@*/ /*@globals fileSystem@*/;
 
 /*
   This macro intentionally conflicts with GLib one. The only difference is that

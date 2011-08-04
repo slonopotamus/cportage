@@ -301,6 +301,12 @@ g_ascii_strcasecmp(const gchar *s1,  const gchar *s2) /*@*/;
 g_ascii_strup(const gchar *str, gssize len) /*@*/;
 
 /*@only@*/ gchar *
+g_ascii_strdown(const gchar *str, gssize len) /*@*/;
+
+gboolean
+g_str_has_prefix(const gchar *str, const gchar *prefix) /*@*/;
+
+/*@only@*/ gchar *
 g_strconcat(const gchar *string1, ...) /*@*/;
 
 guint

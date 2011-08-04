@@ -39,7 +39,7 @@ envvar(
     int argc,
     char **argv,
     GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stdout,*stderr,errno@*/ /*@globals fileSystem@*/ {
     int i = 0;
     gboolean verbose = FALSE;
     CPSettings settings = NULL;
@@ -82,7 +82,7 @@ get_repos(
     int argc,
     char **argv,
     GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stdout,*stderr,errno@*/ /*@globals fileSystem@*/ {
     CPSettings settings = NULL;
     int i = 0;
     int retval = 2;
@@ -119,7 +119,7 @@ get_repo_path(
     int argc, 
     char **argv,
     GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stdout,*stderr,errno@*/ /*@globals fileSystem@*/ {
     CPSettings settings = NULL;
     int i;
     int retval = 2;
@@ -154,7 +154,7 @@ do_with_pkgs(
     char **argv,
     int (*func)(GSList *pkgs),
     /*@null@*/ GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stderr,errno@*/ /*@globals fileSystem@*/ {
     CPAtom atom = NULL;
     CPSettings settings = NULL;
     CPVartree vartree = NULL;
@@ -196,8 +196,8 @@ ERR:
     return retval;
 }
 
-static int
-print_pkgs(GSList *pkgs) {
+static int G_GNUC_WARN_UNUSED_RESULT
+print_pkgs(GSList *pkgs) /*@modifies *stdout,errno@*/ {
     CP_GSLIST_ITER(pkgs, pkg) {
         g_print("%s\n", cp_package_str(pkg));
     } end_CP_GSLIST_ITER
@@ -205,13 +205,13 @@ print_pkgs(GSList *pkgs) {
     return EXIT_SUCCESS;
 }
 
-static int
-test_nonempty(GSList *pkgs) {
+static int G_GNUC_WARN_UNUSED_RESULT
+test_nonempty(GSList *pkgs) /*@*/ {
     return pkgs == NULL? 1 : EXIT_SUCCESS;
 }
 
-static int
-print_last(GSList *pkgs) {
+static int G_GNUC_WARN_UNUSED_RESULT
+print_last(GSList *pkgs) /*@modifies *stdout,errno@*/ {
     GSList *last = g_slist_last(pkgs);
 
     if (last == NULL) {
@@ -227,7 +227,7 @@ print_last(GSList *pkgs) {
 static int
 vdb_path(
     GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stdout,*stderr,errno@*/ /*@globals fileSystem@*/ {
     CPSettings settings = NULL;
     CPVartree vartree  = NULL;
     int retval = 2;
@@ -258,7 +258,7 @@ is_protected(
     int argc,
     char **argv,
     GError **error
-) /*@modifies *error@*/ /*@globals fileSystem@*/ {
+) /*@modifies *error,*stderr,errno@*/ /*@globals fileSystem@*/ {
     CPSettings settings = NULL;
     CPConfigProtect config_protect = NULL;
     int retval = 2;
@@ -287,7 +287,7 @@ ERR:
 }
 
 static void
-usage(const char *progname) /*@modifies *stdout@*/ {
+usage(const char *progname) /*@modifies *stdout,errno@*/ {
     /* TODO: usage docs */
     g_print("%s: usage\n", progname);
 }
@@ -299,7 +299,7 @@ usage(const char *progname) /*@modifies *stdout@*/ {
 
 int
 main(int argc, char **argv)
-/*@modifies stdout,*stderr,errno,internalState,fileSystem@*/ {
+/*@modifies *stdout,*stderr,errno,internalState,fileSystem@*/ {
     GError *error = NULL;
     int retval;
 

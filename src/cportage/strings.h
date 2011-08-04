@@ -26,16 +26,23 @@
 
 /*@-exportany@*/
 
+typedef enum {
+    CP_TRUE,
+    CP_FALSE,
+    CP_UNKNOWN
+} CPTriBoolean;
+
 /**
- * Parses string as boolean
+ * Parses string as tri-state boolean
  *
- * \return %FALSE if \a str is one of "false", "f", "no", "n", "0",
- *         %TRUE otherwise
+ * \return #CP_TRUE  if \a str is one of "true",  "t", "yes", "y", "1", "on";
+ *         #CP_FALSE if \a str is one of "false", "f", "no",  "n", "0", "off";
+ *         #CP_UNKNOWN otherwise
  */
-gboolean
-cp_string_is_true(
+CPTriBoolean
+cp_string_truth(
     /*@null@*/ const char *str
 ) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *stderr,errno@*/;
+/*@*/;
 
 #endif
