@@ -158,6 +158,7 @@ do_with_pkgs(
     CPAtom atom = NULL;
     CPSettings settings = NULL;
     CPVartree vartree = NULL;
+    CPTree vardb = NULL;
     GSList *pkgs = NULL;
     int retval = 2;
 
@@ -180,8 +181,9 @@ do_with_pkgs(
     if (vartree == NULL) {
         goto ERR;
     }
+    vardb = cp_vartree_get_tree(vartree);
 
-    if (!cp_vartree_find_packages(vartree, atom, &pkgs, error)) {
+    if (!cp_tree_find_packages(vardb, atom, &pkgs, error)) {
         goto ERR;
     }
 
@@ -190,6 +192,7 @@ do_with_pkgs(
 ERR:
     cp_package_list_free(pkgs);
     cp_atom_unref(atom);
+    cp_tree_unref(vardb);
     cp_vartree_unref(vartree);
     cp_settings_unref(settings);
 

@@ -25,13 +25,12 @@
 #include "strings.h"
 
 struct CPVartree {
-    char *path;
+    CPTree tree;
+
+    /*@only@*/ char *path;
 
     /** Category->packagename->packages cache */
     /*@only@*/ GHashTable *cache;
-    gboolean lazy_cache;
-
-    /*@refs@*/ unsigned int refs;
 };
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
@@ -182,6 +181,7 @@ OUT:
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 init_cache(
     CPVartree self,
+    gboolean lazy_cache,
     /*@null@*/ GError **error
 ) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
     GDir *vdb_dir = NULL;
@@ -195,7 +195,7 @@ init_cache(
     }
 
     CP_GDIR_ITER(vdb_dir, category) {
-        if (self->lazy_cache) {
+        if (lazy_cache) {
             g_hash_table_insert(self->cache, g_strdup(category), NULL);
             continue;
         }
@@ -210,68 +210,6 @@ init_cache(
 ERR:
     g_dir_close(vdb_dir);
     return result;
-}
-
-CPVartree
-cp_vartree_new(const CPSettings settings, GError **error) {
-    CPVartree self;
-
-    g_assert(error == NULL || *error == NULL);
-
-    self = g_new0(struct CPVartree, 1);
-    self->refs = (unsigned int)1;
-    g_assert(self->path == NULL);
-    self->path = g_build_filename(cp_settings_root(settings),
-                                  "var", "db", "pkg", NULL);
-
-    self->lazy_cache = cp_string_truth(
-        cp_settings_get_default(settings, "CPORTAGE_VARTREE_LAZY", "true")
-    ) == CP_TRUE;
-    g_assert(self->cache == NULL);
-    self->cache = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_hash_table_destroy
-    );
-    if (!init_cache(self, error)) {
-       goto ERR;
-    }
-
-    return self;
-
-ERR:
-    /*@-usereleased@*/
-    cp_vartree_unref(self);
-    /*@=usereleased@*/
-
-    return NULL;
-}
-
-CPVartree
-cp_vartree_ref(CPVartree self) {
-    ++self->refs;
-    /*@-refcounttrans@*/
-    return self;
-    /*@=refcounttrans@*/
-}
-
-void
-cp_vartree_unref(CPVartree self) {
-    /*@-mustfreeonly@*/
-    if (self == NULL) {
-        return;
-    }
-
-    g_assert(self->refs > 0);
-    if (--self->refs > 0) {
-        return;
-    }
-    /*@=mustfreeonly@*/
-
-    g_free(self->path);
-    cp_hash_table_destroy(self->cache);
-
-    /*@-refcounttrans@*/
-    g_free(self);
-    /*@=refcounttrans@*/
 }
 
 static gboolean
@@ -290,18 +228,18 @@ get_category_cache(
         return TRUE;
     }
 
-    if (*result == NULL) {
-        /* Uninited lazy cache */
-        g_assert(self->lazy_cache);
-
-        if (!populate_cache(self, cat, error)) {
-            return FALSE;
-        }
-
-        /*@-dependenttrans@*/
-        *result = g_hash_table_lookup(self->cache, cat);
-        /*@=dependenttrans@*/
+    if (*result != NULL) {
+        return TRUE;
     }
+
+    /* Uninited lazy cache */
+    if (!populate_cache(self, cat, error)) {
+        return FALSE;
+    }
+
+    /*@-dependenttrans@*/
+    *result = g_hash_table_lookup(self->cache, cat);
+    /*@=dependenttrans@*/
 
     return TRUE;
 }
@@ -333,13 +271,15 @@ get_package_cache(
     return TRUE;
 }
 
-gboolean
+static gboolean
 cp_vartree_find_packages(
-    CPVartree self,
+    void *priv,
     const CPAtom atom,
-    GSList **match,
-    GError **error
-) {
+    /*@out@*/ GSList/*<CPPackage>*/ **match,
+    /*@null@*/ GError **error
+) /*@modifies *priv,*match,*error,errno@*/ /*@globals fileSystem@*/ {
+    CPVartree self = priv;
+
     const char *category = cp_atom_category(atom);
     const char *package = cp_atom_package(atom);
     GSList *pkgs;
@@ -368,6 +308,84 @@ cp_vartree_find_packages(
     } end_CP_GSLIST_ITER
 
     return TRUE;
+}
+
+static void
+cp_vartree_destroy(/*@only@*/ void *priv) /*@modifies priv@*/ {
+    CPVartree self = priv;
+
+    g_free(self->path);
+    cp_hash_table_destroy(self->cache);
+
+    /*@-refcounttrans@*/
+    g_free(priv);
+    /*@=refcounttrans@*/
+}
+
+/*@unchecked@*/ static const struct CPTreeMethods vartree_methods = {
+    cp_vartree_destroy,
+    cp_vartree_find_packages
+};
+
+CPVartree
+cp_vartree_new(const CPSettings settings, GError **error) {
+    CPVartree self;
+    gboolean lazy_cache;
+
+    g_assert(error == NULL || *error == NULL);
+
+    self = g_new0(struct CPVartree, 1);
+    g_assert(self->tree == NULL);
+    self->tree = cp_tree_new(&vartree_methods, self);
+
+    g_assert(self->path == NULL);
+    self->path = g_build_filename(cp_settings_root(settings),
+                                  "var", "db", "pkg", NULL);
+
+    lazy_cache = cp_string_truth(
+        cp_settings_get_default(settings, "CPORTAGE_VARTREE_LAZY", "true")
+    ) == CP_TRUE;
+
+    g_assert(self->cache == NULL);
+    self->cache = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, (GDestroyNotify)cp_hash_table_destroy
+    );
+    if (!init_cache(self, lazy_cache, error)) {
+       goto ERR;
+    }
+
+    return self;
+
+ERR:
+    /*@-usereleased@*/
+    cp_vartree_unref(self);
+    /*@=usereleased@*/
+
+    return NULL;
+}
+
+CPVartree
+cp_vartree_ref(CPVartree self) {
+    self->tree = cp_tree_ref(self->tree);
+    /*@-refcounttrans@*/
+    return self;
+    /*@=refcounttrans@*/
+}
+
+/*@-mustfreeonly@*/
+void
+cp_vartree_unref(CPVartree self) {
+    if (self == NULL) {
+        return;
+    }
+
+    cp_tree_unref(self->tree);
+}
+/*@=mustfreeonly@*/
+
+CPTree
+cp_vartree_get_tree(CPVartree self) {
+    return cp_tree_ref(self->tree);
 }
 
 const char *

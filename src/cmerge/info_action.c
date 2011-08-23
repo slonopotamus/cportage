@@ -95,7 +95,7 @@ print_porttree_timestamp(
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_atom_matches(
-    CPVartree vartree,
+    CPTree vartree,
     const CPAtom atom,
     char *atom_label,
     GError **error
@@ -103,7 +103,7 @@ print_atom_matches(
     GSList *match;
     int i = 0;
 
-    if (!cp_vartree_find_packages(vartree, atom, &match, error)) {
+    if (!cp_tree_find_packages(vartree, atom, &match, error)) {
         /* Error happened */
         return FALSE;
     }
@@ -129,7 +129,7 @@ print_atom_matches(
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_packages(
     const char *portdir,
-    CPVartree vartree,
+    CPTree vartree,
     /*@null@*/ GError **error
 ) /*@modifies vartree,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path;
@@ -272,7 +272,7 @@ ERR:
 }
 
 static char * G_GNUC_WARN_UNUSED_RESULT
-get_baselayout_version(CPVartree vartree, /*@null@*/ GError **error) {
+get_baselayout_version(CPTree vartree, /*@null@*/ GError **error) {
     CPAtom atom = cp_atom_new("sys-apps/baselayout", NULL);
     GSList *match = NULL;
     CPVersion version = NULL;
@@ -280,7 +280,7 @@ get_baselayout_version(CPVartree vartree, /*@null@*/ GError **error) {
 
     g_assert(atom != NULL);
 
-    if (!cp_vartree_find_packages(vartree, atom, &match, error)) {
+    if (!cp_tree_find_packages(vartree, atom, &match, error)) {
         goto OUT;
     }
 
@@ -302,7 +302,7 @@ OUT:
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_system_name(
-    CPVartree vartree,
+    CPTree vartree,
     struct utsname *utsname,
     /*@null@*/ GError **error
 ) {
@@ -367,12 +367,12 @@ cmerge_info_action(
 
     print_version(ctx->settings, &utsname, portdir);
 
-    if (!print_system_name(ctx->vartree, &utsname, error)) {
+    if (!print_system_name(ctx->vardb, &utsname, error)) {
         goto ERR;
     }
 
     print_porttree_timestamp(portdir);
-    if (!print_packages(portdir, ctx->vartree, error)) {
+    if (!print_packages(portdir, ctx->vardb, error)) {
         goto ERR;
     }
     print_repositories(ctx->settings);

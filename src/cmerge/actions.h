@@ -35,6 +35,7 @@ typedef struct CMergeOptions {
 typedef struct CPContext {
     CPSettings settings;
     CPVartree vartree;
+    CPTree vardb;
 } *CPContext;
 
 int

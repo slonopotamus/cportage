@@ -480,6 +480,66 @@ cp_config_protect_is_protected(
 ) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
+ * TODO: documentation.
+ */
+typedef /*@refcounted@*/ struct CPTree *CPTree;
+
+typedef gboolean (*CPTreeFindPackagesFunc)(
+    void *priv,
+    const CPAtom atom,
+    /*@out@*/ GSList/*<CPPackage>*/ **match,
+    /*@null@*/ GError **error
+);
+
+typedef void (*CPTreeDestroyFunc)(/*@only@*/ void *priv) /*@modifies priv@*/;
+
+typedef const struct CPTreeMethods {
+  const CPTreeDestroyFunc destructor;
+  const CPTreeFindPackagesFunc find_packages;
+} *CPTreeMethods;
+
+/*@newref@*/ CPTree
+cp_tree_new(/*@shared@*/ const CPTreeMethods methods, void *priv) /*@*/;
+
+/**
+ * Increases reference count of \a self by 1.
+ *
+ * \param self a #CPTree structure
+ * \return \a self
+ */
+/*@newref@*/ CPTree
+cp_tree_ref(CPTree self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+
+/**
+ * Decreases reference count of \a self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * \param self a #CPTree
+ */
+void
+cp_tree_unref(/*@killref@*/ /*@null@*/ CPTree self) /*@modifies self@*/;
+
+/**
+ * Searches for packages matching \a atom in \a self.
+ *
+ * \param atom  atom to match against
+ * \param match return location for matched atoms list,
+ *              free it using cp_package_list_free()
+ * \param error return location for a %GError, or %NULL
+ * \return      %TRUE on success, %FALSE if an error occurred
+ *
+ * \see cp_atom_matches()
+ */
+gboolean
+cp_tree_find_packages(
+    CPTree self,
+    const CPAtom atom,
+    /*@out@*/ GSList/*<CPPackage>*/ **match,
+    /*@null@*/ GError **error
+) G_GNUC_WARN_UNUSED_RESULT
+/*@modifies self,*match,*error,errno@*/ /*@globals fileSystem@*/;
+
+/**
  * Installed packages tree.
  */
 typedef /*@refcounted@*/ struct CPVartree *CPVartree;
@@ -515,25 +575,52 @@ cp_vartree_unref(/*@killref@*/ /*@null@*/ CPVartree self) /*@modifies self@*/;
 /*@observer@*/ const char *
 cp_vartree_path(const CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+/*@newref@*/ CPTree
+cp_vartree_get_tree(CPVartree self) /*@modifies *self@*/;
+
+/** TODO: documentation. */
+typedef /*@refcounted@*/ struct CPPorttree *CPPorttree;
+
 /**
- * Searches for packages matching \a atom in \a self.
- *
- * \param atom  atom to match against
- * \param match return location for matched atoms list,
- *              free it using cp_package_list_free()
- * \param error return location for a %GError, or %NULL
- * \return      %TRUE on success, %FALSE if an error occurred
- *
- * \see cp_atom_matches()
+ * TODO: documentation.
  */
-gboolean
-cp_vartree_find_packages(
-    CPVartree self,
-    const CPAtom atom,
-    /*@out@*/ GSList/*<CPPackage>*/ **match,
+/*@newref@*/ /*@null@*/ CPPorttree
+cp_porttree_new(
+    const CPSettings settings,
     /*@null@*/ GError **error
-) G_GNUC_WARN_UNUSED_RESULT
-/*@modifies self,*match,*error,errno@*/ /*@globals fileSystem@*/;
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno*/ /*@globals fileSystem@*/;
+
+/** TODO: documentation. */
+typedef /*@refcounted@*/ struct CPBintree *CPBintree;
+
+/**
+ * TODO: documentation.
+ */
+/*@newref@*/ /*@null@*/ CPBintree
+cp_bintree_new(
+    const CPSettings settings,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *error,errno*/ /*@globals fileSystem@*/;
+
+/**
+ * Increases reference count of \a self by 1.
+ *
+ * \param self a #CPBintree structure
+ * \return \a self
+ */
+/*@newref@*/ CPBintree
+cp_bintree_ref(CPBintree self) G_GNUC_WARN_UNUSED_RESULT /*@modifies *self@*/;
+
+/**
+ * Decreases reference count of \a self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * \param self a #CPBintree
+ */
+void
+cp_bintree_unref(/*@killref@*/ /*@null@*/ CPBintree self) /*@modifies self@*/;
 
 /*
   This macro intentionally conflicts with GLib one. The only difference is that

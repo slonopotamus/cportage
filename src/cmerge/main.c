@@ -150,7 +150,7 @@ main(int argc, char *argv[])
 /*@globals opts,root,default_action@*/ {
     GOptionContext *opt_ctx;
     GError *error = NULL;
-    struct CPContext ctx = { NULL, NULL };
+    struct CPContext ctx = { NULL, NULL, NULL };
     int retval;
 
 #if HAVE_SETLOCALE
@@ -184,10 +184,12 @@ main(int argc, char *argv[])
         retval = EXIT_FAILURE;
         goto ERR;
     }
+    ctx.vardb = cp_vartree_get_tree(ctx.vartree);
 
     retval = action->func(&ctx, &opts, &error);
 
 ERR:
+    cp_tree_unref(ctx.vardb);
     cp_vartree_unref(ctx.vartree);
     cp_settings_unref(ctx.settings);
     g_option_context_free(opt_ctx);
