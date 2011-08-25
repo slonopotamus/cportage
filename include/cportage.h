@@ -422,19 +422,6 @@ cp_package_repo(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 typedef /*@refcounted@*/ struct CPAtom *CPAtom;
 
 /**
- * Creates a #CPAtom structure for \a value.
- *
- * \param error return location for a %GError, or %NULL
- * \return      a #CPAtom, free it using cp_atom_unref()
- */
-/*@newref@*/ /*@null@*/ CPAtom
-cp_atom_new(
-    const char *value,
-    /*@null@*/ GError **error
-) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-/*@modifies *error@*/;
-
-/**
  * Increases reference count of \a self by 1.
  *
  * \param self a #CPAtom
@@ -460,6 +447,46 @@ cp_atom_matches(
     const CPAtom self,
     const CPPackage package
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *package@*/;
+
+/**
+ * Structure, describing an atom factory.
+ */
+typedef /*@refcounted@*/ struct CPAtomFactory *CPAtomFactory;
+
+/*@newref@*/ CPAtomFactory
+cp_atom_factory_new(void) /*@*/;
+
+/**
+ * Increases reference count of \a self by 1.
+ *
+ * \param self a #CPAtomFactory
+ * \return \a self
+ */
+/*@newref@*/ CPAtomFactory
+cp_atom_factory_ref(CPAtomFactory self) /*@modifies *self@*/;
+
+/**
+ * Decreases reference count of \a self by 1. When reference count drops
+ * to zero, it frees all the memory associated with the structure.
+ *
+ * \param self a #CPAtomFactory
+ */
+void
+cp_atom_factory_unref(/*@killref@*/ CPAtomFactory self) /*@modifies self@*/;
+
+/**
+ * Creates a #CPAtom structure for \a value.
+ *
+ * \param error return location for a %GError, or %NULL
+ * \return      a #CPAtom, free it using cp_atom_unref()
+ */
+/*@newref@*/ /*@null@*/ CPAtom
+cp_atom_new(
+    CPAtomFactory factory,
+    const char *value,
+    /*@null@*/ GError **error
+) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+/*@modifies *factory,*error@*/;
 
 typedef struct CPConfigProtect *CPConfigProtect;
 
@@ -499,7 +526,10 @@ typedef const struct CPTreeMethods {
 } *CPTreeMethods;
 
 /*@newref@*/ CPTree
-cp_tree_new(/*@shared@*/ const CPTreeMethods methods, void *priv) /*@*/;
+cp_tree_new(
+    /*@shared@*/ const CPTreeMethods methods,
+    /*@owned@*/ void *priv
+) /*@*/;
 
 /**
  * Increases reference count of \a self by 1.

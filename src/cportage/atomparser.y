@@ -645,26 +645,6 @@ cp_version_glob_match(const CPVersion first, const CPVersion second) {
     return g_str_has_prefix(second->str, first->str);
 }
 
-CPAtom
-cp_atom_new(const char *value, GError **error) {
-    cp_atomparser_ctx ctx;
-
-    g_assert(error == NULL || *error == NULL);
-
-    ctx.atom = NULL;
-
-    if (!doparse(&ctx, value, ATOM_MAGIC)) {
-        cp_atom_unref(ctx.atom);
-        g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
-            _("'%s': invalid atom"), value);
-        return FALSE;
-    }
-
-    g_assert(ctx.atom != NULL);
-
-    return ctx.atom;
-}
-
 gboolean
 cp_atom_category_validate(const char *value, GError **error) {
     cp_atomparser_ctx ctx;
@@ -839,4 +819,96 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
     /* TODO: check useflags */
 
     return result;
+}
+
+typedef struct CPAtomFactoryEntry {
+    /*@null@*/ CPAtom atom;
+    /*@null@*/ GError *error;
+} *CPAtomFactoryEntry;
+
+struct CPAtomFactory {
+    /*@only@*/ GHashTable *cache;
+    /*@refs@*/ unsigned int refs;
+};
+
+static void
+free_entry(void *entry) {
+    CPAtomFactoryEntry self = entry;
+
+    if (self->error != NULL) {
+        g_error_free(self->error);
+    }
+    cp_atom_unref(self->atom);
+
+    g_free(self);
+}
+
+CPAtomFactory
+cp_atom_factory_new(void) {
+    CPAtomFactory self = g_new(struct CPAtomFactory, 1);
+
+    self->refs = 1;
+    self->cache = g_hash_table_new_full(
+        g_str_hash, g_str_equal, g_free, free_entry
+    );
+
+    return self;
+}
+
+CPAtomFactory
+cp_atom_factory_ref(CPAtomFactory self) {
+    ++self->refs;
+    /*@-refcounttrans@*/
+    return self;
+    /*@=refcounttrans@*/
+}
+
+void
+cp_atom_factory_unref(CPAtomFactory self) {
+    if (self == NULL) {
+        /*@-mustfreeonly@*/
+        return;
+        /*@=mustfreeonly@*/
+    }
+
+    g_assert(self->refs > 0);
+    if (--self->refs > 0) {
+        return;
+    }
+
+    cp_hash_table_destroy(self->cache);
+
+    /*@-refcounttrans@*/
+    g_free(self);
+    /*@=refcounttrans@*/
+}
+
+CPAtom
+cp_atom_new(CPAtomFactory factory, const char *value, GError **error) {
+    CPAtomFactoryEntry entry;
+
+    g_assert(error == NULL || *error == NULL);
+
+    entry = g_hash_table_lookup(factory->cache, value);
+
+    if (entry == NULL) {
+        cp_atomparser_ctx ctx;
+        ctx.atom = NULL;
+
+        entry = g_new(struct CPAtomFactoryEntry, 1);
+        entry->error = doparse(&ctx, value, ATOM_MAGIC)
+            ? NULL
+            : g_error_new(CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
+                    _("'%s': invalid atom"), value);
+        entry->atom = ctx.atom;
+
+        g_hash_table_insert(factory->cache, g_strdup(value), entry);
+    }
+
+    if (entry->error != NULL) {
+        g_propagate_error(error, g_error_copy(entry->error));
+        return NULL;
+    }
+
+    return cp_atom_ref(entry->atom);
 }

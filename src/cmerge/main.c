@@ -150,7 +150,7 @@ main(int argc, char *argv[])
 /*@globals opts,root,default_action@*/ {
     GOptionContext *opt_ctx;
     GError *error = NULL;
-    struct CPContext ctx = { NULL, NULL, NULL };
+    struct CPContext ctx = { NULL, NULL, NULL, NULL };
     int retval;
 
 #if HAVE_SETLOCALE
@@ -169,6 +169,8 @@ main(int argc, char *argv[])
     if (action == NULL) {
         action = default_action;
     }
+
+    ctx.atom_factory = cp_atom_factory_new();
 
     ctx.settings = cp_settings_new(root, &error);
     if (ctx.settings == NULL) {
@@ -189,6 +191,7 @@ main(int argc, char *argv[])
     retval = action->func(&ctx, &opts, &error);
 
 ERR:
+    cp_atom_factory_unref(ctx.atom_factory);
     cp_tree_unref(ctx.vardb);
     cp_vartree_unref(ctx.vartree);
     cp_settings_unref(ctx.settings);

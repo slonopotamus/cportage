@@ -33,6 +33,7 @@ typedef struct CMergeOptions {
 } *CMergeOptions;
 
 typedef struct CPContext {
+    CPAtomFactory atom_factory;
     CPSettings settings;
     CPVartree vartree;
     CPTree vardb;

@@ -29,6 +29,8 @@ struct item {
 
 static void
 atom_new(void) {
+    CPAtomFactory atom_factory = cp_atom_factory_new();
+
     const struct item data[] = {
         { "sys-apps/portage", TRUE },
         { "=sys-apps/portage-2.1", TRUE },
@@ -123,7 +125,7 @@ atom_new(void) {
         const char *s = data[i].str;
         const char *msg = data[i].valid ? "valid" : "invalid";
         GError *error = NULL;
-        CPAtom atom = cp_atom_new(s, &error);
+        CPAtom atom = cp_atom_new(atom_factory, s, &error);
         if (data[i].valid == (atom == NULL)) {
             g_error("'%s' must be %s, but it isn't\n", s, msg);
         }
@@ -135,6 +137,8 @@ atom_new(void) {
         g_clear_error(&error);
         ++i;
     }
+
+    cp_atom_factory_unref(atom_factory);
 }
 
 static void

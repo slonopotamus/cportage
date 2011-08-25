@@ -129,9 +129,9 @@ print_atom_matches(
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_packages(
     const char *portdir,
-    CPTree vartree,
+    CPContext ctx,
     /*@null@*/ GError **error
-) /*@modifies vartree,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
+) /*@modifies *ctx,*error,*stdout,errno@*/ /*@globals fileSystem@*/ {
     char *path;
     char **data;
     gboolean result = TRUE;
@@ -147,13 +147,13 @@ print_packages(
     cp_strings_sort(data);
 
     CP_STRV_ITER(data, s) {
-        CPAtom atom = cp_atom_new(s, NULL);
+        CPAtom atom = cp_atom_new(ctx->atom_factory, s, NULL);
         char *atom_label = g_strconcat(s, ":", NULL);
 
         if (atom == NULL) {
             g_print("%-20s [NOT VALID]\n", atom_label);
         } else {
-            result = print_atom_matches(vartree, atom, atom_label, error);
+            result = print_atom_matches(ctx->vardb, atom, atom_label, error);
         }
 
         g_free(atom_label);
@@ -272,15 +272,15 @@ ERR:
 }
 
 static char * G_GNUC_WARN_UNUSED_RESULT
-get_baselayout_version(CPTree vartree, /*@null@*/ GError **error) {
-    CPAtom atom = cp_atom_new("sys-apps/baselayout", NULL);
+get_baselayout_version(CPContext ctx, /*@null@*/ GError **error) {
+    CPAtom atom = cp_atom_new(ctx->atom_factory, "sys-apps/baselayout", NULL);
     GSList *match = NULL;
     CPVersion version = NULL;
     char *result = NULL;
 
     g_assert(atom != NULL);
 
-    if (!cp_tree_find_packages(vartree, atom, &match, error)) {
+    if (!cp_tree_find_packages(ctx->vardb, atom, &match, error)) {
         goto OUT;
     }
 
@@ -302,7 +302,7 @@ OUT:
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_system_name(
-    CPTree vartree,
+    CPContext ctx,
     struct utsname *utsname,
     /*@null@*/ GError **error
 ) {
@@ -312,7 +312,7 @@ print_system_name(
 
     g_assert(error == NULL || *error == NULL);
 
-    sys_version = get_baselayout_version(vartree, error);
+    sys_version = get_baselayout_version(ctx, error);
     if (sys_version == NULL) {
         goto ERR;
     }
@@ -367,12 +367,12 @@ cmerge_info_action(
 
     print_version(ctx->settings, &utsname, portdir);
 
-    if (!print_system_name(ctx->vardb, &utsname, error)) {
+    if (!print_system_name(ctx, &utsname, error)) {
         goto ERR;
     }
 
     print_porttree_timestamp(portdir);
-    if (!print_packages(portdir, ctx->vardb, error)) {
+    if (!print_packages(portdir, ctx, error)) {
         goto ERR;
     }
     print_repositories(ctx->settings);

@@ -160,6 +160,7 @@ do_with_pkgs(
     CPVartree vartree = NULL;
     CPTree vardb = NULL;
     GSList *pkgs = NULL;
+    CPAtomFactory atom_factory = NULL;
     int retval = 2;
 
     if (argc != 2) {
@@ -167,7 +168,8 @@ do_with_pkgs(
         goto ERR;
     }
 
-    atom = cp_atom_new(argv[1], error);
+    atom_factory = cp_atom_factory_new();
+    atom = cp_atom_new(atom_factory, argv[1], error);
     if (atom == NULL) {
         goto ERR;
     }
@@ -190,6 +192,7 @@ do_with_pkgs(
     retval = func(pkgs);
 
 ERR:
+    cp_atom_factory_unref(atom_factory);
     cp_package_list_free(pkgs);
     cp_atom_unref(atom);
     cp_tree_unref(vardb);
