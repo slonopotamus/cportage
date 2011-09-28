@@ -17,8 +17,9 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*@-fielduse@*/
+#include "eapi.h"
 
+/*@-fielduse@*/
 typedef struct cp_atomparser_ctx_t {
     yyscan_t yyscanner;
 
@@ -26,5 +27,6 @@ typedef struct cp_atomparser_ctx_t {
     CPVersion version;
     struct pv pv;
 
+    CPEapi eapi;
     int magic;
 } /*@unused@*/ cp_atomparser_ctx;

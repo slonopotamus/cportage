@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include <cportage.h>
+
 /*@-exportany@*/
 
 /**
@@ -31,12 +33,15 @@
  * \return      %TRUE if \a eapi is supported EAPI version string,
  *              %FALSE otherwise
  */
-gboolean
-cp_eapi_check(
+CPEapi
+cp_eapi_parse(
     const char *eapi,
     const char *file,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
+
+/*@observer@*/ const char *
+cp_eapi_str(CPEapi eapi) /*@*/;
 
 /**
  * \param file  a pathname in the GLib file name encoding
@@ -44,10 +49,22 @@ cp_eapi_check(
  * \return      %TRUE if \a file contains supported EAPI version string,
  *              %FALSE otherwise
  */
-gboolean
-cp_eapi_check_file(
+CPEapi
+cp_eapi_parse_file(
     const char *file,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error,errno@*/ /*@globals fileSystem@*/;
+
+gboolean
+cp_eapi_check(CPEapi eapi, /*@null@*/ GError **error) /*@modifies *error@*/;
+
+gboolean
+cp_eapi_has_use_deps(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
+
+gboolean
+cp_eapi_has_slot_deps(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
+
+gboolean
+cp_eapi_has_strong_blocks(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
 
 #endif

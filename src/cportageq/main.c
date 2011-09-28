@@ -169,7 +169,7 @@ do_with_pkgs(
     }
 
     atom_factory = cp_atom_factory_new();
-    atom = cp_atom_new(atom_factory, argv[1], error);
+    atom = cp_atom_new(atom_factory, CP_EAPI_LATEST, argv[1], error);
     if (atom == NULL) {
         goto ERR;
     }

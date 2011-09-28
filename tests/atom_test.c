@@ -125,7 +125,7 @@ atom_new(void) {
         const char *s = data[i].str;
         const char *msg = data[i].valid ? "valid" : "invalid";
         GError *error = NULL;
-        CPAtom atom = cp_atom_new(atom_factory, s, &error);
+        CPAtom atom = cp_atom_new(atom_factory, CP_EAPI_LATEST, s, &error);
         if (data[i].valid == (atom == NULL)) {
             g_error("'%s' must be %s, but it isn't\n", s, msg);
         }

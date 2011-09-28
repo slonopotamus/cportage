@@ -35,6 +35,7 @@
 #include <gmp.h>
 
 #include "atom.h"
+#include "eapi.h"
 #include "error.h"
 #include "strings.h"
 #include "version.h"
@@ -267,14 +268,31 @@ start:
 
 atom:
     atom_slot_repo
-  | atom_slot_repo LSQUARE use_loop RSQUARE { $$ = $1; }
+  | atom_slot_repo LSQUARE use_loop RSQUARE {
+      $$ = $1;
+      if (!cp_eapi_has_use_deps(ctx->eapi)) {
+          cp_atom_unref($$);
+          YYABORT;
+      }
+  }
 
 atom_slot_repo:
     base_atom { $$ = $1; $$->slot = NULL;    $$->repo = NULL; }
-  | base_atom COLON slot { $$ = $1; $$->slot = $3; $$->repo = NULL; }
+  | base_atom COLON slot {
+      $$ = $1; $$->slot = $3; $$->repo = NULL;
+      if (!cp_eapi_has_slot_deps(ctx->eapi)) {
+          cp_atom_unref($$);
+          YYABORT;
+      }
+  }
   | base_atom COLON COLON repo { $$ = $1; $$->slot = NULL; $$->repo = $4; }
-  | base_atom COLON slot COLON COLON repo
-      { $$ = $1; $$->slot = $3; $$->repo = $6; }
+  | base_atom COLON slot COLON COLON repo {
+      $$ = $1; $$->slot = $3; $$->repo = $6;
+      if (!cp_eapi_has_slot_deps(ctx->eapi)) {
+          cp_atom_unref($$);
+          YYABORT;
+      }
+  }
 
 base_atom:
     cp             { $$ = $1; $$->op = OP_NONE; }
@@ -420,10 +438,11 @@ word_or_plus_minus_dot_loop:
 %%
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-doparse(cp_atomparser_ctx *ctx, const char *value, int magic) {
+doparse(cp_atomparser_ctx *ctx, CPEapi eapi, const char *value, int magic) {
     YY_BUFFER_STATE bp;
     gboolean result;
 
+    ctx->eapi = eapi;
     ctx->magic = magic;
 
     cp_atomparser_lex_init(&ctx->yyscanner);
@@ -451,7 +470,7 @@ cp_version_new(const char *value, GError **error) {
 
     ctx.version = NULL;
 
-    if (!doparse(&ctx, value, VERSION_MAGIC)) {
+    if (!doparse(&ctx, CP_EAPI_LATEST, value, VERSION_MAGIC)) {
         cp_version_unref(ctx.version);
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s': invalid version"), value);
@@ -609,11 +628,9 @@ cp_version_cmp_internal(
     }
 
     /* Compare revision */
-    if (!check_revision) {
-        return 0;
-    }
-
-    return num_cmp(first->revision, second->revision);
+    return check_revision
+        ? num_cmp(first->revision, second->revision)
+        : 0;
 }
 
 int
@@ -643,7 +660,7 @@ cp_atom_category_validate(const char *value, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    if (!doparse(&ctx, value, CATEGORY_MAGIC)) {
+    if (!doparse(&ctx, CP_EAPI_LATEST, value, CATEGORY_MAGIC)) {
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s': invalid category name"), value);
         return FALSE;
@@ -658,7 +675,7 @@ cp_atom_slot_validate(const char *value, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    if (!doparse(&ctx, value, SLOT_MAGIC)) {
+    if (!doparse(&ctx, CP_EAPI_LATEST, value, SLOT_MAGIC)) {
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s': invalid slot name"), value);
         return FALSE;
@@ -673,7 +690,7 @@ cp_atom_repo_validate(const char *value, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    if (!doparse(&ctx, value, REPO_MAGIC)) {
+    if (!doparse(&ctx, CP_EAPI_LATEST, value, REPO_MAGIC)) {
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s': invalid repository name"), value);
         return FALSE;
@@ -696,7 +713,7 @@ cp_atom_pv_split(
     ctx.pv.package = NULL;
     ctx.pv.version = NULL;
 
-    if (!doparse(&ctx, value, PV_MAGIC)) {
+    if (!doparse(&ctx, CP_EAPI_LATEST, value, PV_MAGIC)) {
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
             _("'%s' isn't valid package-version"), value);
         return FALSE;
@@ -819,7 +836,7 @@ typedef struct CPAtomFactoryEntry {
 } *CPAtomFactoryEntry;
 
 struct CPAtomFactoryS {
-    /*@only@*/ GHashTable *cache;
+    /*@only@*/ GHashTable **cache;
     /*@refs@*/ unsigned int refs;
 };
 
@@ -837,12 +854,17 @@ free_entry(void *entry) {
 
 CPAtomFactory
 cp_atom_factory_new(void) {
+    CPEapi i;
     CPAtomFactory self = g_new(struct CPAtomFactoryS, 1);
 
     self->refs = 1;
-    self->cache = g_hash_table_new_full(
-        g_str_hash, g_str_equal, g_free, free_entry
-    );
+    self->cache = g_new(GHashTable *, CP_EAPI_LATEST + 1);
+
+    for (i = 0; i <= CP_EAPI_LATEST - CP_EAPI_0; ++i) {
+        self->cache[i] = g_hash_table_new_full(
+            g_str_hash, g_str_equal, g_free, free_entry
+        );
+    }
 
     return self;
 }
@@ -857,6 +879,8 @@ cp_atom_factory_ref(CPAtomFactory self) {
 
 void
 cp_atom_factory_unref(CPAtomFactory self) {
+    CPEapi i;
+
     if (self == NULL) {
         /*@-mustfreeonly@*/
         return;
@@ -868,7 +892,10 @@ cp_atom_factory_unref(CPAtomFactory self) {
         return;
     }
 
-    cp_hash_table_destroy(self->cache);
+    for (i = 0; i <= CP_EAPI_LATEST - CP_EAPI_0; ++i) {
+        cp_hash_table_destroy(self->cache[i]);
+    }
+    g_free(self->cache);
 
     /*@-refcounttrans@*/
     g_free(self);
@@ -876,25 +903,37 @@ cp_atom_factory_unref(CPAtomFactory self) {
 }
 
 CPAtom
-cp_atom_new(CPAtomFactory factory, const char *value, GError **error) {
+cp_atom_new(
+    CPAtomFactory factory,
+    CPEapi eapi,
+    const char *value,
+    GError **error
+) {
     CPAtomFactoryEntry entry;
+    GHashTable *cache;
 
     g_assert(error == NULL || *error == NULL);
 
-    entry = g_hash_table_lookup(factory->cache, value);
+    if (!cp_eapi_check(eapi, error)) {
+        return NULL;
+    }
+
+    cache = factory->cache[eapi - CP_EAPI_0];
+    entry = g_hash_table_lookup(cache, value);
 
     if (entry == NULL) {
         cp_atomparser_ctx ctx;
         ctx.atom = NULL;
 
         entry = g_new(struct CPAtomFactoryEntry, 1);
-        entry->error = doparse(&ctx, value, ATOM_MAGIC)
+        entry->error = doparse(&ctx, eapi, value, ATOM_MAGIC)
             ? NULL
             : g_error_new(CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
-                    _("'%s': invalid atom"), value);
+                    _("'%s': invalid atom (EAPI: %s)"),
+                    value, cp_eapi_str(eapi));
         entry->atom = ctx.atom;
 
-        g_hash_table_insert(factory->cache, g_strdup(value), entry);
+        g_hash_table_insert(cache, g_strdup(value), entry);
     }
 
     if (entry->error != NULL) {

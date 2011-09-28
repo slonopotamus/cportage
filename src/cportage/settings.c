@@ -159,7 +159,7 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
 
     /* Check eapi */
     config_file = g_build_filename(profile_dir, "eapi", NULL);
-    result = cp_eapi_check_file(config_file, error);
+    result = cp_eapi_parse_file(config_file, error) != CP_EAPI_UNKNOWN;
     g_free(config_file);
     if (!result) {
         return FALSE;

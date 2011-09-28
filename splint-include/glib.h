@@ -64,6 +64,7 @@ typedef void            (*GFreeFunc)            (gpointer       data);
 
 #define G_GNUC_EXTENSION
 #define G_GNUC_MALLOC
+#define G_GNUC_PURE
 #define G_GNUC_UNUSED
 #define G_GNUC_WARN_UNUSED_RESULT
 

@@ -56,7 +56,7 @@ try_load_package(
     }
 
     config_file = g_build_filename(self->path, category, pv, "EAPI", NULL);
-    result = cp_eapi_check_file(config_file, error);
+    result = cp_eapi_parse_file(config_file, error) != CP_EAPI_UNKNOWN;
     g_free(config_file);
     if (!result) {
         goto OUT;

@@ -147,7 +147,7 @@ print_packages(
     cp_strings_sort(data);
 
     CP_STRV_ITER(data, s) {
-        CPAtom atom = cp_atom_new(ctx->atom_factory, s, NULL);
+        CPAtom atom = cp_atom_new(ctx->atom_factory, CP_EAPI_LATEST, s, NULL);
         char *atom_label = g_strconcat(s, ":", NULL);
 
         if (atom == NULL) {
@@ -273,7 +273,9 @@ ERR:
 
 static char * G_GNUC_WARN_UNUSED_RESULT
 get_baselayout_version(CPContext ctx, /*@null@*/ GError **error) {
-    CPAtom atom = cp_atom_new(ctx->atom_factory, "sys-apps/baselayout", NULL);
+    CPAtom atom = cp_atom_new(
+        ctx->atom_factory, CP_EAPI_LATEST, "sys-apps/baselayout", NULL
+    );
     GSList *match = NULL;
     CPVersion version = NULL;
     char *result = NULL;

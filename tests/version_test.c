@@ -71,7 +71,6 @@ version_cmp(void) {
     assert_version_cmp("1.0_beta3","1.0_rc3", -1);
     assert_version_cmp("1.001000000000000000001", "1.001000000000000000002", -1);
     assert_version_cmp("1.00100000000", "1.0010000000000000001", -1);
-    /* assert_version_cmp("9999", "cvs.9999", -1); */
     assert_version_cmp("999999999999999999999999999998",
         "999999999999999999999999999999", -1);
     assert_version_cmp("1.01", "1.1", -1);

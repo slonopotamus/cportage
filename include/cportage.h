@@ -420,6 +420,16 @@ cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 /*@observer@*/ const char *
 cp_package_repo(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
+typedef enum CPEapi {
+    CP_EAPI_0,
+    CP_EAPI_1,
+    CP_EAPI_2,
+    CP_EAPI_3,
+    CP_EAPI_4,
+    CP_EAPI_LATEST = CP_EAPI_4,
+    CP_EAPI_UNKNOWN = -1
+} CPEapi;
+
 /**
  * Structure, describing a single atom.
  */
@@ -487,6 +497,7 @@ cp_atom_factory_unref(/*@killref@*/ CPAtomFactory self) /*@modifies self@*/;
 /*@newref@*/ /*@null@*/ CPAtom
 cp_atom_new(
     CPAtomFactory factory,
+    CPEapi eapi,
     const char *value,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
