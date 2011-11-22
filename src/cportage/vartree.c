@@ -117,7 +117,7 @@ insert_package(
     }
 
     /*@-refcounttrans@*/
-    list = g_slist_prepend(list, package);
+    list = g_slist_insert_sorted(list, package, (GCompareFunc)cp_package_cmp);
     /*@=refcounttrans@*/
     g_hash_table_insert(name2pkg, key, list);
 }
@@ -294,15 +294,8 @@ cp_vartree_find_packages(
 
     CP_GSLIST_ITER(pkgs, pkg) {
         if (cp_atom_matches(atom, pkg)) {
-            /*
-              TODO: instead of sorting here, keep cache reverse-sorted
-              and use g_slist_prepend.
-             */
             /*@-mustfreefresh@*/
-            *match = g_slist_insert_sorted(
-                *match,
-                cp_package_ref(pkg),
-                (GCompareFunc)cp_package_cmp);
+            *match = g_slist_prepend(*match, cp_package_ref(pkg));
             /*@=mustfreefresh@*/
         }
     } end_CP_GSLIST_ITER

@@ -185,7 +185,7 @@ do_with_pkgs(
     }
     vardb = cp_vartree_get_tree(vartree);
 
-    if (!cp_tree_find_packages(vardb, atom, &pkgs, error)) {
+    if (!cp_tree_find_packages(vardb, atom, TRUE, &pkgs, error)) {
         goto ERR;
     }
 

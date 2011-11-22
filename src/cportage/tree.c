@@ -21,16 +21,16 @@
 
 struct CPTreeS {
     /*@owned@*/ void *priv;
-    /*@shared@*/ CPTreeMethods methods;
+    /*@shared@*/ CPTreeOps ops;
 
     /*@refs@*/ unsigned int refs;
 };
 
 CPTree
-cp_tree_new(const CPTreeMethods methods, void *priv) {
+cp_tree_new(const CPTreeOps ops, void *priv) {
     CPTree self = g_new0(struct CPTreeS, 1);
 
-    self->methods = methods;
+    self->ops = ops;
     g_assert(self->priv == NULL);
     self->priv = priv;
 
@@ -58,7 +58,7 @@ cp_tree_unref(CPTree self) {
     }
     /*@=mustfreeonly@*/
 
-    self->methods->destructor(self->priv);
+    self->ops->destructor(self->priv);
 
     /*@-refcounttrans@*/
     g_free(self);
@@ -69,10 +69,18 @@ gboolean
 cp_tree_find_packages(
     CPTree self,
     const CPAtom atom,
+    gboolean ascending,
     GSList **match,
     GError **error
 ) {
+    gboolean result;
     g_assert(error == NULL || *error == NULL);
 
-    return self->methods->find_packages(self->priv, atom, match, error);
+    result = self->ops->find_packages(self->priv, atom, match, error);
+
+    if (result && ascending) {
+        *match = g_slist_reverse(*match);
+    }
+
+    return result;
 }

@@ -103,7 +103,7 @@ print_atom_matches(
     GSList *match;
     int i = 0;
 
-    if (!cp_tree_find_packages(vartree, atom, &match, error)) {
+    if (!cp_tree_find_packages(vartree, atom, TRUE, &match, error)) {
         /* Error happened */
         return FALSE;
     }
@@ -282,7 +282,7 @@ get_baselayout_version(CPContext ctx, /*@null@*/ GError **error) {
 
     g_assert(atom != NULL);
 
-    if (!cp_tree_find_packages(ctx->vardb, atom, &match, error)) {
+    if (!cp_tree_find_packages(ctx->vardb, atom, FALSE, &match, error)) {
         goto OUT;
     }
 
@@ -291,7 +291,7 @@ get_baselayout_version(CPContext ctx, /*@null@*/ GError **error) {
         goto OUT;
     }
 
-    version = cp_package_version(g_slist_last(match)->data);
+    version = cp_package_version(match->data);
     result = g_strdup(cp_version_str(version));
 
 OUT:

@@ -538,11 +538,11 @@ typedef void (*CPTreeDestroyFunc)(/*@only@*/ void *priv) /*@modifies priv@*/;
 typedef const struct CPTreeOps {
   const CPTreeDestroyFunc destructor;
   const CPTreeFindPackagesFunc find_packages;
-} *CPTreeMethods;
+} *CPTreeOps;
 
 /*@newref@*/ CPTree
 cp_tree_new(
-    /*@shared@*/ const CPTreeMethods methods,
+    /*@shared@*/ const CPTreeOps ops,
     /*@owned@*/ void *priv
 ) /*@*/;
 
@@ -567,11 +567,13 @@ cp_tree_unref(/*@killref@*/ /*@null@*/ CPTree self) /*@modifies self@*/;
 /**
  * Searches for packages matching \a atom in \a self.
  *
- * \param atom  atom to match against
- * \param match return location for matched atoms list,
- *              free it using cp_package_list_free()
- * \param error return location for a %GError, or %NULL
- * \return      %TRUE on success, %FALSE if an error occurred
+ * \param atom      atom to match against
+ * \param ascending if %TRUE, \a match will be sorted in ascending order,
+ *                  otherwise in descending
+ * \param match     return location for matched atoms list,
+ *                  free it using cp_package_list_free()
+ * \param error     return location for a %GError, or %NULL
+ * \return          %TRUE on success, %FALSE if an error occurred
  *
  * \see cp_atom_matches()
  */
@@ -579,6 +581,7 @@ gboolean
 cp_tree_find_packages(
     CPTree self,
     const CPAtom atom,
+    gboolean ascending,
     /*@out@*/ GSList/*<CPPackage>*/ **match,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT
