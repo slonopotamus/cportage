@@ -22,8 +22,8 @@
 %defines
 %expect 4
 %lex-param { void *scanner }
-%name-prefix "cp_atomparser_"
-%parse-param { cp_atomparser_ctx *ctx }
+%name-prefix "cp_atom_parser_"
+%parse-param { cp_atom_parser_ctx *ctx }
 %verbose
 
 %{
@@ -40,10 +40,10 @@
 #include "strings.h"
 #include "version.h"
 
-#include "atomparser_types.h"
-#include "atomparser.h"
-#include "atomscanner.h"
-#include "atomparser_ctx.h"
+#include "atom_parser_types.h"
+#include "atom_parser.h"
+#include "atom_scanner.h"
+#include "atom_parser_ctx.h"
 
 #define scanner ctx->yyscanner
 #define YYDEBUG 1
@@ -89,8 +89,8 @@ suffix_free(VersionSuffix suffix) {
 %{
 
 static void
-cp_atomparser_error(
-    cp_atomparser_ctx *ctx G_GNUC_UNUSED,
+cp_atom_parser_error(
+    cp_atom_parser_ctx *ctx G_GNUC_UNUSED,
     const char *err G_GNUC_UNUSED
 ) {
     /* noop */
@@ -438,33 +438,33 @@ word_or_plus_minus_dot_loop:
 %%
 
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-doparse(cp_atomparser_ctx *ctx, CPEapi eapi, const char *value, int magic) {
+doparse(cp_atom_parser_ctx *ctx, CPEapi eapi, const char *value, int magic) {
     YY_BUFFER_STATE bp;
     gboolean result;
 
     ctx->eapi = eapi;
     ctx->magic = magic;
 
-    cp_atomparser_lex_init(&ctx->yyscanner);
-    bp = cp_atomparser__scan_string(value, ctx->yyscanner);
-    cp_atomparser__switch_to_buffer(bp, ctx->yyscanner);
-    cp_atomparser_set_extra(ctx, ctx->yyscanner);
+    cp_atom_parser_lex_init(&ctx->yyscanner);
+    bp = cp_atom_parser__scan_string(value, ctx->yyscanner);
+    cp_atom_parser__switch_to_buffer(bp, ctx->yyscanner);
+    cp_atom_parser_set_extra(ctx, ctx->yyscanner);
 
     if (cp_string_truth(g_getenv("CPORTAGE_ATOMPARSER_DEBUG")) == CP_TRUE) {
-        cp_atomparser_debug = 1;
-        cp_atomparser_set_debug(1, ctx->yyscanner);
+        cp_atom_parser_debug = 1;
+        cp_atom_parser_set_debug(1, ctx->yyscanner);
     }
 
-    result = cp_atomparser_parse(ctx) == 0;
-    cp_atomparser__delete_buffer(bp, ctx->yyscanner);
-    cp_atomparser_lex_destroy(ctx->yyscanner);
+    result = cp_atom_parser_parse(ctx) == 0;
+    cp_atom_parser__delete_buffer(bp, ctx->yyscanner);
+    cp_atom_parser_lex_destroy(ctx->yyscanner);
 
     return result;
 }
 
 CPVersion
 cp_version_new(const char *value, GError **error) {
-    cp_atomparser_ctx ctx;
+    cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -656,7 +656,7 @@ cp_version_glob_match(const CPVersion first, const CPVersion second) {
 
 gboolean
 cp_atom_category_validate(const char *value, GError **error) {
-    cp_atomparser_ctx ctx;
+    cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -671,7 +671,7 @@ cp_atom_category_validate(const char *value, GError **error) {
 
 gboolean
 cp_atom_slot_validate(const char *value, GError **error) {
-    cp_atomparser_ctx ctx;
+    cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -686,7 +686,7 @@ cp_atom_slot_validate(const char *value, GError **error) {
 
 gboolean
 cp_atom_repo_validate(const char *value, GError **error) {
-    cp_atomparser_ctx ctx;
+    cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -706,7 +706,7 @@ cp_atom_pv_split(
     CPVersion *version,
     GError **error
 ) {
-    cp_atomparser_ctx ctx;
+    cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
@@ -922,7 +922,7 @@ cp_atom_new(
     entry = g_hash_table_lookup(cache, value);
 
     if (entry == NULL) {
-        cp_atomparser_ctx ctx;
+        cp_atom_parser_ctx ctx;
         ctx.atom = NULL;
 
         entry = g_new(struct CPAtomFactoryEntry, 1);

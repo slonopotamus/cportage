@@ -24,8 +24,8 @@
 %error-verbose
 %lex-param { void *scanner }
 %locations
-%name-prefix "cp_shellconfig_"
-%parse-param { cp_shellparser_ctx *ctx }
+%name-prefix "cp_shell_parser_"
+%parse-param { cp_shell_parser_ctx *ctx }
 %verbose
 
 %{
@@ -39,9 +39,9 @@
 #include "shellconfig.h"
 #include "strings.h"
 
-#include "shellparser.h"
-#include "shellscanner.h"
-#include "shellparser_ctx.h"
+#include "shell_parser.h"
+#include "shell_scanner.h"
+#include "shell_parser_ctx.h"
 
 #define scanner ctx->yyscanner
 #define YYDEBUG 1
@@ -64,9 +64,9 @@
 %{
 
 static void
-cp_shellconfig_error(
+cp_shell_parser_error(
     const YYLTYPE *locp,
-    cp_shellparser_ctx *ctx,
+    cp_shell_parser_ctx *ctx,
     const char *err
 ) {
     if (ctx->error == NULL || *ctx->error != NULL) {
@@ -87,7 +87,7 @@ cp_shellconfig_error(
 }
 
 static gboolean
-dosource(cp_shellparser_ctx *ctx, const char *path) {
+dosource(cp_shell_parser_ctx *ctx, const char *path) {
     /* TODO: protect against include loop? */
     char *full;
     gboolean result;
@@ -113,7 +113,7 @@ dosource(cp_shellparser_ctx *ctx, const char *path) {
 }
 
 static char *
-dolookup(const cp_shellparser_ctx *ctx, const char *key) {
+dolookup(const cp_shell_parser_ctx *ctx, const char *key) {
     const char *found = ctx->lookup_func(ctx->entries, key);
     return g_strdup(found == NULL ? "" : found);
 }
@@ -300,7 +300,7 @@ blank:
 
 static gboolean
 doparse(
-    cp_shellparser_ctx *ctx,
+    cp_shell_parser_ctx *ctx,
     const char *path,
     gboolean allow_source,
     int magic,
@@ -312,14 +312,14 @@ doparse(
     ctx->error = error;
     ctx->allow_source = allow_source;
     ctx->magic = magic;
-    cp_shellconfig_set_extra(ctx, ctx->yyscanner);
+    cp_shell_parser_set_extra(ctx, ctx->yyscanner);
 
     if (cp_string_truth(g_getenv("CPORTAGE_SHELLCONFIG_DEBUG")) == CP_TRUE) {
-        cp_shellconfig_debug = 1;
-        cp_shellconfig_set_debug(1, ctx->yyscanner);
+        cp_shell_parser_debug = 1;
+        cp_shell_parser_set_debug(1, ctx->yyscanner);
     }
 
-    return cp_shellconfig_parse(ctx) == 0;
+    return cp_shell_parser_parse(ctx) == 0;
 }
 
 gboolean
@@ -331,7 +331,7 @@ cp_read_shellconfig(
     gboolean allow_source,
     GError **error
 ) {
-    cp_shellparser_ctx ctx;
+    cp_shell_parser_ctx ctx;
     gboolean retval;
     FILE *f;
 
@@ -346,10 +346,10 @@ cp_read_shellconfig(
         return FALSE;
     }
 
-    cp_shellconfig_lex_init(&ctx.yyscanner);
-    cp_shellconfig_set_in(f, ctx.yyscanner);
+    cp_shell_parser_lex_init(&ctx.yyscanner);
+    cp_shell_parser_set_in(f, ctx.yyscanner);
     retval = doparse(&ctx, path, allow_source, FILE_MAGIC, error);
-    cp_shellconfig_lex_destroy(ctx.yyscanner);
+    cp_shell_parser_lex_destroy(ctx.yyscanner);
     fclose(f);
 
     return retval;
@@ -357,7 +357,7 @@ cp_read_shellconfig(
 
 char *
 cp_varexpand(const char *str, GHashTable *vars, GError **error) {
-    cp_shellparser_ctx ctx;
+    cp_shell_parser_ctx ctx;
     YY_BUFFER_STATE bp;
 
     g_assert(error == NULL || *error == NULL);
@@ -367,17 +367,17 @@ cp_varexpand(const char *str, GHashTable *vars, GError **error) {
     ctx.save_func = NULL;
     ctx.expanded = NULL;
 
-    cp_shellconfig_lex_init(&ctx.yyscanner);
-    bp = cp_shellconfig__scan_string(str, ctx.yyscanner);
-    cp_shellconfig__switch_to_buffer(bp, ctx.yyscanner);
+    cp_shell_parser_lex_init(&ctx.yyscanner);
+    bp = cp_shell_parser__scan_string(str, ctx.yyscanner);
+    cp_shell_parser__switch_to_buffer(bp, ctx.yyscanner);
     if (doparse(&ctx, str, FALSE, VAR_MAGIC, error)) {
         g_assert(ctx.expanded != NULL);
     } else {
         g_free(ctx.expanded);
         ctx.expanded = NULL;
     }
-    cp_shellconfig__delete_buffer(bp, ctx.yyscanner);
-    cp_shellconfig_lex_destroy(ctx.yyscanner);
+    cp_shell_parser__delete_buffer(bp, ctx.yyscanner);
+    cp_shell_parser_lex_destroy(ctx.yyscanner);
 
     return ctx.expanded;
 }

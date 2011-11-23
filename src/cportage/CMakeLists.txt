@@ -5,16 +5,16 @@ else()
 endif()
 
 macro(add_flex_bison_target _name)
-  flex_target("${_name}scanner"
-    "${_name}scanner.l"
-    "${CMAKE_CURRENT_BINARY_DIR}/${_name}scanner.c"
+  flex_target("${_name}_scanner"
+    "${_name}_scanner.l"
+    "${CMAKE_CURRENT_BINARY_DIR}/${_name}_scanner.c"
     COMPILE_FLAGS
-    "${flex_mode} --header-file=${CMAKE_CURRENT_BINARY_DIR}/${_name}scanner.h")
-  bison_target("${_name}parser"
-    "${_name}parser.y"
-    "${CMAKE_CURRENT_BINARY_DIR}/${_name}parser.c"
+    "${flex_mode} --header-file=${CMAKE_CURRENT_BINARY_DIR}/${_name}_scanner.h")
+  bison_target("${_name}_parser"
+    "${_name}_parser.y"
+    "${CMAKE_CURRENT_BINARY_DIR}/${_name}_parser.c"
     COMPILE_FLAGS "-Wall -Werror --report=all")
-  add_flex_bison_dependency("${_name}scanner" "${_name}parser")
+  add_flex_bison_dependency("${_name}_scanner" "${_name}_parser")
 endmacro()
 
 add_flex_bison_target("atom")
@@ -25,8 +25,8 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}" sources)
 set(sources
   ${sources}
-  ${BISON_atomparser_OUTPUTS} ${FLEX_atomscanner_OUTPUTS}
-  ${BISON_shellparser_OUTPUTS} ${FLEX_shellscanner_OUTPUTS}
+  ${BISON_atom_parser_OUTPUTS} ${FLEX_atom_scanner_OUTPUTS}
+  ${BISON_shell_parser_OUTPUTS} ${FLEX_shell_scanner_OUTPUTS}
 )
 
 add_library(cportage SHARED ${sources})

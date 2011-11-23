@@ -17,18 +17,16 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shellconfig.h"
+#include "eapi.h"
 
 /*@-fielduse@*/
-
-typedef struct cp_shellparser_ctx_t {
+typedef struct cp_atom_parser_ctx_t {
     yyscan_t yyscanner;
-    const char *filename;
-    void *entries;
-    CPShellconfigLookupFunc lookup_func;
-    CPShellconfigSaveFunc save_func;
-    char *expanded;
-    GError **error;
+
+    CPAtom atom;
+    CPVersion version;
+    struct pv pv;
+
+    CPEapi eapi;
     int magic;
-    gboolean allow_source;
-} /*@unused@*/ cp_shellparser_ctx;
+} /*@unused@*/ cp_atom_parser_ctx;

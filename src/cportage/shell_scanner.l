@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-%option prefix="cp_shellconfig_"
+%option prefix="cp_shell_parser_"
 %option batch bison-bridge bison-locations reentrant yylineno warn debug 8bit
 %option nodefault noinput nounput noyywrap noyyget_extra noyy_push_state
 %option noyy_pop_state noyy_top_state never-interactive
@@ -37,13 +37,13 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#include "shellparser.h"
-#include "shellparser_ctx.h"
+#include "shell_parser.h"
+#include "shell_parser_ctx.h"
 
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
     yylloc->first_column = yycolumn; yylloc->last_column = yycolumn+yyleng; \
     yycolumn += yyleng;
-#define YY_EXTRA_TYPE cp_shellparser_ctx *
+#define YY_EXTRA_TYPE cp_shell_parser_ctx *
 #define DUPSTR yylval->str = g_strdup(yytext)
 
 %}

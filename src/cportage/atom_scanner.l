@@ -17,7 +17,7 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-%option prefix="cp_atomparser_"
+%option prefix="cp_atom_parser_"
 %option batch bison-bridge reentrant warn debug 8bit
 %option nodefault noinput nounput noyywrap noyyget_extra noyy_push_state
 %option noyy_pop_state noyy_top_state never-interactive
@@ -37,11 +37,11 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#include "atomparser_types.h"
-#include "atomparser_ctx.h"
-#include "atomparser.h"
+#include "atom_parser_types.h"
+#include "atom_parser_ctx.h"
+#include "atom_parser.h"
 
-#define YY_EXTRA_TYPE cp_atomparser_ctx *
+#define YY_EXTRA_TYPE cp_atom_parser_ctx *
 #define DUPSTR yylval->str = g_strdup(yytext)
 
 %}
