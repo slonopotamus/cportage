@@ -31,7 +31,7 @@ set(CMAKE_REQUIRED_FLAGS
     -Wbad-function-cast -Wcast-qual -Wcast-align -Wpacked-bitfield-compat
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
-    -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs -Winline
+    -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs
     -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization -Wimport
     -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing)
 
