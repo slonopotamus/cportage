@@ -20,7 +20,7 @@
 %option prefix="cp_atomparser_"
 %option batch bison-bridge reentrant warn debug 8bit
 %option nodefault noinput nounput noyywrap noyyget_extra noyy_push_state
-%option noyy_pop_state noyy_top_state
+%option noyy_pop_state noyy_top_state never-interactive
 %option noyyget_extra noyyget_leng noyyget_text noyyget_lineno noyyset_lineno
 %option noyyget_in noyyget_out noyyset_out noyyget_lval noyyset_lval
 %option noyyget_lloc noyyset_lloc noyyget_debug
