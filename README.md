@@ -7,14 +7,16 @@ Dependencies
 ------------
 Build time only:
 
- -  CMake >= 2.8 (tested with 2.8.4)
- -  bison (tested with 2.5)
+ -  CMake >= 2.8 (tested with 2.8.8)
+ -  bison (tested with 2.5.1)
  -  flex (tested with 2.5.35)
- -  GCC (tested with 4.4.5)
+ -  GCC >= 4.6 (tested with 4.6.3)
+ -  pkg-config (tested with 0.21)
+ -  gettext if ENABLE_NLS=ON (tested with 0.17)
 
 Both build and runtime:
 
- -  GLib >= 2.28 (tested with 2.28.6)
+ -  GLib >= 2.30 (tested with 2.30.3)
  -  GMP (tested with 4.3.2)
 
 Compiling
