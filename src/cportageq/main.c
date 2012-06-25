@@ -55,7 +55,7 @@ envvar(
         goto ERR;
     }
 
-    settings = cp_settings_new(get_root(), error);
+    settings = cp_settings_new(get_root(), NULL, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -92,7 +92,7 @@ get_repos(
         goto ERR;
     }
 
-    settings = cp_settings_new(argv[0], error);
+    settings = cp_settings_new(argv[0], NULL, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -116,7 +116,7 @@ ERR:
 
 static int
 get_repo_path(
-    int argc, 
+    int argc,
     char **argv,
     GError **error
 ) /*@modifies *error,*stdout,*stderr,errno@*/ /*@globals fileSystem@*/ {
@@ -129,7 +129,7 @@ get_repo_path(
         goto ERR;
     }
 
-    settings = cp_settings_new(argv[0], error);
+    settings = cp_settings_new(argv[0], NULL, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -174,7 +174,7 @@ do_with_pkgs(
         goto ERR;
     }
 
-    settings = cp_settings_new(argv[0], error);
+    settings = cp_settings_new(argv[0], NULL, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -238,7 +238,7 @@ vdb_path(
     CPVartree vartree  = NULL;
     int retval = 2;
 
-    settings = cp_settings_new(get_root(), error);
+    settings = cp_settings_new(get_root(), NULL, error);
     if (settings == NULL) {
         goto ERR;
     }
@@ -274,7 +274,7 @@ is_protected(
         goto ERR;
     }
 
-    settings = cp_settings_new(argv[0], error);
+    settings = cp_settings_new(argv[0], NULL, error);
     if (settings == NULL) {
         goto ERR;
     }

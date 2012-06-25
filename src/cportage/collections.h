@@ -33,6 +33,17 @@ cp_tree_foreach_remove(
     /*@null@*/ void *user_data
 ) /*@modifies *tree,*user_data@*/;
 
+typedef void * (*CPCopyFunc) (void *value, /*@null@*/ void *user_data);
+
+void
+cp_tree_insert_all(
+    GTree *src,
+    GTree *dest,
+    CPCopyFunc key_copy_func,
+    CPCopyFunc value_copy_func,
+    /*@null@*/ void *user_data
+) /*@modifies *dest@*/;
+
 gboolean
 cp_true_filter(void *key, void *value, /*@null@*/ void *user_data) /*@*/;
 

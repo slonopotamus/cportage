@@ -17,6 +17,8 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string.h>
+
 #include <cportage.h>
 
 static char *dir;
@@ -25,7 +27,19 @@ static void
 test_var(const char *test_dir, const char *var, const char *expected_value) {
     char *root = g_build_filename(dir, test_dir, NULL);
     GError *error = NULL;
-    CPSettings settings = cp_settings_new(root, &error);
+    CPSettings settings;
+
+    GTree *defaults = g_tree_new_full(
+        (GCompareDataFunc)strcmp,
+        NULL,
+        g_free,
+        g_free
+    );
+    g_tree_insert(defaults, g_strdup("PORTDIR"), g_strdup("/tmp"));
+
+    settings = cp_settings_new(root, defaults, &error);
+
+    g_tree_unref(defaults);
 
     g_assert_no_error(error);
     g_assert_cmpstr(cp_settings_get(settings, var), ==, expected_value);

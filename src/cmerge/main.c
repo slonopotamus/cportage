@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 
     ctx.atom_factory = cp_atom_factory_new();
 
-    ctx.settings = cp_settings_new(root, &error);
+    ctx.settings = cp_settings_new(root, NULL, &error);
     if (ctx.settings == NULL) {
         retval = EXIT_FAILURE;
         goto ERR;

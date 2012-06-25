@@ -357,7 +357,7 @@ init_repos(CPSettings self) /*@modifies *self,*stderr,errno@*/ /*@globals fileSy
 }
 
 CPSettings
-cp_settings_new(const char *root, GError **error) {
+cp_settings_new(const char *root, GTree *defaults, GError **error) {
     CPSettings self;
 
     g_assert(error == NULL || *error == NULL);
@@ -383,20 +383,36 @@ cp_settings_new(const char *root, GError **error) {
     self->config = g_tree_new_full(
         (GCompareDataFunc)strcmp, NULL, g_free, g_free
     );
+
     g_assert(self->incrementals == NULL);
     self->incrementals = cp_incrementals_new(self->config);
-    if (!load_etc_config(self, "profile.env", FALSE, TRUE, TRUE, error)) {
-        goto ERR;
+
+    if (defaults == NULL) {
+        if (!load_etc_config(self, "profile.env", FALSE, TRUE, TRUE, error)) {
+            goto ERR;
+        }
+        if (!load_etc_config(self, "make.globals", FALSE, FALSE, TRUE, error)) {
+            goto ERR;
+        }
+    } else {
+        cp_tree_insert_all(
+            defaults,
+            self->config,
+            (CPCopyFunc)g_strdup,
+            (CPCopyFunc)g_strdup,
+            NULL
+        );
     }
-    if (!load_etc_config(self, "make.globals", FALSE, FALSE, TRUE, error)) {
-        goto ERR;
-    }
+
     if (!add_profile(self, self->profile, error)) {
         goto ERR;
     }
     if (!load_etc_config(self, "make.conf", TRUE, TRUE, FALSE, error)) {
         goto ERR;
     }
+
+    cp_incrementals_config_finished(self->incrementals);
+
     /*
         We do not support CONFIGROOT and ROOT overriding. Actually,
         we do not need these variables at all, but let's act like portage.
@@ -426,8 +442,6 @@ cp_settings_new(const char *root, GError **error) {
 
     /* init misc stuff */
     init_cbuild(self);
-
-    cp_incrementals_config_finished(self->incrementals);
 
     return self;
 

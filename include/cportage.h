@@ -211,13 +211,17 @@ typedef /*@refcounted@*/ struct CPSettings *CPSettings;
  * Reads global and profile configuration data
  * and stores it in a #CPSettings immutable structure.
  *
- * \param root  path to configuration root dir (typically "/")
- * \param error return location for a %GError, or %NULL
- * \return      a #CPSettings structure, free it using cp_settings_unref()
+ * \param root     path to configuration root dir (typically "/")
+ * \param defaults optional default settings values or %NULL,
+ *                 setting this to not-%NULL disables reading of system-wide
+ *                 config files in "/etc"
+ * \param error    return location for a %GError, or %NULL
+ * \return         a #CPSettings structure, free it using cp_settings_unref()
  */
 /*@newref@*/ /*@null@*/ CPSettings
 cp_settings_new(
     const char *root,
+    /*@null@*/ GTree/*<char*, char*>*/ *defaults,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *error,*stderr,errno@*/ /*@globals fileSystem@*/;
