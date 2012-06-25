@@ -32,6 +32,7 @@
 
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
 #pragma GCC diagnostic ignored "-Wswitch-default"
 
 #include "error.h"

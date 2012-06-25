@@ -87,7 +87,7 @@ get_repos(
     int i = 0;
     int retval = 2;
 
-    if (argc < 1) {
+    if (argc == 0) {
         g_critical(_("ERROR: insufficient parameters!"));
         goto ERR;
     }
