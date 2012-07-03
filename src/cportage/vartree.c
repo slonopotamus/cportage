@@ -24,7 +24,7 @@
 #include "settings.h"
 #include "strings.h"
 
-struct CPVartree {
+struct CPVartreeS {
     CPTree tree;
 
     /*@only@*/ char *path;
@@ -322,7 +322,7 @@ cp_vartree_destroy(/*@only@*/ void *priv) /*@modifies priv@*/ {
     /*@=refcounttrans@*/
 }
 
-/*@unchecked@*/ static const struct CPTreeMethods vartree_methods = {
+/*@unchecked@*/ static const struct CPTreeOps vartree_methods = {
     cp_vartree_destroy,
     cp_vartree_find_packages
 };
@@ -334,7 +334,7 @@ cp_vartree_new(const CPSettings settings, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    self = g_new0(struct CPVartree, 1);
+    self = g_new0(struct CPVartreeS, 1);
     g_assert(self->tree == NULL);
     self->tree = cp_tree_new(&vartree_methods, self);
 

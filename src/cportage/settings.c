@@ -29,7 +29,7 @@
 #include "shellconfig.h"
 #include "strings.h"
 
-struct CPSettings {
+struct CPSettingsS {
     /*@only@*/ char *root;
     /*@only@*/ char *profile;
 
@@ -362,7 +362,7 @@ cp_settings_new(const char *root, GTree *defaults, GError **error) {
 
     g_assert(error == NULL || *error == NULL);
 
-    self = g_new0(struct CPSettings, 1);
+    self = g_new0(struct CPSettingsS, 1);
 
     /* init basic things */
     self->refs = (unsigned int)1;

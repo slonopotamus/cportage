@@ -23,7 +23,7 @@
 
 #include "settings.h"
 
-struct CPConfigProtect {
+struct CPConfigProtectS {
     /*@null@*/ /*@only@*/ GSList/*<char *>*/ *protected;
     /*@null@*/ /*@only@*/ GSList/*<char *>*/ *masked;
 };
@@ -46,7 +46,7 @@ CPConfigProtect
 cp_config_protect_new(CPSettings settings) {
     CPConfigProtect self;
 
-    self = g_new0(struct CPConfigProtect, 1);
+    self = g_new0(struct CPConfigProtectS, 1);
 
     g_assert(self->protected == NULL);
     self->protected = build_path_list(settings, "CONFIG_PROTECT");

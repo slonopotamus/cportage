@@ -22,7 +22,7 @@
 #include "package.h"
 #include "version.h"
 
-struct CPPackage {
+struct CPPackageS {
     /*@only@*/ char *category;
     /*@only@*/ char *name;
     CPVersion version;
@@ -43,7 +43,7 @@ cp_package_new(
 ) {
     CPPackage self;
 
-    self = g_new0(struct CPPackage, 1);
+    self = g_new0(struct CPPackageS, 1);
     self->refs = (unsigned int)1;
 
     /* TODO: validate args or make function private */

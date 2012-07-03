@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project(cportage C)
+project(cportage C CXX)
 
 # Increase when incompatible API change happens, reset MINOR and PATCH.
 set(CP_VERSION_MAJOR 0)
@@ -16,28 +16,32 @@ set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 ##################
 
 set(CMAKE_REQUIRED_DEFINITIONS
+    -D__STDC_LIMIT_MACROS -D__STDC_FORMAT_MACROS
     -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=700 -D_FILE_OFFSET_BITS=64
     -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="${CMAKE_PROJECT_NAME}"
     -DGETTEXT_PACKAGE="${CMAKE_PROJECT_NAME}"
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
 
 set(CMAKE_REQUIRED_FLAGS
-    -std=c89 -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
+    -pedantic -fvisibility=hidden -fmessage-length=0 -finput-charset=UTF-8
     -fdiagnostics-show-option -Wabi -Wdouble-promotion
     -Wall -Wextra -Werror -Wformat=2 -Winit-self -Wunknown-pragmas
     -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused -ftree-vrp
     -fstrict-overflow -Wstrict-overflow=5 -Wfloat-equal -Wsync-nand
-    -Wdeclaration-after-statement -Wundef -Wshadow -Wno-overlength-strings
-    -Wbad-function-cast -Wcast-qual -Wcast-align -Wpacked-bitfield-compat
+    -Wundef -Wshadow -Wno-overlength-strings
+    -Wcast-qual -Wcast-align -Wpacked-bitfield-compat
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
-    -Wpadded -Wno-error=padded -Wredundant-decls -Wnested-externs
+    -Wpadded -Wno-error=padded -Wredundant-decls
     -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization -Wimport
     -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing)
 
-add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS}
-    -Wold-style-definition -Wmissing-prototypes
-    -Wmissing-declarations -Wstrict-prototypes)
+set(CMAKE_C_FLAGS
+    "-std=c89 -Wdeclaration-after-statement -Wbad-function-cast -Wnested-externs -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes")
+
+set(CMAKE_CXX_FLAGS "-std=c++98 -fno-rtti -fvisibility-inlines-hidden")
+
+add_definitions(${CMAKE_REQUIRED_DEFINITIONS} ${CMAKE_REQUIRED_FLAGS} -Wmissing-declarations)
 
 ################
 # Dependencies #

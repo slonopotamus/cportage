@@ -21,7 +21,7 @@
 
 #include "repository.h"
 
-struct CPRepository {
+struct CPRepositoryS {
     /*@only@*/ char *name;
     /*@only@*/ char *path;
 
@@ -64,7 +64,7 @@ CPRepository
 cp_repository_new(const char *path) {
     CPRepository self;
 
-    self = g_new0(struct CPRepository, 1);
+    self = g_new0(struct CPRepositoryS, 1);
     self->refs = (unsigned int)1;
     g_assert(self->path == NULL);
     self->path = g_strdup(path);

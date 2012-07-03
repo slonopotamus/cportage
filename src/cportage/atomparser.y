@@ -106,7 +106,7 @@ typedef enum OpType {
     OP_GLOB
 } OpType;
 
-struct CPAtom {
+struct CPAtomS {
     /*@only@*/ char *category;
     /*@only@*/ char *package;
     /*@null@*/ CPVersion version;
@@ -121,7 +121,7 @@ static CPAtom
 cp_atom_alloc(char *category, char *package, /*@null@*/ CPVersion version) {
     CPAtom result;
 
-    result = g_new(struct CPAtom, 1);
+    result = g_new(struct CPAtomS, 1);
     result->refs = 1;
     result->category = category;
     result->package = package;
@@ -130,7 +130,7 @@ cp_atom_alloc(char *category, char *package, /*@null@*/ CPVersion version) {
     return result;
 }
 
-struct CPVersion {
+struct CPVersionS {
     char *str;
     GSList/*<char *>*/ *minor;
     GSList/*<VersionSuffix>*/ *suffixes;
@@ -168,7 +168,7 @@ cp_version_alloc(
     CPVersion result;
     GString *str;
 
-    result = g_new(struct CPVersion, 1);
+    result = g_new(struct CPVersionS, 1);
     result->refs = 1;
 
     str = g_string_new(major);
@@ -818,7 +818,7 @@ typedef struct CPAtomFactoryEntry {
     /*@null@*/ GError *error;
 } *CPAtomFactoryEntry;
 
-struct CPAtomFactory {
+struct CPAtomFactoryS {
     /*@only@*/ GHashTable *cache;
     /*@refs@*/ unsigned int refs;
 };
@@ -837,7 +837,7 @@ free_entry(void *entry) {
 
 CPAtomFactory
 cp_atom_factory_new(void) {
-    CPAtomFactory self = g_new(struct CPAtomFactory, 1);
+    CPAtomFactory self = g_new(struct CPAtomFactoryS, 1);
 
     self->refs = 1;
     self->cache = g_hash_table_new_full(

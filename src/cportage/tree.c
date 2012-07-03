@@ -19,7 +19,7 @@
 
 #include <cportage.h>
 
-struct CPTree {
+struct CPTreeS {
     /*@owned@*/ void *priv;
     /*@shared@*/ CPTreeMethods methods;
 
@@ -28,7 +28,7 @@ struct CPTree {
 
 CPTree
 cp_tree_new(const CPTreeMethods methods, void *priv) {
-    CPTree self = g_new0(struct CPTree, 1);
+    CPTree self = g_new0(struct CPTreeS, 1);
 
     self->methods = methods;
     g_assert(self->priv == NULL);

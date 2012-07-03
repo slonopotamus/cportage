@@ -147,7 +147,7 @@ cp_varexpand(
 /**
  * A structure describing a single repository.
  */
-typedef /*@refcounted@*/ struct CPRepository *CPRepository;
+typedef /*@refcounted@*/ struct CPRepositoryS *CPRepository;
 
 /**
  * Increases reference count of \a self by 1.
@@ -205,7 +205,7 @@ cp_repository_sync(
 /**
  * Central immutable storage of cportage configuration.
  */
-typedef /*@refcounted@*/ struct CPSettings *CPSettings;
+typedef /*@refcounted@*/ struct CPSettingsS *CPSettings;
 
 /**
  * Reads global and profile configuration data
@@ -309,7 +309,7 @@ cp_settings_get(
 /**
  * Structure, describing single package version.
  */
-typedef /*@refcounted@*/ struct CPVersion *CPVersion;
+typedef /*@refcounted@*/ struct CPVersionS *CPVersion;
 
 /**
  * Increases reference count of \a self by 1.
@@ -347,7 +347,7 @@ cp_version_str(const CPVersion self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 /**
  * Structure, describing a single package.
  */
-typedef /*@refcounted@*/ struct CPPackage *CPPackage;
+typedef /*@refcounted@*/ struct CPPackageS *CPPackage;
 
 /**
  * Increases reference count of \a self by 1.
@@ -423,7 +423,7 @@ cp_package_repo(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 /**
  * Structure, describing a single atom.
  */
-typedef /*@refcounted@*/ struct CPAtom *CPAtom;
+typedef /*@refcounted@*/ struct CPAtomS *CPAtom;
 
 /**
  * Increases reference count of \a self by 1.
@@ -455,7 +455,7 @@ cp_atom_matches(
 /**
  * Structure, describing an atom factory.
  */
-typedef /*@refcounted@*/ struct CPAtomFactory *CPAtomFactory;
+typedef /*@refcounted@*/ struct CPAtomFactoryS *CPAtomFactory;
 
 /*@newref@*/ CPAtomFactory
 cp_atom_factory_new(void) /*@*/;
@@ -492,7 +492,7 @@ cp_atom_new(
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
 /*@modifies *factory,*error@*/;
 
-typedef struct CPConfigProtect *CPConfigProtect;
+typedef struct CPConfigProtectS *CPConfigProtect;
 
 CPConfigProtect
 cp_config_protect_new(
@@ -513,7 +513,7 @@ cp_config_protect_is_protected(
 /**
  * TODO: documentation.
  */
-typedef /*@refcounted@*/ struct CPTree *CPTree;
+typedef /*@refcounted@*/ struct CPTreeS *CPTree;
 
 typedef gboolean (*CPTreeFindPackagesFunc)(
     void *priv,
@@ -524,7 +524,7 @@ typedef gboolean (*CPTreeFindPackagesFunc)(
 
 typedef void (*CPTreeDestroyFunc)(/*@only@*/ void *priv) /*@modifies priv@*/;
 
-typedef const struct CPTreeMethods {
+typedef const struct CPTreeOps {
   const CPTreeDestroyFunc destructor;
   const CPTreeFindPackagesFunc find_packages;
 } *CPTreeMethods;
@@ -576,7 +576,7 @@ cp_tree_find_packages(
 /**
  * Installed packages tree.
  */
-typedef /*@refcounted@*/ struct CPVartree *CPVartree;
+typedef /*@refcounted@*/ struct CPVartreeS *CPVartree;
 
 /**
  * TODO: documentation.
@@ -613,7 +613,7 @@ cp_vartree_path(const CPVartree self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 cp_vartree_get_tree(CPVartree self) /*@modifies *self@*/;
 
 /** TODO: documentation. */
-typedef /*@refcounted@*/ struct CPPorttree *CPPorttree;
+typedef /*@refcounted@*/ struct CPPorttreeS *CPPorttree;
 
 /**
  * TODO: documentation.
@@ -626,7 +626,7 @@ cp_porttree_new(
 /*@modifies *error,errno*/ /*@globals fileSystem@*/;
 
 /** TODO: documentation. */
-typedef /*@refcounted@*/ struct CPBintree *CPBintree;
+typedef /*@refcounted@*/ struct CPBintreeS *CPBintree;
 
 /**
  * TODO: documentation.
