@@ -17,7 +17,32 @@
     along with cportage.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cportage.h>
+
 #include "eapi.h"
+
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
+
+struct pv {
+    char *package;
+    CPVersion version;
+};
+
+typedef enum VersionSuffixType {
+    SUF_ALPHA,
+    SUF_BETA,
+    SUF_PRE,
+    SUF_RC,
+    SUF_P
+} VersionSuffixType;
+
+typedef struct VersionSuffix {
+    char *value;
+    VersionSuffixType type;
+} *VersionSuffix;
 
 /*@-fielduse@*/
 typedef struct cp_atom_parser_ctx_t {

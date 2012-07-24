@@ -37,7 +37,6 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#include "atom_parser_types.h"
 #include "atom_parser_ctx.h"
 #include "atom_parser.h"
 

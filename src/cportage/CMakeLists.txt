@@ -13,7 +13,7 @@ macro(add_flex_bison_target _name)
   bison_target("${_name}_parser"
     "${_name}_parser.y"
     "${CMAKE_CURRENT_BINARY_DIR}/${_name}_parser.c"
-    COMPILE_FLAGS "-Wall -Werror --report=all")
+    COMPILE_FLAGS "-Wall -Werror --report=all --debug")
   add_flex_bison_dependency("${_name}_scanner" "${_name}_parser")
 endmacro()
 

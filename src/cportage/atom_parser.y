@@ -21,7 +21,7 @@
 %glr-parser
 %defines
 %expect 4
-%lex-param { void *scanner }
+%lex-param { yyscan_t scanner }
 %name-prefix "cp_atom_parser_"
 %parse-param { cp_atom_parser_ctx *ctx }
 %verbose
@@ -35,18 +35,15 @@
 #include <gmp.h>
 
 #include "atom.h"
-#include "eapi.h"
 #include "error.h"
 #include "strings.h"
 #include "version.h"
 
-#include "atom_parser_types.h"
+#include "atom_parser_ctx.h"
 #include "atom_parser.h"
 #include "atom_scanner.h"
-#include "atom_parser_ctx.h"
 
 #define scanner ctx->yyscanner
-#define YYDEBUG 1
 #define YY_ _
 
 #define DOCONCAT2(str1, str2) g_strconcat(str1, str2, NULL); \

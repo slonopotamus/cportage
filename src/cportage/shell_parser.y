@@ -22,7 +22,7 @@
 %define api.pure
 %defines
 %error-verbose
-%lex-param { void *scanner }
+%lex-param { yyscan_t scanner }
 %locations
 %name-prefix "cp_shell_parser_"
 %parse-param { cp_shell_parser_ctx *ctx }
@@ -39,12 +39,11 @@
 #include "shellconfig.h"
 #include "strings.h"
 
+#include "shell_parser_ctx.h"
 #include "shell_parser.h"
 #include "shell_scanner.h"
-#include "shell_parser_ctx.h"
 
 #define scanner ctx->yyscanner
-#define YYDEBUG 1
 #define YY_ _
 
 #define DOCONCAT2(str1, str2) g_strconcat(str1, str2, NULL); \
