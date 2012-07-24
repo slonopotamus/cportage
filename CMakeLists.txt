@@ -54,8 +54,8 @@ include(CheckCSourceRuns)
 
 set(GLIB_MINIMAL_REQUIRED 2.30)
 
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
+find_package(BISON 2.6 REQUIRED)
+find_package(FLEX 2.5.35 REQUIRED)
 
 find_library(GMP_LIBRARY gmp)
 if(NOT GMP_LIBRARY)
