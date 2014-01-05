@@ -17,7 +17,7 @@ set(CP_VERSION "${CP_VERSION_MAJOR}.${CP_VERSION_MINOR}.${CP_VERSION_PATCH}")
 
 set(CMAKE_REQUIRED_DEFINITIONS
     -D__STDC_LIMIT_MACROS -D__STDC_FORMAT_MACROS
-    -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=700 -D_FILE_OFFSET_BITS=64
+    -D_XOPEN_SOURCE=700 -D_FILE_OFFSET_BITS=64
     -DCPORTAGE_COMPILATION -DG_LOG_DOMAIN="${CMAKE_PROJECT_NAME}"
     -DGETTEXT_PACKAGE="${CMAKE_PROJECT_NAME}"
     -DG_DISABLE_DEPRECATED -DG_DISABLE_SINGLE_INCLUDES)
@@ -54,8 +54,8 @@ include(CheckCSourceRuns)
 
 set(GLIB_MINIMAL_REQUIRED 2.30)
 
-find_package(BISON 2.6 REQUIRED)
-find_package(FLEX 2.5.35 REQUIRED)
+find_package(BISON 2.7.12 REQUIRED)
+find_package(FLEX 2.5.37 REQUIRED)
 
 find_library(GMP_LIBRARY gmp)
 if(NOT GMP_LIBRARY)
@@ -126,7 +126,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 macro(set_link_flags _target)
   set_target_properties(${_target} PROPERTIES
-      LINK_FLAGS "-Wl,--as-needed,--no-add-needed,--fatal-warnings,--no-undefined,--warn-shared-textrel,-z=now,-z=noexecstack,--no-undefined-version")
+      LINK_FLAGS "-Wl,--as-needed,--no-add-needed,--fatal-warnings,--no-undefined,--warn-shared-textrel,--no-undefined-version")
 endmacro()
 
 ###########
