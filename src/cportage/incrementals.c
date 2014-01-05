@@ -34,8 +34,8 @@ struct CPIncrementals {
 /*@observer@*/ /*@unchecked@*/ static const char * const
 default_incrementals[] = {
     "USE", "USE_EXPAND", "USE_EXPAND_HIDDEN", "FEATURES", "ACCEPT_KEYWORDS",
-    "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
-    "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES"
+    "ACCEPT_LICENSE", "CONFIG_PROTECT_MASK", "CONFIG_PROTECT", "PRELINK_PATH",
+    "PRELINK_PATH_MASK", "PROFILE_ONLY_VARIABLES",
 };
 
 static /*@dependent@*/ GTree *
