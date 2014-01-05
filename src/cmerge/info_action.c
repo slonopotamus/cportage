@@ -220,7 +220,7 @@ print_settings(
         const char *value = cp_settings_get(settings, s);
         if (value == NULL) {
             if (unset == NULL) {
-                unset = g_string_append(g_string_new("Unset: "), s);
+                unset = g_string_append(g_string_new("Unset:  "), s);
             } else {
                 g_string_append_printf(unset, ", %s", s);
             }
@@ -239,36 +239,6 @@ print_settings(
 OUT:
     g_free(path);
     g_strfreev(data);
-}
-
-static char * G_GNUC_WARN_UNUSED_RESULT
-get_processor(void) {
-    int status;
-    char *output = NULL;
-    char *end;
-
-    if (!g_spawn_command_line_sync("uname -p", &output, NULL, &status, NULL)) {
-        goto ERR;
-    }
-
-    if (output == NULL) {
-        goto ERR;
-    }
-
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != EXIT_SUCCESS) {
-        goto ERR;
-    }
-
-    end = strchr(output, '\n');
-    if (end != NULL) {
-        *end = '\0';
-    }
-
-    return output;
-
-ERR:
-    g_free(output);
-    return NULL;
 }
 
 static char * G_GNUC_WARN_UNUSED_RESULT
@@ -302,6 +272,36 @@ OUT:
     return result;
 }
 
+static char * G_GNUC_WARN_UNUSED_RESULT
+get_command_output(const char *cmd) {
+    int status;
+    char *output = NULL;
+    char *end;
+
+    if (!g_spawn_command_line_sync(cmd, &output, NULL, &status, NULL)) {
+        goto ERR;
+    }
+
+    if (output == NULL) {
+        goto ERR;
+    }
+
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != EXIT_SUCCESS) {
+        goto ERR;
+    }
+
+    end = strchr(output, '\n');
+    if (end != NULL) {
+        *end = '\0';
+    }
+
+    return output;
+
+ERR:
+    g_free(output);
+    return NULL;
+}
+
 static gboolean G_GNUC_WARN_UNUSED_RESULT
 print_system_name(
     CPContext ctx,
@@ -319,7 +319,7 @@ print_system_name(
         goto ERR;
     }
 
-    cpu = get_processor();
+    cpu = get_command_output("uname -p");
 
     g_print("=============================================================\n");
     g_print("System uname: ");
@@ -352,6 +352,7 @@ cmerge_info_action(
     struct utsname utsname;
     CPRepository main_repo;
     const char *portdir;
+    char *linker = NULL;
     int rc;
 
     g_assert(error == NULL || *error == NULL);
@@ -374,6 +375,13 @@ cmerge_info_action(
     }
 
     print_porttree_timestamp(portdir);
+
+    linker = get_command_output("ld --version");
+    if (linker) {
+	    g_print("ld %s\n", linker);
+    }
+    g_free(linker);
+
     if (!print_packages(portdir, ctx, error)) {
         goto ERR;
     }
