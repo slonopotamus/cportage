@@ -332,7 +332,7 @@ cp_vartree_new(const CPSettings settings, GError **error) {
     self->tree = cp_tree_new(&vartree_methods, self);
 
     g_assert(self->path == NULL);
-    self->path = g_build_filename(cp_settings_root(settings),
+    self->path = g_build_filename(cp_settings_config_root(settings),
                                   "var", "db", "pkg", NULL);
 
     lazy_cache = cp_string_truth(

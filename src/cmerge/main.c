@@ -58,7 +58,7 @@ typedef enum {
 
 static VerbosityLevel verbosity = VERBOSITY_NORMAL;
 
-/*@observer@*/ static const char *root = "/";
+/*@observer@*/ static const char *config_root = "/";
 
 static struct CMergeOptions opts = { NULL, FALSE, FALSE };
 
@@ -96,7 +96,7 @@ options[] = {
 
     /* Global options */
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &opts.args, NULL, NULL},
-    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &root, NULL, NULL},
+    {"config-root", '\0', 0, G_OPTION_ARG_STRING, &config_root, NULL, NULL},
     {"quiet", 'q', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
     {"verbose", 'v', (gint)G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, (gpointer)verbosity_cb, NULL, NULL},
 
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 
     ctx.atom_factory = cp_atom_factory_new();
 
-    ctx.settings = cp_settings_new(root, NULL, &error);
+    ctx.settings = cp_settings_new(config_root, NULL, &error);
     if (ctx.settings == NULL) {
         retval = EXIT_FAILURE;
         goto ERR;

@@ -211,7 +211,7 @@ typedef /*@refcounted@*/ struct CPSettingsS *CPSettings;
  * Reads global and profile configuration data
  * and stores it in a #CPSettings immutable structure.
  *
- * \param root     path to configuration root dir (typically "/")
+ * \param config_root     path to configuration root dir (typically "/")
  * \param defaults optional default settings values or %NULL,
  *                 setting this to not-%NULL disables reading of system-wide
  *                 config files in "/etc"
@@ -220,7 +220,7 @@ typedef /*@refcounted@*/ struct CPSettingsS *CPSettings;
  */
 /*@newref@*/ /*@null@*/ CPSettings
 cp_settings_new(
-    const char *root,
+    const char *config_root,
     /*@null@*/ GTree/*<char*, char*>*/ *defaults,
     /*@null@*/ GError **error
 ) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT

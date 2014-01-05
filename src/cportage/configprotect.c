@@ -30,12 +30,12 @@ struct CPConfigProtectS {
 
 static /*@null@*/ /*@only@*/ GSList *
 build_path_list(CPSettings settings, const char *key) /*@*/ {
-    const char *root = cp_settings_root(settings);
+    const char *config_root = cp_settings_config_root(settings);
     char **items = cp_strings_pysplit(cp_settings_get_default(settings, key, ""));
     GSList *result = NULL;
 
     CP_STRV_ITER(items, item) {
-        result = g_slist_prepend(result, g_build_filename(root, item, NULL));
+        result = g_slist_prepend(result, g_build_filename(config_root, item, NULL));
     } end_CP_STRV_ITER
 
     g_strfreev(items);

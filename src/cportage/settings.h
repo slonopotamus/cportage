@@ -28,7 +28,7 @@
  * \return readonly canonical path to settings root
  */
 /*@observer@*/ const char *
-cp_settings_root(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+cp_settings_config_root(const CPSettings self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
  * \return %TRUE if \a feature is enabled in \c FEATURES variable,
