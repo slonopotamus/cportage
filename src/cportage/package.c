@@ -27,11 +27,25 @@ struct CPPackageS {
     /*@only@*/ char *name;
     CPVersion version;
     /*@only@*/ char *slot;
+    /*@only@*/ char *subslot;
     /*@only@*/ char *repo;
     /*@only@*/ char *str;
 
     /*@refs@*/ unsigned int refs;
 };
+
+static void
+init_slot(CPPackage self, const char *slot) {
+    char **tokens = g_strsplit(slot, "/", 2);
+
+    g_assert(strlen(slot) > 0);
+    g_assert(self->slot == NULL);
+    g_assert(self->subslot == NULL);
+
+    self->slot = g_strdup(tokens[0]);
+    self->subslot = g_strdup(tokens[1] == NULL ? self->slot : tokens[1]);
+    g_strfreev(tokens);
+}
 
 CPPackage
 cp_package_new(
@@ -53,8 +67,7 @@ cp_package_new(
     self->name = g_strdup(name);
     g_assert(self->version == NULL);
     self->version = cp_version_ref(version);
-    g_assert(self->slot == NULL);
-    self->slot = g_strdup(slot);
+    init_slot(self, slot);
     g_assert(self->repo == NULL);
     self->repo = g_strdup(repo);
     g_assert(self->str == NULL);
@@ -88,6 +101,7 @@ cp_package_unref(CPPackage self) {
     g_free(self->name);
     cp_version_unref(self->version);
     g_free(self->slot);
+    g_free(self->subslot);
     g_free(self->repo);
     g_free(self->str);
 
@@ -118,6 +132,11 @@ cp_package_version(const CPPackage self) {
 const char *
 cp_package_slot(const CPPackage self) {
     return self->slot;
+}
+
+const char *
+cp_package_subslot(const CPPackage self) {
+    return self->subslot;
 }
 
 const char *

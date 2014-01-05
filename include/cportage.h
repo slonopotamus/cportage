@@ -415,6 +415,12 @@ cp_package_version(
 cp_package_slot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
 
 /**
+ * \return readonly slot name of \a self
+ */
+/*@observer@*/ const char *
+cp_package_subslot(const CPPackage self) G_GNUC_WARN_UNUSED_RESULT /*@*/;
+
+/**
  * \return readonly repository name of \a self
  */
 /*@observer@*/ const char *
@@ -426,7 +432,8 @@ typedef enum CPEapi {
     CP_EAPI_2,
     CP_EAPI_3,
     CP_EAPI_4,
-    CP_EAPI_LATEST = CP_EAPI_4,
+    CP_EAPI_5,
+    CP_EAPI_LATEST = CP_EAPI_5,
     CP_EAPI_UNKNOWN = -1
 } CPEapi;
 

@@ -97,6 +97,9 @@ atom_new(void) {
         { "foo/666", TRUE },
         { "=dev-libs/poppler-qt3-0.11*", TRUE },
 
+        /* EAPI-5 subslot */
+        { "dev-lang/spidermonkey:0/mozjs185", TRUE },
+
         { "sys-apps/portage[foo]", TRUE },
         { "sys-apps/portage-2.1:[foo]", FALSE },
         { "=sys-apps/portage-2.2*:foo[bar?,!baz?,!doc=,build=]", TRUE },

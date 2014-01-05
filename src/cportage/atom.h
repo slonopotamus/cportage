@@ -53,6 +53,7 @@ cp_atom_category_validate(
 gboolean
 cp_atom_slot_validate(
     const char *slot,
+    CPEapi eapi,
     /*@null@*/ GError **error
 ) G_GNUC_WARN_UNUSED_RESULT /*@modifies *error@*/;
 

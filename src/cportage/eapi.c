@@ -39,6 +39,9 @@ cp_eapi_str(CPEapi eapi) {
         case CP_EAPI_4:
             return "4";
 
+        case CP_EAPI_5:
+            return "5";
+
         case CP_EAPI_UNKNOWN:
         default:
             return "unknown";
@@ -68,6 +71,9 @@ cp_eapi_parse(const char *eapi, const char *file, GError **error) {
 
         case '4':
             return CP_EAPI_4;
+
+        case '5':
+            return CP_EAPI_5;
 
         default:
             goto ERR;
@@ -126,4 +132,9 @@ cp_eapi_has_use_deps(CPEapi eapi) {
 gboolean
 cp_eapi_has_strong_blocks(CPEapi eapi) {
     return eapi >= CP_EAPI_2;
+}
+
+gboolean
+cp_eapi_has_subslots(CPEapi eapi) {
+    return eapi >= CP_EAPI_5;
 }

@@ -70,7 +70,7 @@ try_load_package(
     }
     slot = g_strstrip(slot);
 
-    result = cp_atom_slot_validate(slot, error);
+    result = cp_atom_slot_validate(slot, CP_EAPI_LATEST, error);
     if (!result) {
         goto OUT;
     }

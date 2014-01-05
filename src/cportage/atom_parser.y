@@ -30,7 +30,6 @@
 
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
 
 #include <gmp.h>
 
@@ -109,6 +108,7 @@ struct CPAtomS {
     /*@only@*/ char *package;
     /*@null@*/ CPVersion version;
     /*@null@*/ /*@only@*/ char *slot;
+    /*@null@*/ /*@only@*/ char *subslot;
     /*@null@*/ /*@only@*/ char *repo;
 
     /*@refs@*/ unsigned int refs;
@@ -119,7 +119,7 @@ static CPAtom
 cp_atom_alloc(char *category, char *package, /*@null@*/ CPVersion version) {
     CPAtom result;
 
-    result = g_new(struct CPAtomS, 1);
+    result = g_new0(struct CPAtomS, 1);
     result->refs = 1;
     result->category = category;
     result->package = package;
@@ -245,7 +245,7 @@ suffix_alloc(VersionSuffixType type, char *value) {
 %type <suffix_list> suffix_loop
 %type <suffix_type> suffix_type
 
-%type <str> category slot repo package package_
+%type <str> category slot slot_base repo package package_
 %type <str> maybe_revision maybe_number use_name
 %type <str> word word_or_plus word_no_underline
 %type <str> word_or_minus word_or_minus_loop
@@ -357,9 +357,13 @@ suffix_type:
   | RC    { $$ = SUF_RC;    }
   | P     { $$ = SUF_P;     }
 
-slot:
+slot_base:
     word_or_plus
   | word_or_plus word_or_plus_minus_dot_loop { $$ = DOCONCAT2($1, $2); }
+
+slot:
+    slot_base
+  | slot_base SLASH slot_base { g_free($3); $$ = $1; }
 
 repo:
     word
@@ -667,14 +671,14 @@ cp_atom_category_validate(const char *value, GError **error) {
 }
 
 gboolean
-cp_atom_slot_validate(const char *value, GError **error) {
+cp_atom_slot_validate(const char *value, CPEapi eapi, GError **error) {
     cp_atom_parser_ctx ctx;
 
     g_assert(error == NULL || *error == NULL);
 
-    if (!doparse(&ctx, CP_EAPI_LATEST, value, SLOT_MAGIC)) {
+    if (!doparse(&ctx, eapi, value, SLOT_MAGIC)) {
         g_set_error(error, CP_ERROR, (gint)CP_ERROR_ATOM_SYNTAX,
-            _("'%s': invalid slot name"), value);
+            _("'%s': invalid slot name for EAPI=%s"), value, cp_eapi_str(eapi));
         return FALSE;
     }
 
@@ -750,6 +754,7 @@ cp_atom_unref(CPAtom self) {
     g_free(self->package);
     cp_version_unref(self->version);
     g_free(self->slot);
+    g_free(self->subslot);
     g_free(self->repo);
 
     /*@-refcounttrans@*/
@@ -780,6 +785,10 @@ cp_atom_matches(const CPAtom self, const CPPackage package) {
     }
     if (self->slot != NULL
             && g_strcmp0(self->slot, cp_package_slot(package)) != 0) {
+        return FALSE;
+    }
+    if (self->subslot != NULL
+            && g_strcmp0(self->slot, cp_package_subslot(package)) != 0) {
         return FALSE;
     }
     /*

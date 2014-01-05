@@ -67,4 +67,7 @@ cp_eapi_has_slot_deps(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
 gboolean
 cp_eapi_has_strong_blocks(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
 
+gboolean
+cp_eapi_has_subslots(CPEapi eapi) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE /*@*/;
+
 #endif
