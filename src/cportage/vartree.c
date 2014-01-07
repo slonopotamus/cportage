@@ -315,7 +315,7 @@ cp_vartree_destroy(/*@only@*/ void *priv) /*@modifies priv@*/ {
     /*@=refcounttrans@*/
 }
 
-/*@unchecked@*/ static const struct CPTreeOps vartree_methods = {
+/*@unchecked@*/ static const struct CPTreeOps vartree_ops = {
     cp_vartree_destroy,
     cp_vartree_find_packages
 };
@@ -329,7 +329,7 @@ cp_vartree_new(const CPSettings settings, GError **error) {
 
     self = g_new0(struct CPVartreeS, 1);
     g_assert(self->tree == NULL);
-    self->tree = cp_tree_new(&vartree_methods, self);
+    self->tree = cp_tree_new(&vartree_ops, self);
 
     g_assert(self->path == NULL);
     self->path = g_build_filename(cp_settings_config_root(settings),

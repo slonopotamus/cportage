@@ -58,7 +58,9 @@ cp_tree_unref(CPTree self) {
     }
     /*@=mustfreeonly@*/
 
-    self->ops->destructor(self->priv);
+    if (self->ops->destructor != NULL) {
+        self->ops->destructor(self->priv);
+    }
 
     /*@-refcounttrans@*/
     g_free(self);

@@ -543,7 +543,7 @@ typedef gboolean (*CPTreeFindPackagesFunc)(
 typedef void (*CPTreeDestroyFunc)(/*@only@*/ void *priv) /*@modifies priv@*/;
 
 typedef const struct CPTreeOps {
-  const CPTreeDestroyFunc destructor;
+  /*@null@*/ const CPTreeDestroyFunc destructor;
   const CPTreeFindPackagesFunc find_packages;
 } *CPTreeOps;
 
