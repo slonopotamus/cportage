@@ -60,31 +60,59 @@ init_cbuild(CPSettings self) /*@modifies *self@*/ {
     g_tree_insert(self->config, g_strdup("CBUILD"), g_strdup(chost));
 }
 
+/**
+ * TODO: PMS reference?
+ * TODO: documentation.
+ */
+static void
+init_portdir(CPSettings self) /*@modifies *self@*/ {
+    if (cp_settings_get(self, "PORTDIR") != NULL) {
+        return;
+    }
+
+    g_tree_insert(self->config, g_strdup("PORTDIR"), g_build_filename(self->config_root, "usr", "portage", NULL));
+}
+
+/**
+ * Loads given file into a #CPSettings structure.
+ *
+ * \param self         a #CPSettings structure
+ * \param path         filename to load, automatically freed.
+ * \param allow_source if %TRUE, \c source statements are handled in config file
+ * \param error        return location for a %GError, or %NULL
+ * \return             %TRUE on success, %FALSE if an error occurred
+ */
 static gboolean G_GNUC_WARN_UNUSED_RESULT
-read_config(
+load_make_config(
     CPSettings self,
-    const char *path,
+    /*@only@*/ char *path,
     gboolean allow_source,
     gboolean stack_use_expand,
     /*@null@*/ GError **error
 ) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
+    gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
 
-    if (!cp_read_shellconfig(
+    if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
+        goto OUT;
+    }
+
+    result = cp_read_shellconfig(
         self->config,
         (CPShellconfigLookupFunc)g_tree_lookup,
         (CPShellconfigSaveFunc)g_tree_insert,
         path,
         allow_source,
-        error)
-    ) {
-        return FALSE;
+        error);
+
+    if (result) {
+        cp_incrementals_config_changed(self->incrementals, stack_use_expand);
     }
 
-    cp_incrementals_config_changed(self->incrementals, stack_use_expand);
-
-    return TRUE;
+OUT:
+    g_free(path);
+    return result;
 }
 
 /**
@@ -152,81 +180,45 @@ add_parent_profiles(
 /** See declaration above. */
 static gboolean
 add_profile(CPSettings self, const char *profile_dir, GError **error) {
-    char *config_file;
+    char *path;
     gboolean result = TRUE;
 
     g_assert(error == NULL || *error == NULL);
 
     /* Check eapi */
-    config_file = g_build_filename(profile_dir, "eapi", NULL);
-    result = cp_eapi_parse_file(config_file, error) != CP_EAPI_UNKNOWN;
-    g_free(config_file);
+    path = g_build_filename(profile_dir, "eapi", NULL);
+    result = cp_eapi_parse_file(path, error) != CP_EAPI_UNKNOWN;
+    g_free(path);
     if (!result) {
         return FALSE;
     }
 
     /* Check whether profile is deprecated */
-    config_file = g_build_filename(profile_dir, "deprecated", NULL);
-    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
+    path = g_build_filename(profile_dir, "deprecated", NULL);
+    if (g_file_test(path, G_FILE_TEST_EXISTS)) {
         g_warning("Profile %s is deprecated", profile_dir);
         /* TODO: read and print deprecation reason from file */
     }
-    g_free(config_file);
+    g_free(path);
 
     /* Load parents */
-    config_file = g_build_filename(profile_dir, "parent", NULL);
-    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        result = add_parent_profiles(self, config_file, error);
+    path = g_build_filename(profile_dir, "parent", NULL);
+    if (g_file_test(path, G_FILE_TEST_EXISTS)) {
+        result = add_parent_profiles(self, path, error);
     }
-    g_free(config_file);
+    g_free(path);
     if (!result) {
         return FALSE;
     }
 
     /* Parse profile configs */
-
-    config_file = g_build_filename(profile_dir, "make.defaults", NULL);
-    if (g_file_test(config_file, G_FILE_TEST_EXISTS)) {
-        result = read_config(self, config_file, FALSE, TRUE, error);
-    }
-    g_free(config_file);
-    if (!result) {
+    if (!load_make_config(self, g_build_filename(profile_dir, "make.defaults", NULL), FALSE, TRUE, error)) {
         return FALSE;
     }
 
     return cp_incrementals_process_profile(
         self->incrementals, profile_dir, error
     );
-}
-
-/**
- * Loads file with given name from \c $CONFIG_ROOT
- * into a #CPSettings structure.
- *
- * \param self         a #CPSettings structure
- * \param name         filename to load
- * \param allow_source if %TRUE, \c source statements are handled in config file
- * \param error        return location for a %GError, or %NULL
- * \return             %TRUE on success, %FALSE if an error occurred
- */
-static gboolean G_GNUC_WARN_UNUSED_RESULT
-load_make_config(
-    CPSettings self,
-    const char *name,
-    gboolean allow_source,
-    gboolean stack_use_expand,
-    /*@null@*/ GError **error
-) /*@modifies *self,*error,errno@*/ /*@globals fileSystem@*/ {
-    char *path;
-    gboolean result;
-
-    g_assert(error == NULL || *error == NULL);
-
-    path = g_build_filename(self->config_root, name, NULL);
-    result = !g_file_test(path, G_FILE_TEST_EXISTS)
-        || read_config(self, path, allow_source, stack_use_expand, error);
-    g_free(path);
-    return result;
 }
 
 /**
@@ -387,10 +379,13 @@ cp_settings_new(const char *config_root, GTree *defaults, GError **error) {
     self->incrementals = cp_incrementals_new(self->config);
 
     if (defaults == NULL) {
-        if (!load_make_config(self, "usr/share/portage/config/make.globals", FALSE, TRUE, error)) {
+        if (!load_make_config(self, g_build_filename(self->config_root, "etc", "make.globals", NULL), FALSE, TRUE, error)) {
             goto ERR;
         }
-        if (!load_make_config(self, "etc/profile.env", FALSE, TRUE, error)) {
+        if (!load_make_config(self, g_build_filename(self->config_root, "usr", "share", "portage", "config", "make.globals", NULL), FALSE, TRUE, error)) {
+            goto ERR;
+        }
+        if (!load_make_config(self, g_build_filename(self->config_root, "etc", "profile.env", NULL), FALSE, TRUE, error)) {
             goto ERR;
         }
     } else {
@@ -407,11 +402,11 @@ cp_settings_new(const char *config_root, GTree *defaults, GError **error) {
         goto ERR;
     }
 
-    if (!load_make_config(self, "etc/make.conf", TRUE, FALSE, error)) {
+    if (!load_make_config(self, g_build_filename(self->config_root, "etc", "make.conf", NULL), TRUE, FALSE, error)) {
         goto ERR;
     }
 
-    if (!load_make_config(self, "etc/portage/make.conf", TRUE, FALSE, error)) {
+    if (!load_make_config(self, g_build_filename(self->config_root, "etc", "portage", "make.conf", NULL), TRUE, FALSE, error)) {
         goto ERR;
     }
 
@@ -431,6 +426,10 @@ cp_settings_new(const char *config_root, GTree *defaults, GError **error) {
         g_strdup(self->config_root)
     );
 
+    /* init misc stuff */
+    init_cbuild(self);
+    init_portdir(self);
+
     /* init repositories */
     g_assert(self->name2repo == NULL);
     self->name2repo = g_tree_new_full(
@@ -443,9 +442,6 @@ cp_settings_new(const char *config_root, GTree *defaults, GError **error) {
         goto ERR;
     }
     init_repos(self);
-
-    /* init misc stuff */
-    init_cbuild(self);
 
     return self;
 
