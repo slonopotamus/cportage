@@ -301,7 +301,7 @@ init_repos(CPSettings self) /*@modifies *self,*stderr,errno@*/ /*@globals fileSy
     );
     /*@=mustfreefresh@*/
     /*@-refcounttrans@*/
-    self->repos = g_slist_prepend(self->repos, self->main_repo);
+    self->repos = g_slist_append(self->repos, self->main_repo);
     /*@=refcounttrans@*/
 
     CP_STRV_ITER(paths, path) {
@@ -325,12 +325,8 @@ init_repos(CPSettings self) /*@modifies *self,*stderr,errno@*/ /*@globals fileSy
         }
 
         g_tree_insert(self->name2repo, g_strdup(name), repo);
-        /*
-          self->repos is in reverse order so that packages from repositories
-          defined _later_ in PORTDIR_OVERLAY appear _earlier_.
-         */
         /*@-kepttrans@*/
-        self->repos = g_slist_prepend(self->repos, repo);
+        self->repos = g_slist_append(self->repos, repo);
         /*@=kepttrans@*/
 
         if (overlay_str->len > 0) {
