@@ -81,8 +81,6 @@ if(NOT HAVE_REALPATH)
     message(FATAL_ERROR "Your system doesn't have realpath() function")
 endif()
 
-check_symbol_exists(fileno stdio.h HAVE_FILENO)
-
 check_c_source_runs(
     "#include <stdlib.h>\n int main(void) {return realpath(\".\", NULL) == NULL;}"
     REALPATH_ACCEPTS_NULL)
@@ -107,7 +105,6 @@ check_include_file(unistd.h HAVE_UNISTD_H)
 if(HAVE_UNISTD_H)
     check_symbol_exists(nice unistd.h HAVE_NICE)
     check_symbol_exists(getpid unistd.h HAVE_GETPID)
-    check_symbol_exists(read unistd.h HAVE_READ)
     check_symbol_exists(execlp unistd.h HAVE_EXECLP)
 endif()
 

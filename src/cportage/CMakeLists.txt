@@ -1,3 +1,6 @@
+check_symbol_exists(fileno stdio.h HAVE_FILENO)
+check_symbol_exists(read unistd.h HAVE_READ)
+
 if(HAVE_READ AND HAVE_FILENO)
     set(flex_mode "--fast")
 else()
