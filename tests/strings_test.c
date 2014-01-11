@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2011, Marat Radchenko
+    Copyright 2009-2014, Marat Radchenko
 
     This file is part of cportage.
 

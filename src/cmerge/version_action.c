@@ -1,5 +1,5 @@
 /*
-    Copyright 2009-2011, Marat Radchenko
+    Copyright 2009-2014, Marat Radchenko
 
     This file is part of cportage.
 
@@ -31,7 +31,7 @@ cmerge_version_action(
     g_assert(error == NULL || *error == NULL);
 
     g_print("cportage " CP_VERSION "\n\n");
-    g_print("Copyright (C) 2009-2011 Marat Radchenko <marat@slonopotamus.org>\n"
+    g_print("Copyright (C) 2009-2014 Marat Radchenko <marat@slonopotamus.org>\n"
          "License GPLv3+: GNU GPL version 3 or later"
              " <http://gnu.org/licenses/gpl.html>\n"
          "This is free software: you are free to change and redistribute it.\n"
