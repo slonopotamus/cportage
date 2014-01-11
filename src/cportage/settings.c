@@ -43,6 +43,30 @@ struct CPSettingsS {
     /*@refs@*/ unsigned int refs;
 };
 
+static /*@null@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
+find_profile(const char *config_root, GError **error) /*@modifies *error,errno@*/ /*@globals fileSystem@*/ {
+    char *profile;
+    char *result = NULL;
+
+    g_assert(error == NULL || *error == NULL);
+
+    profile = g_build_filename(config_root, "etc", "make.profile", NULL);
+    if (!g_file_test(profile, G_FILE_TEST_EXISTS)) {
+        g_free(profile);
+        profile = g_build_filename(config_root, "etc", "portage", "make.profile", NULL);
+    }
+
+    if (g_file_test(profile, G_FILE_TEST_EXISTS)) {
+        result = cp_path_realpath(profile, error);
+    } else {
+        g_message("Cannot find usable make.profile: %s", profile);
+        result = g_strdup(profile);
+    }
+
+    g_free(profile);
+    return result;
+}
+
 /**
  * TODO: PMS reference?
  * TODO: documentation.
@@ -124,7 +148,7 @@ OUT:
  * \param error       return location for a %GError, or %NULL
  * \return            %TRUE on success, %FALSE if an error occurred
  */
-static gboolean
+static gboolean G_GNUC_WARN_UNUSED_RESULT
 add_profile(
     CPSettings self,
     const char *profile_dir,
@@ -219,29 +243,6 @@ add_profile(CPSettings self, const char *profile_dir, GError **error) {
     return cp_incrementals_process_profile(
         self->incrementals, profile_dir, error
     );
-}
-
-/**
- * Constructs root profile path and checks its existence.
- *
- * \param config_root  root dir for config files
- * \param error return location for a %GError, or %NULL
- * \return      canonical profile path on success,
- *              %NULL if an error occurred
- */
-static /*@null@*/ char * G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT
-build_profile_path(
-    const char *config_root,
-    /*@null@*/ GError **error
-) /*@modifies *error,errno@*/ /*@globals fileSystem@*/ {
-    char *profile;
-    char *result;
-
-    g_assert(error == NULL || *error == NULL);
-    profile = g_build_filename(config_root, "etc", "make.profile", NULL);
-    result = cp_path_realpath(profile, error);
-    g_free(profile);
-    return result;
 }
 
 /** TODO: documentation */
@@ -360,7 +361,7 @@ cp_settings_new(const char *config_root, GTree *defaults, GError **error) {
     }
 
     g_assert(self->profile == NULL);
-    self->profile = build_profile_path(self->config_root, error);
+    self->profile = find_profile(self->config_root, error);
     if (self->profile == NULL) {
         goto ERR;
     }

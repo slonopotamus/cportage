@@ -49,6 +49,11 @@ test_var(const char *test_dir, const char *var, const char *expected_value) {
 }
 
 static void
+no_profile(void) {
+    test_var("roots/empty", "PORTDIR", "/tmp");
+}
+
+static void
 profiles_order(void) {
     test_var("roots/profiles_order", "foo", "bar baz");
 }
@@ -85,6 +90,7 @@ main(int argc, char *argv[]) {
     g_assert(argc == 2);
     dir = argv[1];
 
+    g_test_add_func("/settings/no_profile", no_profile);
     g_test_add_func("/settings/profile_order", profiles_order);
     g_test_add_func("/settings/incrementals", incrementals);
     g_test_add_func("/settings/use/mask", use_mask);
