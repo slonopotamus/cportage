@@ -32,7 +32,7 @@ set(CMAKE_REQUIRED_FLAGS
     -Wcast-qual -Wcast-align -Wpacked-bitfield-compat
     -Wwrite-strings -Wconversion -Wlogical-op -Waggregate-return -Wvla
     -Wmissing-noreturn -Wmissing-format-attribute -Wnormalized=nfkc -Wpacked
-    -Wpadded -Wno-error=padded -Wredundant-decls
+    -Wno-padded -Wredundant-decls
     -Winvalid-pch -Wvolatile-register-var -Wdisabled-optimization -Wimport
     -Wstack-protector -fstack-protector -fstack-protector-all -fstrict-aliasing)
 
@@ -54,7 +54,7 @@ include(CheckCSourceRuns)
 
 set(GLIB_MINIMAL_REQUIRED 2.30)
 
-find_package(BISON 2.5 REQUIRED)
+find_package(BISON 3.0.4 REQUIRED)
 find_package(FLEX 2.5.35 REQUIRED)
 
 find_library(GMP_LIBRARY gmp)

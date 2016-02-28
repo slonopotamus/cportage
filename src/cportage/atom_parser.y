@@ -328,25 +328,25 @@ version:
       { $$ = cp_version_alloc($1, $2, $3, $4, $5); }
 
 maybe_letter:
-    /* empty */ { $$ = '\0'; }
-  | P           { $$ = 'p'; }
-  | R           { $$ = 'r'; }
-  | LOWER       { $$ = $1; }
+    %empty { $$ = '\0'; }
+  | P      { $$ = 'p'; }
+  | R      { $$ = 'r'; }
+  | LOWER  { $$ = $1; }
 
 maybe_number:
-    /* empty */    { $$ = NULL; }
+    %empty { $$ = NULL; }
   | NUMBER
 
 maybe_revision:
-    /* empty */    { $$ = NULL; }
+    %empty         { $$ = NULL; }
   | MINUS R NUMBER { $$ = $3; }
 
 version_minor_loop:
-    /* empty */ { $$ = NULL; }
+    %empty                        { $$ = NULL; }
   | version_minor_loop DOT NUMBER { $$ = g_slist_append($1, $3); }
 
 suffix_loop:
-    /* empty */ { $$ = NULL; }
+    %empty { $$ = NULL; }
   | suffix_loop UNDERLINE suffix_type maybe_number
       { $$ = g_slist_append($1, suffix_alloc($3, $4)); }
 
